@@ -1,0 +1,1242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Insurance License Data Explorer&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com/lucide@latest"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Theme C: Deep Navy/Charcoal background, Electric Blue/Violet Accents */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>:root {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--bg-dark: #1f2937; /* Slate-800 / Deep Charcoal */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--bg-lighter: #374151; /* Slate-700 / Card Background */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--accent-primary: #22d3ee; /* Cyan-400 / Electric Blue */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--text-light: #f3f4f6; /* Off-White/Light Gray */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--shadow-glow: 0 0 10px rgba(34, 211, 238, 0.5); /* Subtle Blue Glow */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--error-color: #f87171; /* Red-400 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-dark);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-light);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.card {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-lighter);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.search-input:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-color: var(--accent-primary);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: var(--shadow-glow);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-input, .form-select, .form-textarea {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #1f2937; /* Darker background for input fields */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #475569; /* Slate-600 */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-light);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 0.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0.75rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.accent-button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--accent-primary);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--bg-dark);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.accent-button:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.9;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: var(--shadow-glow);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.secondary-button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #4b5563; /* Gray-600 */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-light);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.secondary-button:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #6b7280; /* Gray-500 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.tab-button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: transparent;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #94a3b8; /* Slate-400 */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 2px solid transparent;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding-bottom: 0.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.tab-button.active {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-light);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 2px solid var(--accent-primary);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.carrier-chip {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: inline-flex;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0.5rem 1rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.875rem;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 500;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 9999px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #475569;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #374151;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #d1d5db;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>user-select: none;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.selected-carrier {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--accent-primary) !important;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--bg-dark) !important;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-color: var(--accent-primary);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: var(--shadow-glow);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Modal Styles */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.modal {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: fixed;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: rgba(0, 0, 0, 0.75);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: none;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>z-index: 50;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.modal-content {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-dark);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 90%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 800px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 1rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #475569;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: var(--shadow-glow);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-height: 90vh;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overflow-y: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.reset-modal-content {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 400px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Main Container --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="min-h-screen p-4 md:p-8 flex flex-col items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Header --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;header class="w-full max-w-5xl text-center mb-10"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1 class="text-3xl md:text-5xl font-extrabold text-slate-100 mt-4 tracking-tighter"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>License &lt;span class="text-cyan-400"&gt;Data Explorer&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-slate-400 mt-2"&gt;Firebase-authenticated data tool for agents.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Login/Registration Panel (VISIBLE BY DEFAULT) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10" style="display: none;"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="grid grid-cols-1 lg:grid-cols-2 gap-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Login Form (Left Side) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="log-in" class="w-6 h-6 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Agent Login</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-slate-400 mb-6"&gt;Log in with your registered email and password.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;form id="login-form" onsubmit="event.preventDefault(); loginAgent()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="login-email" class="block text-sm font-medium text-slate-300 mb-1"&gt;Email Address&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="email" id="login-email" class="form-input w-full" required placeholder="name@corp.com" value="admin@corp.com"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="login-password" class="block text-sm font-medium text-slate-300 mb-1"&gt;Password&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="password" id="login-password" class="form-input w-full" required placeholder="Enter your password" value="adminpass123"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;!-- FORGOT PASSWORD LINK --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="mt-2 text-right"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                             </span>&lt;a href="#" onclick="event.preventDefault(); openResetModal()" class="text-sm text-cyan-400 hover:text-cyan-300 transition duration-150"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Forgot Password?</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button type="submit" id="login-button" class="accent-button w-full mt-6 px-4 py-2 rounded-lg flex items-center justify-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="key-round" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>Log In</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Registration Form (Right Side) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="lg:pl-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="user-plus" class="w-6 h-6 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>New Agent Registration</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-slate-400 mb-6"&gt;Create a new agent account.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;form id="new-agent-form" onsubmit="event.preventDefault(); submitNewAgent()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1"&gt;Full Name&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="text" id="reg-name" class="form-input w-full" required placeholder="Jane Doe"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="reg-npn" class="block text-sm font-medium text-slate-300 mb-1"&gt;NPN Number&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="text" id="reg-npn" class="form-input w-full" required placeholder="12345678"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1"&gt;Email (Login ID)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="email" id="reg-email" class="form-input w-full" required placeholder="jane@example.com"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1"&gt;Password&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="password" id="reg-password" class="form-input w-full" required placeholder="Set your password"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="md:col-span-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label for="reg-extension" class="block text-sm font-medium text-slate-300 mb-1"&gt;Extension&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="text" id="reg-extension" class="form-input w-full" required placeholder="555-1234"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3 class="text-md font-semibold text-slate-300 mb-3 border-t pt-4 border-slate-700 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="certificate" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>Licensed States &amp; Carriers</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div id="license-container" class="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;!-- Dynamic license rows will be added here --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex gap-4 mt-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button type="button" onclick="addLicenseSection('license-container')" class="secondary-button px-4 py-2 rounded-lg flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="plus" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Add State License</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button type="submit" id="register-button" class="accent-button px-4 py-2 rounded-lg flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="user-check" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Register Agent</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Main Application Content (HIDDEN until logged in) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- App Header/Tabs/Logout --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="w-full max-w-5xl card p-4 rounded-xl shadow-lg border border-slate-700/50 mb-6 flex justify-between items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="flex items-center space-x-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-sm text-slate-400 hidden sm:block"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Logged in as: &lt;strong id="current-user-name" class="text-cyan-400"&gt;&lt;/strong&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span id="admin-badge" class="bg-red-800/50 text-red-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2 hidden"&gt;ADMIN&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex space-x-2 border-l border-slate-700 pl-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="search-tab-button" onclick="changeView('search')" class="tab-button active flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="search" class="w-4 h-4 mr-1"&gt;&lt;/i&gt; Search Tool</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;!-- NEW: Profile/My Licenses tab for all authenticated users --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="profile-tab-button" onclick="changeView('profile')" class="tab-button flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="award" class="w-4 h-4 mr-1"&gt;&lt;/i&gt; My Licenses</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="admin-tab-button" onclick="changeView('admin')" class="tab-button hidden flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="shield" class="w-4 h-4 mr-1"&gt;&lt;/i&gt; Admin Panel</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="logout()" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="log-out" class="w-4 h-4 mr-1"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Logout</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Content Area --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="w-full max-w-5xl"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- 1. Search View --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="search-view" class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="w-full max-w-3xl mx-auto mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex card p-2 rounded-xl shadow-lg border border-slate-700/50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>id="search-input"</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>type="text"</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>placeholder="Search by State (CA), Agent Name, or Carrier Name..."</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>class="search-input w-full p-4 text-lg bg-transparent outline-none placeholder-slate-500 rounded-lg transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900"</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>onkeydown="if(event.key === 'Enter') searchData()"</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>onclick="searchData()"</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>class="accent-button px-6 py-3 ml-2 rounded-xl font-semibold flex items-center"</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="search" class="w-5 h-5 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Search</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;main id="results-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50 flex flex-col items-center justify-center text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-xl text-slate-400"&gt;Use the search bar above to find licensed data.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/main&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- 2. Profile View (New) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="profile-view" class="w-full hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;main id="profile-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;!-- Content rendered by renderProfilePanel() --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/main&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- 3. Admin View (Hidden by default) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="admin-view" class="w-full hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;main id="admin-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;!-- Content rendered by renderAdminPanel() --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/main&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Dynamic Message Box --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="message-box" class="fixed bottom-4 right-4 p-4 rounded-lg text-sm transition-opacity duration-300 opacity-0 pointer-events-none"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Modal for Password Reset --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="reset-modal" class="modal" onclick="if(event.target.id === 'reset-modal') closeResetModal()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="modal-content reset-modal-content p-6 md:p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3 class="text-2xl font-bold text-cyan-400 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="rotate-ccw" class="w-6 h-6 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Password Reset</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="closeResetModal()" class="text-slate-400 hover:text-red-500 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="x" class="w-6 h-6"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;form id="reset-form" onsubmit="event.preventDefault(); handlePasswordReset()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;label for="reset-email" class="block text-sm font-medium text-slate-300 mb-1"&gt;Registered Email&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="email" id="reset-email" class="form-input w-full" required placeholder="Enter email to reset password"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="reset-message-container" class="mt-4 text-sm min-h-[20px]"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button type="submit" id="reset-send-button" class="accent-button w-full mt-6 px-4 py-2 rounded-lg flex items-center justify-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="mail" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Send Reset Link</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Modal for Agent Editing --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="edit-modal" class="modal" onclick="if(event.target.id === 'edit-modal') closeEditModal()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="modal-content p-6 md:p-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3 class="text-2xl font-bold text-cyan-400 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="edit" class="w-6 h-6 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Edit Agent Details</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="closeEditModal()" class="text-slate-400 hover:text-red-500 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="x" class="w-6 h-6"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;form id="edit-agent-form" onsubmit="event.preventDefault(); saveAgentDetails()"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Agent details inputs (Name, NPN, Email, Extension) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="block text-sm font-medium text-slate-300 mb-1"&gt;Full Name&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="text" id="edit-name" class="form-input w-full" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="block text-sm font-medium text-slate-300 mb-1"&gt;NPN Number&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="text" id="edit-npn" class="form-input w-full" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="block text-sm font-medium text-slate-300 mb-1"&gt;Email&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="email" id="edit-email" class="form-input w-full" required readonly&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="block text-sm font-medium text-slate-300 mb-1"&gt;Extension&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;input type="text" id="edit-extension" class="form-input w-full" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h4 class="text-lg font-semibold text-slate-300 mb-3 border-t pt-4 border-slate-700 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="file-text" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Licensed States &amp; Carriers</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="edit-license-container" class="space-y-4 p-4 border border-slate-700 rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;!-- Dynamic edit license rows will be loaded here --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button type="button" onclick="addLicenseSection('edit-license-container')" class="secondary-button mt-4 px-4 py-2 rounded-lg flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="plus" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Add State License</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="flex justify-end gap-4 mt-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="button" onclick="closeEditModal()" class="secondary-button px-4 py-2 rounded-lg"&gt;Cancel&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="submit" class="accent-button px-4 py-2 rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="save" class="w-4 h-4 mr-2"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Save Changes</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- I. Global State and Firebase Setup ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let licenseCount = 0;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let currentUserData = null; // Holds the agent data from AGENTS array (keyed by UID)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let activeView = 'search';<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let editingAgentUid = null;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Environment variables</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let auth;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let isAuthReady = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (firebaseConfig) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const app = initializeApp(firebaseConfig);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>auth = getAuth(app);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>console.log("Firebase Auth initialized.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>console.error("Firebase config is missing. Authentication will fail.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// AGENTS data is now keyed by Firebase User ID (UID)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let AGENTS = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// NOTE: Initial agents are placeholder data. You must register these emails<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// in the Firebase console for them to work with the specified passwords.</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"admin_placeholder_uid": {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>name: "Admin Master",</p>
+<p class="p1"><span class="Apple-converted-space">                </span>npn: "00000000",</p>
+<p class="p1"><span class="Apple-converted-space">                </span>email: "admin@corp.com", // This email must be registered in Firebase</p>
+<p class="p1"><span class="Apple-converted-space">                </span>extension: "0000",</p>
+<p class="p1"><span class="Apple-converted-space">                </span>isAdmin: true,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>licenses: []<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const STATES = [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ name: "California", acronym: "CA" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Texas", acronym: "TX" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Florida", acronym: "FL" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ name: "New York", acronym: "NY" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Illinois", acronym: "IL" },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const CARRIERS = [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"UnitedHealthcare",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Humana",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Aetna",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Blue Cross Blue Shield",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Cigna",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Mutual of Omaha",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"State Farm"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>];</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- II. Initialization and Utility Functions ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>addLicenseSection('license-container');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Firebase Auth State Listener</p>
+<p class="p1"><span class="Apple-converted-space">        </span>onAuthStateChanged(auth, (user) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>isAuthReady = true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (user) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentUserData = AGENTS[user.uid];</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!currentUserData) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>signOut(auth);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>showMessage('User data record not found. Please register.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>grantAccess(user);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentUserData = null;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showAuthPanel();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function showMessage(message, type = 'info') {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const box = document.getElementById('message-box');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let color = 'bg-blue-600';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (type === 'error') color = 'bg-red-600';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (type === 'success') color = 'bg-green-600';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>box.className = `fixed bottom-4 right-4 p-4 rounded-lg text-sm text-white transition-opacity duration-300 ${color} opacity-100`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box.textContent = message;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>clearTimeout(box.timer);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box.timer = setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>box.classList.remove('opacity-100');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>box.classList.add('opacity-0');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}, 3000);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const normalize = (str) =&gt; str.toLowerCase().trim();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function setButtonLoading(buttonId, isLoading, defaultText) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const button = document.getElementById(buttonId);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!button) return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>button.disabled = isLoading;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (isLoading) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>button.textContent = 'Processing...';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>button.classList.add('opacity-50', 'cursor-not-allowed');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>button.textContent = defaultText;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>button.classList.remove('opacity-50', 'cursor-not-allowed');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- III. Authentication and Access Control ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function showAuthPanel() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!isAuthReady) return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('main-app-content').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('auth-panel').style.display = 'block';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('login-form').reset();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function loginAgent() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const email = document.getElementById('login-email').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const password = document.getElementById('login-password').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setButtonLoading('login-button', true, 'Log In');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const userCredential = await signInWithEmailAndPassword(auth, email, password);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const user = userCredential.user;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentUserData = AGENTS[user.uid];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!currentUserData) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>throw new Error("Local agent data not found. Please register.");</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage(`Welcome back, ${currentUserData.name}!`, 'success');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let errorMessage = "Login failed. Check your email and password.";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Firebase Login Error:", error.code, error.message);</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (error.code === 'auth/invalid-credential') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'Invalid email or password.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (error.code === 'auth/user-not-found') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'No user found with this email.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (error.message.includes("Local agent data not found")) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = error.message;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>signOut(auth);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage(errorMessage, 'error');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
+<p class="p1"><span class="Apple-converted-space">                 </span>setButtonLoading('login-button', false, 'Log In');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function logout() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>signOut(auth).then(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Successfully logged out.', 'info');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).catch(error =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Logout failed.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Logout Error:", error);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function grantAccess(user) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('auth-panel').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('main-app-content').style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('current-user-name').textContent = currentUserData.name;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Show Admin Panel tab only if current user is an admin</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const adminBadge = document.getElementById('admin-badge');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const adminTabButton = document.getElementById('admin-tab-button');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (currentUserData.isAdmin) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>adminBadge.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>adminTabButton.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>adminBadge.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>adminTabButton.classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Default to My Licenses view if not an admin, otherwise search</p>
+<p class="p1"><span class="Apple-converted-space">            </span>changeView(currentUserData.isAdmin ? 'search' : 'profile');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- IV. Password Reset Functions ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function openResetModal() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('reset-modal').style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('reset-email').value = document.getElementById('login-email').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('reset-message-container').innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function closeResetModal() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('reset-modal').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function handlePasswordReset() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const email = document.getElementById('reset-email').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const messageContainer = document.getElementById('reset-message-container');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!email) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>messageContainer.innerHTML = '&lt;span class="text-red-400"&gt;Please enter an email address.&lt;/span&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>setButtonLoading('reset-send-button', true, 'Send Reset Link');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const MAX_RETRIES = 5;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let currentRetry = 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let success = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let lastError = null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>while (currentRetry &lt; MAX_RETRIES &amp;&amp; !success) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await sendPasswordResetEmail(auth, email);</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>messageContainer.innerHTML = `&lt;span class="text-green-400"&gt;A reset link has been sent to ${email}.&lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>success = true;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>lastError = error;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>currentRetry++;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error(`Attempt ${currentRetry} failed:`, error.message);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (currentRetry &lt; MAX_RETRIES) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const delay = Math.pow(2, currentRetry) * 1000 + Math.floor(Math.random() * 1000);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>await new Promise(resolve =&gt; setTimeout(resolve, delay));</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>setButtonLoading('reset-send-button', false, 'Send Reset Link');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!success &amp;&amp; lastError) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let errorMessage = 'An error occurred during reset.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (lastError.code === 'auth/invalid-email') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'The email address is not properly formatted.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (lastError.code === 'auth/user-not-found') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>messageContainer.innerHTML = `&lt;span class="text-green-400"&gt;If that email is registered, a reset link has been sent.&lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (lastError.code === 'auth/too-many-requests') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'Too many requests. Try again later.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = `Error: ${lastError.message}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>messageContainer.innerHTML = `&lt;span class="text-red-400"&gt;${errorMessage}&lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else if (success) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setTimeout(closeResetModal, 3000);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- V. Agent Registration/Management Functions (Access Controlled) ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function submitNewAgent() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentName = document.getElementById('reg-name').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentNpn = document.getElementById('reg-npn').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentEmail = document.getElementById('reg-email').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentPassword = document.getElementById('reg-password').value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentExtension = document.getElementById('reg-extension').value.trim();</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newLicenses = getLicensesFromContainer('license-container');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (newLicenses === null) return;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension || newLicenses.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('All fields and at least one license entry are required.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (agentPassword.length &lt; 6) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Password must be at least 6 characters long.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>setButtonLoading('register-button', true, 'Register Agent');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const user = userCredential.user;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>AGENTS[user.uid] = {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>name: agentName,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>npn: agentNpn,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>email: agentEmail,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>extension: agentExtension,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>isAdmin: false,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>licenses: newLicenses</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage(`Registration successful for ${agentName}. Access granted!`, 'success');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('new-agent-form').reset();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('license-container').innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>licenseCount = 0;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>addLicenseSection('license-container');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let errorMessage = "Registration failed.";</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (error.code === 'auth/email-already-in-use') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'This email address is already registered.';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else if (error.code === 'auth/weak-password') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>errorMessage = 'The password is too weak (must be at least 6 characters).';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage(errorMessage, 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Firebase Registration Error:", error);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setButtonLoading('register-button', false, 'Register Agent');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- VI. License/UI/Data Functions ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function toggleCarrierSelection(event) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const button = event.currentTarget;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>button.classList.toggle('selected-carrier');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function addLicenseSection(containerId, initialData = { state: '', carriers: [] }, index = licenseCount++) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const container = document.getElementById(containerId);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newId = index;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const stateOptions = STATES.map(s =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>`&lt;option value="${s.acronym}" ${initialData.state === s.acronym ? 'selected' : ''}&gt;${s.name} (${s.acronym})&lt;/option&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">            </span>).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const carrierButtons = CARRIERS.map(c =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const isSelected = initialData.carriers.includes(c);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return `&lt;button type="button"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                            </span>class="carrier-chip ${isSelected ? 'selected-carrier' : ''}"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                            </span>data-carrier="${c}"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                            </span>onclick="toggleCarrierSelection(event)"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${c}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const licenseHtml = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="${containerId}-row-${newId}" class="card p-4 border border-slate-600 rounded-lg grid md:grid-cols-3 gap-4 relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;button type="button"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>onclick="document.getElementById('${containerId}-row-${newId}').remove(); lucide.createIcons();"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>class="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>title="Remove License"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="x" class="w-4 h-4"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/button&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label for="${containerId}-state-${newId}" class="block text-sm font-medium text-slate-400 mb-1"&gt;State&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;select id="${containerId}-state-${newId}" name="state" class="form-select w-full" required&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;option value=""&gt;-- Select State --&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${stateOptions}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="md:col-span-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="block text-sm font-medium text-slate-400 mb-1"&gt;Carriers Represented (Click to select)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div id="${containerId}-carriers-${newId}" class="carrier-buttons-container flex flex-wrap gap-2 p-3 border border-slate-700 rounded-lg min-h-[100px] bg-[#1a202c]"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${carrierButtons}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>container.insertAdjacentHTML('beforeend', licenseHtml);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>return newId;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getLicensesFromContainer(containerId) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const licenseRows = document.querySelectorAll(`#${containerId} div[id^="${containerId}-row-"]`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const licenses = [];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let isValid = true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const enteredStates = new Set();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>licenseRows.forEach((row) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const stateSelect = row.querySelector(`select[name="state"]`);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const selectedCarrierButtons = row.querySelectorAll('.selected-carrier');<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const stateValue = stateSelect ? stateSelect.value : '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const selectedCarriers = Array.from(selectedCarrierButtons)</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>.map(button =&gt; button.getAttribute('data-carrier'));<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!stateValue &amp;&amp; selectedCarriers.length === 0) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (!stateValue || selectedCarriers.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>showMessage(`License row is incomplete (State and at least one Carrier are required).`, 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>isValid = false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (stateValue &amp;&amp; enteredStates.has(stateValue) &amp;&amp; isValid) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>showMessage(`Duplicate state "${stateValue}" selected. Please remove one.`, 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>isValid = false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (stateValue) enteredStates.add(stateValue);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (isValid &amp;&amp; stateValue &amp;&amp; selectedCarriers.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>licenses.push({</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>state: stateValue,</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>carriers: selectedCarriers</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!isValid) return null;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return licenses;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function changeView(view) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>activeView = view;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('search-view').classList.add('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('profile-view').classList.add('hidden'); // NEW: Hide profile view</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('admin-view').classList.add('hidden');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('search-tab-button').classList.remove('active');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('profile-tab-button').classList.remove('active'); // NEW: Remove active class from profile</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('admin-tab-button').classList.remove('active');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (view === 'search') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('search-view').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('search-tab-button').classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else if (view === 'profile') { // NEW: Handle profile view</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('profile-view').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('profile-tab-button').classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderProfilePanel();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else if (view === 'admin' &amp;&amp; currentUserData.isAdmin) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('admin-view').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('admin-tab-button').classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderAdminPanel();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderProfilePanel() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agent = currentUserData;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const uid = auth.currentUser.uid;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const panel = document.getElementById('profile-panel');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const statesLicensed = agent.licenses.map(l =&gt; l.state);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let stateDetailsHtml = agent.licenses.map(license =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const stateObj = STATES.find(s =&gt; s.acronym === license.state);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const carrierBadges = license.carriers.map(c =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`&lt;span class="bg-slate-700 text-sm px-3 py-1 rounded-full whitespace-nowrap"&gt;${c}&lt;/span&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">                </span>).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="card p-4 rounded-xl border border-slate-600 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h4 class="font-semibold text-lg text-slate-100 mb-2 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                             </span>&lt;i data-lucide="flag" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${stateObj ? stateObj.name : license.state}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-400 mb-2 text-sm"&gt;Carriers in this state:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex flex-wrap gap-2"&gt;${carrierBadges}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).join('') || '&lt;p class="text-slate-400"&gt;You currently have no licenses registered.&lt;/p&gt;';</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>panel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-3xl font-bold text-slate-100 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="award" class="w-7 h-7 mr-3 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>Your Profile &amp; Licenses</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button onclick="openEditModal('${uid}')" class="accent-button px-4 py-2 rounded-lg flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i data-lucide="edit-3" class="w-4 h-4 mr-2"&gt;&lt;/i&gt; Edit My Licenses</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left p-4 card rounded-lg border border-slate-700"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;Name:&lt;/strong&gt; ${agent.name}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;NPN:&lt;/strong&gt; ${agent.npn}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;Email:&lt;/strong&gt; ${agent.email}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;Extension:&lt;/strong&gt; ${agent.extension}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3 class="text-xl font-semibold text-slate-300 mb-4 border-t pt-4 border-slate-700"&gt;License Details (${statesLicensed.length} States)&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid md:grid-cols-2 gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${stateDetailsHtml}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderAdminPanel() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const panel = document.getElementById('admin-panel');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentsArray = Object.values(AGENTS); // Get array of agent objects</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentListHtml = agentsArray.map(agent =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const uid = Object.keys(AGENTS).find(key =&gt; AGENTS[key] === agent); // Get UID</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const isAdmin = agent.isAdmin;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const toggleAction = isAdmin ? 'Demote' : 'Promote';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const toggleColor = isAdmin ? 'bg-red-700 hover:bg-red-600' : 'bg-green-700 hover:bg-green-600';</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const selfCheck = uid === auth.currentUser.uid ? ' (You)' : '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const toggleDisabled = uid === "admin_placeholder_uid" || uid === auth.currentUser.uid;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="card p-4 rounded-xl mb-3 border border-slate-600 flex flex-col md:flex-row justify-between items-start md:items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h4 class="font-semibold text-lg text-slate-100 flex items-center mb-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="${isAdmin ? 'shield-check' : 'user'}" class="w-5 h-5 mr-2 ${isAdmin ? 'text-red-400' : 'text-cyan-400'}"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${agent.name} ${selfCheck}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-sm text-slate-400"&gt;NPN: ${agent.npn} | Email: ${agent.email} | Ext: ${agent.extension}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="text-xs font-medium px-2 py-0.5 rounded-full ${isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'} mt-1 inline-block"&gt;${isAdmin ? 'Administrator' : 'Agent'}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex space-x-2 mt-3 md:mt-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;!-- Only Admins can see and use this edit button for any agent --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="openEditModal('${uid}')" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="edit-3" class="w-4 h-4 mr-1"&gt;&lt;/i&gt; Edit</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="toggleAdminStatus('${uid}')" ${toggleDisabled ? 'disabled' : ''} class="${toggleColor} text-white px-3 py-1 rounded-lg text-sm flex items-center font-medium ${toggleDisabled ? 'opacity-50 cursor-not-allowed' : ''}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="shield-half" class="w-4 h-4 mr-1"&gt;&lt;/i&gt; ${toggleAction}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>panel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="users-round" class="w-7 h-7 mr-3 text-red-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>System User Management</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-slate-400 mb-6"&gt;Manage user roles and agent details for all accounts. Total Accounts: &lt;strong&gt;${agentsArray.length}&lt;/strong&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${agentListHtml}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function toggleAdminStatus(uid) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!currentUserData.isAdmin) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Access Denied: Only administrators can change user roles.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agent = AGENTS[uid];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!agent) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Agent not found.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newStatus = !agent.isAdmin;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.isAdmin = newStatus;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderAdminPanel();</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>showMessage(`${agent.name} is now ${newStatus ? 'an ADMIN' : 'a regular AGENT'}.`, 'success');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function openEditModal(uid) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const isSelf = auth.currentUser &amp;&amp; auth.currentUser.uid === uid;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const canEdit = currentUserData.isAdmin || isSelf;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!canEdit) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Access Denied: You can only edit your own licenses.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agent = AGENTS[uid];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!agent) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Agent not found for editing.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>editingAgentUid = uid;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-name').value = agent.name;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-npn').value = agent.npn;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-email').value = agent.email;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-extension').value = agent.extension;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const licenseContainer = document.getElementById('edit-license-container');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>licenseContainer.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>licenseCount = 0;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.licenses.forEach((license, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>addLicenseSection('edit-license-container', license, index * 100);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (agent.licenses.length === 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                 </span>addLicenseSection('edit-license-container');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-modal').style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function closeEditModal() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('edit-modal').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>editingAgentUid = null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function saveAgentDetails() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!editingAgentUid) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const name = document.getElementById('edit-name').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const npn = document.getElementById('edit-npn').value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const extension = document.getElementById('edit-extension').value.trim();</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newLicenses = getLicensesFromContainer('edit-license-container');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (newLicenses === null) return;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!name || !npn || !extension) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('All main fields are required.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agent = AGENTS[editingAgentUid];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!agent) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showMessage('Error saving: Agent not found in system.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.name = name;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.npn = npn;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.extension = extension;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.licenses = newLicenses;<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Update local user data if they edited themselves</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (auth.currentUser &amp;&amp; auth.currentUser.uid === editingAgentUid) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>currentUserData = agent;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('current-user-name').textContent = currentUserData.name;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>showMessage(`Agent ${name} details updated successfully.`, 'success');</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Re-render the active panel to show changes immediately</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (activeView === 'admin' &amp;&amp; currentUserData.isAdmin) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderAdminPanel();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else if (activeView === 'profile') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderProfilePanel();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>closeEditModal();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- Search Functions (Unchanged core logic) ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function searchData() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const input = normalize(document.getElementById('search-input').value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const resultsPanel = document.getElementById('results-panel');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!input) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resultsPanel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-xl text-slate-400"&gt;Use the search bar above to find licensed data.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentsArray = Object.values(AGENTS);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const matchedState = STATES.find(s =&gt; normalize(s.name) === input || normalize(s.acronym) === input);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (matchedState) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderStateResults(matchedState, agentsArray);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const matchedAgent = agentsArray.find(a =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>normalize(a.name).includes(input) ||<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>normalize(a.npn) === input ||<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>normalize(a.email).includes(input) ||</p>
+<p class="p1"><span class="Apple-converted-space">                </span>normalize(a.extension) === input</p>
+<p class="p1"><span class="Apple-converted-space">            </span>);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (matchedAgent) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderAgentResults(matchedAgent);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const matchedCarrier = CARRIERS.find(c =&gt; normalize(c).includes(input));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (matchedCarrier) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>renderCarrierResults(matchedCarrier, agentsArray);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>resultsPanel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;i data-lucide="alert-triangle" class="w-12 h-12 text-amber-400 mb-4 opacity-70"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2 class="text-2xl font-bold text-slate-100 mb-2"&gt;No Matches Found&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="text-lg text-slate-400"&gt;Could not find a State, Agent, or Carrier matching "${document.getElementById('search-input').value}".&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>showMessage('Search failed. No match found.', 'error');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderStateResults(state, agentsArray) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const resultsPanel = document.getElementById('results-panel');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const stateAcronym = state.acronym;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const licensedAgents = agentsArray.filter(agent =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>agent.licenses.some(l =&gt; l.state === stateAcronym)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let agentsHtml = licensedAgents.length &gt; 0</p>
+<p class="p1"><span class="Apple-converted-space">                </span>? licensedAgents.map(agent =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const license = agent.licenses.find(l =&gt; l.state === stateAcronym);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const carrierBadges = license.carriers.map(c =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>`&lt;span class="bg-slate-700 text-cyan-400 text-xs px-3 py-1 rounded-full whitespace-nowrap"&gt;${c}&lt;/span&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="card p-4 rounded-xl mb-3 border border-slate-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h4 class="font-semibold text-lg text-slate-100 mb-1 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="user" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${agent.name}</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="ml-auto text-sm text-slate-400"&gt;NPN: ${agent.npn} | Ext: ${agent.extension}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-400 mb-2 text-sm"&gt;Carriers represented in ${state.name}:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex flex-wrap gap-2"&gt;${carrierBadges}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}).join('')</p>
+<p class="p1"><span class="Apple-converted-space">                </span>: '&lt;p class="text-slate-400 p-4"&gt;No agents found licensed in this state in the dataset.&lt;/p&gt;';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>resultsPanel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-3xl font-bold text-cyan-400 mb-6 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="map" class="w-7 h-7 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${state.name} (${stateAcronym}) License Overview</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3 class="text-xl font-semibold text-slate-300 mb-4"&gt;Licensed Agents (${licensedAgents.length})&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${agentsHtml}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderAgentResults(agent) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const resultsPanel = document.getElementById('results-panel');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const statesLicensed = agent.licenses.map(l =&gt; l.state);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const totalCarriers = new Set();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>agent.licenses.forEach(l =&gt; l.carriers.forEach(c =&gt; totalCarriers.add(c)));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let stateDetailsHtml = agent.licenses.map(license =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const stateObj = STATES.find(s =&gt; s.acronym === license.state);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const carrierBadges = license.carriers.map(c =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`&lt;span class="bg-slate-700 text-sm px-3 py-1 rounded-full whitespace-nowrap"&gt;${c}&lt;/span&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">                </span>).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="card p-4 rounded-xl border border-slate-600 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h4 class="font-semibold text-lg text-slate-100 mb-2 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                             </span>&lt;i data-lucide="flag" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${stateObj ? stateObj.name : license.state}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-400 mb-2 text-sm"&gt;Carriers in this state:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex flex-wrap gap-2"&gt;${carrierBadges}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>resultsPanel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-3xl font-bold text-cyan-400 mb-6 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="user-check" class="w-7 h-7 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Agent: ${agent.name}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${agent.isAdmin ? '&lt;span class="bg-red-800/50 text-red-300 text-base font-bold px-3 py-1 rounded-full ml-3"&gt;ADMIN&lt;/span&gt;' : ''}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left p-4 card rounded-lg border border-slate-700"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;NPN:&lt;/strong&gt; ${agent.npn}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;Email:&lt;/strong&gt; ${agent.email}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-slate-300"&gt;&lt;strong class="text-cyan-400"&gt;Extension:&lt;/strong&gt; ${agent.extension}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="card p-5 rounded-xl border border-slate-600 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-5xl font-extrabold text-cyan-400"&gt;${statesLicensed.length}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-300 mt-2"&gt;States Licensed&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="card p-5 rounded-xl border border-slate-600 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-5xl font-extrabold text-cyan-400"&gt;${totalCarriers.size}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-300 mt-2"&gt;Unique Carriers&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="card p-5 rounded-xl border border-slate-600 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-5xl font-extrabold text-cyan-400"&gt;${agent.licenses.flatMap(l =&gt; l.carriers).length}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-300 mt-2"&gt;Total Carrier Licenses&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3 class="text-xl font-semibold text-slate-300 mb-4 border-t pt-4 border-slate-700"&gt;License Details by State&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid md:grid-cols-2 gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${stateDetailsHtml}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderCarrierResults(carrierName, agentsArray) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const resultsPanel = document.getElementById('results-panel');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const agentsRepresenting = agentsArray.filter(agent =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>agent.licenses.some(l =&gt; l.carriers.includes(carrierName))</p>
+<p class="p1"><span class="Apple-converted-space">            </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let agentsHtml = agentsRepresenting.length &gt; 0</p>
+<p class="p1"><span class="Apple-converted-space">                </span>? agentsRepresenting.map(agent =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const statesRepresenting = agent.licenses</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>.filter(l =&gt; l.carriers.includes(carrierName))</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>.map(l =&gt; STATES.find(s =&gt; s.acronym === l.state)?.name || l.state);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const stateBadges = statesRepresenting.map(s =&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>`&lt;span class="bg-slate-700 text-xs px-3 py-1 rounded-full whitespace-nowrap"&gt;${s}&lt;/span&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>).join('');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="card p-4 rounded-xl mb-3 border border-slate-600"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h4 class="font-semibold text-lg text-slate-100 mb-1 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i data-lucide="user" class="w-4 h-4 mr-2 text-cyan-400"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${agent.name}</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="ml-auto text-sm text-slate-400"&gt;NPN: ${agent.npn} | Ext: ${agent.extension}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h4&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-400 mb-2 text-sm"&gt;States where they represent this Carrier:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex flex-wrap gap-2"&gt;${stateBadges}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}).join('')</p>
+<p class="p1"><span class="Apple-converted-space">                </span>: '&lt;p class="text-slate-400 p-4"&gt;No agents found representing this carrier in the dataset.&lt;/p&gt;';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>resultsPanel.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-3xl font-bold text-cyan-400 mb-6 flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;i data-lucide="factory" class="w-7 h-7 mr-3"&gt;&lt;/i&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Carrier: ${carrierName} Agent Roster</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h3 class="text-xl font-semibold text-slate-300 mb-4"&gt;Representing Agents (${agentsRepresenting.length})&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${agentsHtml}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lucide.createIcons();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
