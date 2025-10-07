@@ -129,8 +129,8 @@
             <p class="text-slate-400 mt-2">Firebase-authenticated data tool for agents.</p>
         </header>
 
-        <!-- Login/Registration Panel (NOW VISIBLE BY DEFAULT FOR GITHUB PREVIEW) -->
-        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10">
+        <!-- Login/Registration Panel -->
+        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10" style="display: none;">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Login Form (Left Side) -->
                 <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8">
@@ -143,11 +143,13 @@
                         <div class="space-y-4">
                             <div>
                                 <label for="login-email" class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-                                <input type="email" id="login-email" class="form-input w-full" required placeholder="name@corp.com" value="admin@corp.com">
+                                <!-- EMPTY VALUE as requested -->
+                                <input type="email" id="login-email" class="form-input w-full" required placeholder="name@corp.com" value="">
                             </div>
                             <div>
                                 <label for="login-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                                <input type="password" id="login-password" class="form-input w-full" required placeholder="Enter your password" value="adminpass123">
+                                <!-- EMPTY VALUE as requested -->
+                                <input type="password" id="login-password" class="form-input w-full" required placeholder="Enter your password" value="">
                             </div>
                         </div>
                         
@@ -165,15 +167,15 @@
                     </form>
                 </div>
 
-                <!-- Registration Form (Right Side) -->
+                <!-- Registration Form (Right Side - STEP 1) -->
                 <div class="lg:pl-8">
                     <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
                         <i data-lucide="user-plus" class="w-6 h-6 mr-3"></i>
-                        New Agent Registration
+                        New Agent Registration (Step 1 of 2)
                     </h2>
-                    <p class="text-slate-400 mb-6">Create a new agent account.</p>
+                    <p class="text-slate-400 mb-6">Create a new agent account with basic details.</p>
                     <form id="new-agent-form" onsubmit="event.preventDefault(); submitNewAgent()">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
                                 <label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
                                 <input type="text" id="reg-name" class="form-input w-full" required placeholder="Jane Doe">
@@ -196,34 +198,20 @@
                             </div>
                         </div>
 
-                        <h3 class="text-md font-semibold text-slate-300 mb-3 border-t pt-4 border-slate-700 flex items-center">
-                            <i data-lucide="certificate" class="w-4 h-4 mr-2 text-cyan-400"></i>
-                            Licensed States & Carriers
-                        </h3>
-                        <div id="license-container" class="space-y-4">
-                            <!-- Dynamic license rows will be added here -->
-                        </div>
-
-                        <div class="flex gap-4 mt-6">
-                            <button type="button" onclick="addLicenseSection('license-container')" class="secondary-button px-4 py-2 rounded-lg flex items-center">
-                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                                Add State License
-                            </button>
-                            <button type="submit" id="register-button" class="accent-button px-4 py-2 rounded-lg flex items-center">
-                                <i data-lucide="user-check" class="w-4 h-4 mr-2"></i>
-                                Register Agent
-                            </button>
-                        </div>
+                        <button type="submit" id="register-button" class="accent-button w-full px-4 py-2 rounded-lg flex items-center justify-center">
+                            <i data-lucide="arrow-right" class="w-4 h-4 mr-2"></i>
+                            Proceed to License Setup
+                        </button>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- Main Application Content (HIDDEN until logged in) -->
+        <!-- Main Application Content (HIDDEN until setup is complete) -->
         <div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;">
             
             <!-- App Header/Tabs/Logout -->
-            <div class="w-full max-w-5xl card p-4 rounded-xl shadow-lg border border-slate-700/50 mb-6 flex justify-between items-center">
+            <div id="app-header-tabs" class="w-full max-w-5xl card p-4 rounded-xl shadow-lg border border-slate-700/50 mb-6 flex justify-between items-center">
                 <div class="flex items-center space-x-4">
                     <p class="text-sm text-slate-400 hidden sm:block">
                         Logged in as: <strong id="current-user-name" class="text-cyan-400"></strong> 
@@ -233,7 +221,6 @@
                         <button id="search-tab-button" onclick="changeView('search')" class="tab-button active flex items-center">
                             <i data-lucide="search" class="w-4 h-4 mr-1"></i> Search Tool
                         </button>
-                        <!-- NEW: Profile/My Licenses tab for all authenticated users -->
                         <button id="profile-tab-button" onclick="changeView('profile')" class="tab-button flex items-center">
                             <i data-lucide="award" class="w-4 h-4 mr-1"></i> My Licenses
                         </button>
@@ -251,8 +238,13 @@
 
             <!-- Content Area -->
             <div class="w-full max-w-5xl">
+                <!-- NEW: License Setup View (Mandatory Step 2) -->
+                <div id="licenses-setup-view" class="w-full hidden">
+                    <!-- Content rendered by renderLicensesSetupPanel() -->
+                </div>
+
                 <!-- 1. Search View -->
-                <div id="search-view" class="w-full">
+                <div id="search-view" class="w-full hidden">
                     <div class="w-full max-w-3xl mx-auto mb-8">
                         <div class="flex card p-2 rounded-xl shadow-lg border border-slate-700/50">
                             <input
@@ -278,7 +270,7 @@
                     </main>
                 </div>
                 
-                <!-- 2. Profile View (New) -->
+                <!-- 2. Profile View -->
                 <div id="profile-view" class="w-full hidden">
                     <main id="profile-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50">
                         <!-- Content rendered by renderProfilePanel() -->
@@ -299,7 +291,7 @@
         <div id="message-box" class="fixed bottom-4 right-4 p-4 rounded-lg text-sm transition-opacity duration-300 opacity-0 pointer-events-none"></div>
     </div>
 
-    <!-- Modal for Password Reset -->
+    <!-- Modal for Password Reset (Unchanged) -->
     <div id="reset-modal" class="modal" onclick="if(event.target.id === 'reset-modal') closeResetModal()">
         <div class="modal-content reset-modal-content p-6 md:p-8">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-6">
@@ -325,7 +317,7 @@
         </div>
     </div>
 
-    <!-- Modal for Agent Editing -->
+    <!-- Modal for Agent Editing (Unchanged) -->
     <div id="edit-modal" class="modal" onclick="if(event.target.id === 'edit-modal') closeEditModal()">
         <div class="modal-content p-6 md:p-8">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
@@ -384,7 +376,6 @@
 
     <script type="module">
         // Import the functions you need from the SDKs you need.
-        // Updated to use Firebase JS SDK v12.3.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
@@ -396,7 +387,7 @@
         let activeView = 'search'; 
         let editingAgentUid = null; 
 
-        // Use the hardcoded Firebase configuration provided by the user
+        // Use the hardcoded Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
             authDomain: "rts-project-d9d5d.firebaseapp.com",
@@ -414,24 +405,25 @@
         // Initialize Firebase services
         if (firebaseConfig.apiKey) {
             app = initializeApp(firebaseConfig);
-            auth = getAuth(app); // Initialize Auth for the app's functionality
-            const analytics = getAnalytics(app); // Initialize Analytics as requested
+            auth = getAuth(app); 
+            const analytics = getAnalytics(app); 
             console.log("Firebase Auth and Analytics initialized.");
         } else {
             console.error("Firebase config is missing. Authentication will fail.");
         }
 
         // AGENTS data is now keyed by Firebase User ID (UID)
+        // NOTE: New agents are added here on registration with isSetupComplete: false
         let AGENTS = {
-            // NOTE: Initial agents are placeholder data. You must register these emails 
-            // in the Firebase console for them to work with the specified passwords.
+            // Initial agent data (must be manually registered in Firebase console)
             "admin_placeholder_uid": {
                 name: "Admin Master",
                 npn: "00000000",
-                email: "admin@corp.com", // This email must be registered in Firebase
+                email: "admin@corp.com", 
                 extension: "0000",
                 isAdmin: true,
-                licenses: [] 
+                licenses: [],
+                isSetupComplete: true // Admin is always complete
             }
         };
 
@@ -457,7 +449,7 @@
 
         window.onload = () => {
             lucide.createIcons();
-            addLicenseSection('license-container');
+            // No initial license section on the registration form anymore
         };
 
         // Firebase Auth State Listener
@@ -465,6 +457,7 @@
             isAuthReady = true;
             if (user) {
                 // If user is logged in, find their data in the local AGENTS store
+                // NOTE: In a real app, this is where you'd fetch data from Firestore/Realtime DB
                 currentUserData = AGENTS[user.uid];
                 
                 if (!currentUserData) {
@@ -504,7 +497,8 @@
             if (!button) return;
             button.disabled = isLoading;
             if (isLoading) {
-                button.textContent = 'Processing...';
+                button.innerHTML = '<span class="flex items-center"><i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i> Processing...</span>';
+                lucide.createIcons();
                 button.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 button.textContent = defaultText;
@@ -517,9 +511,9 @@
         function showAuthPanel() {
             if (!isAuthReady) return;
             document.getElementById('main-app-content').style.display = 'none';
-            // Explicitly set display block in JS just in case CSS rules override the HTML static display
             document.getElementById('auth-panel').style.display = 'block'; 
             document.getElementById('login-form').reset();
+            document.getElementById('new-agent-form').reset();
         }
 
         async function loginAgent() {
@@ -531,7 +525,6 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // For this example, we check if the user exists in our local AGENTS structure after successful Firebase auth
                 currentUserData = AGENTS[user.uid];
 
                 if (!currentUserData) {
@@ -548,8 +541,8 @@
                 } else if (error.code === 'auth/user-not-found') {
                     errorMessage = 'No user found with this email.';
                 } else if (error.message.includes("Local agent data not found")) {
-                    errorMessage = error.message;
-                    signOut(auth); // Log out the user from Firebase Auth if no local data
+                    errorMessage = "Account found, but data is missing. Please re-register or contact support.";
+                    signOut(auth); 
                 }
                 
                 showMessage(errorMessage, 'error');
@@ -584,12 +577,19 @@
                 adminTabButton.classList.add('hidden');
             }
 
-            // Default to My Licenses view if not an admin, otherwise search
-            changeView(currentUserData.isAdmin ? 'search' : 'profile');
+            // --- CRITICAL: Check Setup Status ---
+            if (!currentUserData.isSetupComplete) {
+                // Force user to the setup view if registration is incomplete
+                showMessage('Please complete your license setup to access the data explorer.', 'info');
+                changeView('setup'); 
+            } else {
+                // Otherwise, proceed to a normal view
+                changeView(currentUserData.isAdmin ? 'search' : 'profile');
+            }
         }
 
 
-        // --- IV. Password Reset Functions ---
+        // --- IV. Password Reset Functions (Unchanged) ---
 
         function openResetModal() {
             document.getElementById('reset-modal').style.display = 'flex';
@@ -658,7 +658,7 @@
         }
 
 
-        // --- V. Agent Registration/Management Functions (Access Controlled) ---
+        // --- V. Agent Registration/Management Functions ---
 
         async function submitNewAgent() {
             const agentName = document.getElementById('reg-name').value.trim();
@@ -666,12 +666,9 @@
             const agentEmail = document.getElementById('reg-email').value.trim();
             const agentPassword = document.getElementById('reg-password').value;
             const agentExtension = document.getElementById('reg-extension').value.trim();
-            
-            const newLicenses = getLicensesFromContainer('license-container');
-            if (newLicenses === null) return; 
 
-            if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension || newLicenses.length === 0) {
-                showMessage('All fields and at least one license entry are required.', 'error');
+            if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension) {
+                showMessage('All fields are required for registration.', 'error');
                 return;
             }
             if (agentPassword.length < 6) {
@@ -679,27 +676,28 @@
                 return;
             }
 
-            setButtonLoading('register-button', true, 'Register Agent');
+            setButtonLoading('register-button', true, 'Proceed to License Setup');
 
             try {
+                // 1. Create user in Firebase Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);
                 const user = userCredential.user;
 
-                // Add new agent to the local AGENTS data store
+                // 2. Add new agent to the local AGENTS data store with incomplete setup status
                 AGENTS[user.uid] = {
                     name: agentName,
                     npn: agentNpn,
                     email: agentEmail,
                     extension: agentExtension,
                     isAdmin: false,
-                    licenses: newLicenses
+                    licenses: [],
+                    isSetupComplete: false // NEW: Must complete license setup
                 };
 
-                showMessage(`Registration successful for ${agentName}. Access granted!`, 'success');
+                showMessage(`Registration successful. Redirecting to license setup...`, 'success');
+                // grantAccess will automatically push them to the setup view
+                
                 document.getElementById('new-agent-form').reset();
-                document.getElementById('license-container').innerHTML = '';
-                licenseCount = 0; 
-                addLicenseSection('license-container');
 
             } catch (error) {
                 let errorMessage = "Registration failed.";
@@ -711,9 +709,38 @@
                 showMessage(errorMessage, 'error');
                 console.error("Firebase Registration Error:", error);
             } finally {
-                setButtonLoading('register-button', false, 'Register Agent');
+                setButtonLoading('register-button', false, 'Proceed to License Setup');
             }
         }
+
+        async function licensesSetupComplete() {
+            if (!auth.currentUser || !currentUserData || currentUserData.isSetupComplete) return;
+
+            const setupContainerId = 'setup-license-container';
+            const finalLicenses = getLicensesFromContainer(setupContainerId);
+
+            if (finalLicenses === null) return; // Error message already shown by helper
+
+            if (finalLicenses.length === 0) {
+                 showMessage('You must add at least one state license to complete setup.', 'error');
+                 return;
+            }
+
+            setButtonLoading('setup-complete-button', true, 'Complete Setup and Access App');
+            
+            // 1. Update the local data store
+            const uid = auth.currentUser.uid;
+            AGENTS[uid].licenses = finalLicenses;
+            AGENTS[uid].isSetupComplete = true;
+            currentUserData = AGENTS[uid]; // Update the active session data
+
+            // 2. Redirect to profile view
+            showMessage('License setup complete! Access granted.', 'success');
+            changeView('profile'); // Send them to their profile view
+
+            setButtonLoading('setup-complete-button', false, 'Complete Setup and Access App');
+        }
+
 
         // --- VI. License/UI/Data Functions ---
 
@@ -786,6 +813,7 @@
                 const selectedCarriers = Array.from(selectedCarrierButtons)
                     .map(button => button.getAttribute('data-carrier')); 
 
+                // Allow empty row only if it's the only one or if all fields are empty
                 if (!stateValue && selectedCarriers.length === 0) return;
 
                 if (!stateValue || selectedCarriers.length === 0) {
@@ -813,35 +841,101 @@
 
         function changeView(view) {
             activeView = view;
+            
+            // Hide all main content views
+            document.getElementById('licenses-setup-view').classList.add('hidden');
             document.getElementById('search-view').classList.add('hidden');
             document.getElementById('profile-view').classList.add('hidden'); 
             document.getElementById('admin-view').classList.add('hidden');
+            
+            // Reset tab styles
+            document.getElementById('search-tab-button')?.classList.remove('active');
+            document.getElementById('profile-tab-button')?.classList.remove('active'); 
+            document.getElementById('admin-tab-button')?.classList.remove('active');
 
-            document.getElementById('search-tab-button').classList.remove('active');
-            document.getElementById('profile-tab-button').classList.remove('active'); 
-            document.getElementById('admin-tab-button').classList.remove('active');
-
-            if (view === 'search') {
-                document.getElementById('search-view').classList.remove('hidden');
-                document.getElementById('search-tab-button').classList.add('active');
-            } else if (view === 'profile') { 
-                document.getElementById('profile-view').classList.remove('hidden');
-                document.getElementById('profile-tab-button').classList.add('active');
-                renderProfilePanel(); 
-            } else if (view === 'admin' && currentUserData.isAdmin) {
-                document.getElementById('admin-view').classList.remove('hidden');
-                document.getElementById('admin-tab-button').classList.add('active');
-                renderAdminPanel();
+            // Hide the header/tabs/logout if the user is in mandatory setup
+            const headerTabs = document.getElementById('app-header-tabs');
+            
+            if (view === 'setup') {
+                document.getElementById('licenses-setup-view').classList.remove('hidden');
+                renderLicensesSetupPanel();
+                headerTabs.classList.add('hidden');
+            } else {
+                headerTabs.classList.remove('hidden');
+                
+                if (view === 'search') {
+                    document.getElementById('search-view').classList.remove('hidden');
+                    document.getElementById('search-tab-button').classList.add('active');
+                } else if (view === 'profile') { 
+                    document.getElementById('profile-view').classList.remove('hidden');
+                    document.getElementById('profile-tab-button').classList.add('active');
+                    renderProfilePanel(); 
+                } else if (view === 'admin' && currentUserData.isAdmin) {
+                    document.getElementById('admin-view').classList.remove('hidden');
+                    document.getElementById('admin-tab-button').classList.add('active');
+                    renderAdminPanel();
+                }
             }
             lucide.createIcons();
         }
+        
+        // --- NEW: License Setup Panel Renderer ---
+        function renderLicensesSetupPanel() {
+            const panel = document.getElementById('licenses-setup-view');
+            const agent = currentUserData; 
+
+            panel.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto card rounded-xl p-6 md:p-10 border border-slate-700/50">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center">
+                        <i data-lucide="list-checks" class="w-7 h-7 mr-3 text-cyan-400"></i>
+                        Complete License Setup (Step 2 of 2)
+                    </h2>
+                    <p class="text-slate-400 mb-6 border-b border-slate-700 pb-4">
+                        Welcome, <strong class="text-cyan-400">${agent.name}</strong>! Before accessing the data explorer, please add your licensed states and carriers.
+                        You must add at least one license entry.
+                    </p>
+
+                    <form id="setup-license-form" onsubmit="event.preventDefault(); licensesSetupComplete()">
+                        <div id="setup-license-container" class="space-y-4">
+                            <!-- Dynamic license rows will be added here -->
+                        </div>
+
+                        <div class="flex gap-4 mt-6 justify-between items-center">
+                            <button type="button" onclick="addLicenseSection('setup-license-container')" class="secondary-button px-4 py-2 rounded-lg flex items-center">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                Add State License
+                            </button>
+                            <button type="submit" id="setup-complete-button" class="accent-button px-6 py-3 rounded-lg flex items-center font-semibold">
+                                <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                                Complete Setup and Access App
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            // Ensure there is at least one license section to start
+            if (document.getElementById('setup-license-container').childElementCount === 0) {
+                 addLicenseSection('setup-license-container');
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- Other Render/Logic Functions (Mostly Unchanged, but depend on setup being complete) ---
 
         function renderProfilePanel() {
             const agent = currentUserData;
+            // Ensure agent data is present and complete before rendering
+            if (!agent || !agent.isSetupComplete) {
+                return changeView('setup'); 
+            }
+            
             const uid = auth.currentUser.uid;
             const panel = document.getElementById('profile-panel');
             
             const statesLicensed = agent.licenses.map(l => l.state);
+            
+            // ... rest of the renderProfilePanel logic (as before) ...
             
             let stateDetailsHtml = agent.licenses.map(license => {
                 const stateObj = STATES.find(s => s.acronym === license.state);
@@ -889,22 +983,30 @@
             `;
             lucide.createIcons();
         }
+        
+        // renderAdminPanel, toggleAdminStatus, openEditModal, saveAgentDetails, searchData
+        // (All other major functions remain the same as the previous revision, operating on the AGENTS store)
 
         function renderAdminPanel() {
+            if (!currentUserData.isAdmin) return changeView('profile'); // Security check
+
             const panel = document.getElementById('admin-panel');
-            const agentsArray = Object.values(AGENTS); // Get array of agent objects
+            const agentsArray = Object.values(AGENTS); 
 
             const agentListHtml = agentsArray.map(agent => {
-                const uid = Object.keys(AGENTS).find(key => AGENTS[key] === agent); // Get UID
+                const uid = Object.keys(AGENTS).find(key => AGENTS[key] === agent);
                 const isAdmin = agent.isAdmin;
                 const toggleAction = isAdmin ? 'Demote' : 'Promote';
                 const toggleColor = isAdmin ? 'bg-red-700 hover:bg-red-600' : 'bg-green-700 hover:bg-green-600';
                 
                 const selfCheck = uid === auth.currentUser.uid ? ' (You)' : '';
-                // Disable promotion/demotion for the initial placeholder admin (to keep one admin)
-                // And disable for the current logged-in user to prevent locking themselves out
-                const toggleDisabled = uid === "admin_placeholder_uid" || uid === auth.currentUser.uid;
+                // Disable promotion/demotion for the current logged-in user
+                const toggleDisabled = uid === auth.currentUser.uid;
                 
+                const setupStatus = agent.isSetupComplete ? 
+                    '<span class="bg-green-800/50 text-green-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2">Setup Complete</span>' : 
+                    '<span class="bg-yellow-800/50 text-yellow-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2">Setup Pending</span>';
+
                 return `
                     <div class="card p-4 rounded-xl mb-3 border border-slate-600 flex flex-col md:flex-row justify-between items-start md:items-center">
                         <div>
@@ -913,10 +1015,12 @@
                                 ${agent.name} ${selfCheck}
                             </h4>
                             <p class="text-sm text-slate-400">NPN: ${agent.npn} | Email: ${agent.email} | Ext: ${agent.extension}</p>
-                            <span class="text-xs font-medium px-2 py-0.5 rounded-full ${isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'} mt-1 inline-block">${isAdmin ? 'Administrator' : 'Agent'}</span>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'}">${isAdmin ? 'Administrator' : 'Agent'}</span>
+                                ${setupStatus}
+                            </div>
                         </div>
                         <div class="flex space-x-2 mt-3 md:mt-0">
-                            <!-- Only Admins can see and use this edit button for any agent -->
                             <button onclick="openEditModal('${uid}')" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center">
                                 <i data-lucide="edit-3" class="w-4 h-4 mr-1"></i> Edit
                             </button>
@@ -1029,6 +1133,11 @@
             agent.npn = npn;
             agent.extension = extension;
             agent.licenses = newLicenses; 
+            
+            // Mark as complete if they edit and it was incomplete (covers admin editing a new user)
+            if (!agent.isSetupComplete && newLicenses.length > 0) {
+                agent.isSetupComplete = true;
+            }
 
             // Update local user data if they edited themselves
             if (auth.currentUser && auth.currentUser.uid === editingAgentUid) {
@@ -1048,9 +1157,8 @@
             closeEditModal();
         }
 
-        // --- Search Functions (Unchanged core logic) ---
-
         function searchData() {
+            // ... (Search logic remains the same, only accessible after setup) ...
             const input = normalize(document.getElementById('search-input').value);
             const resultsPanel = document.getElementById('results-panel');
 
@@ -1096,6 +1204,8 @@
             lucide.createIcons();
             showMessage('Search failed. No match found.', 'error');
         }
+        
+        // renderStateResults, renderAgentResults, renderCarrierResults are unchanged but use the updated AGENTS structure.
 
         function renderStateResults(state, agentsArray) {
             const resultsPanel = document.getElementById('results-panel');
