@@ -129,8 +129,8 @@
             <p class="text-slate-400 mt-2">Firebase-authenticated data tool for agents.</p>
         </header>
 
-        <!-- Login/Registration Panel (VISIBLE BY DEFAULT) -->
-        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10" style="display: none;">
+        <!-- Login/Registration Panel (NOW VISIBLE BY DEFAULT FOR GITHUB PREVIEW) -->
+        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Login Form (Left Side) -->
                 <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8">
@@ -383,8 +383,12 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Import the functions you need from the SDKs you need.
+        // Updated to use Firebase JS SDK v12.3.0
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+
 
         // --- I. Global State and Firebase Setup ---
         let licenseCount = 0; 
@@ -392,15 +396,27 @@
         let activeView = 'search'; 
         let editingAgentUid = null; 
 
-        // Environment variables
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        // Use the hardcoded Firebase configuration provided by the user
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
+            authDomain: "rts-project-d9d5d.firebaseapp.com",
+            projectId: "rts-project-d9d5d",
+            storageBucket: "rts-project-d9d5d.firebasestorage.app",
+            messagingSenderId: "318420505147",
+            appId: "1:318420505147:web:76895831ea9e77a9b1821e",
+            measurementId: "G-C8MRE2QC2E"
+        };
+        
+        let app;
         let auth;
         let isAuthReady = false;
 
-        if (firebaseConfig) {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            console.log("Firebase Auth initialized.");
+        // Initialize Firebase services
+        if (firebaseConfig.apiKey) {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app); // Initialize Auth for the app's functionality
+            const analytics = getAnalytics(app); // Initialize Analytics as requested
+            console.log("Firebase Auth and Analytics initialized.");
         } else {
             console.error("Firebase config is missing. Authentication will fail.");
         }
@@ -448,15 +464,18 @@
         onAuthStateChanged(auth, (user) => {
             isAuthReady = true;
             if (user) {
+                // If user is logged in, find their data in the local AGENTS store
                 currentUserData = AGENTS[user.uid];
                 
                 if (!currentUserData) {
+                    // If auth succeeds but no local data found (e.g., deleted from AGENTS)
                     signOut(auth);
                     showMessage('User data record not found. Please register.', 'error');
                     return;
                 }
                 grantAccess(user);
             } else {
+                // If user is logged out
                 currentUserData = null;
                 showAuthPanel();
             }
@@ -498,7 +517,8 @@
         function showAuthPanel() {
             if (!isAuthReady) return;
             document.getElementById('main-app-content').style.display = 'none';
-            document.getElementById('auth-panel').style.display = 'block';
+            // Explicitly set display block in JS just in case CSS rules override the HTML static display
+            document.getElementById('auth-panel').style.display = 'block'; 
             document.getElementById('login-form').reset();
         }
 
@@ -511,6 +531,7 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
+                // For this example, we check if the user exists in our local AGENTS structure after successful Firebase auth
                 currentUserData = AGENTS[user.uid];
 
                 if (!currentUserData) {
@@ -528,7 +549,7 @@
                     errorMessage = 'No user found with this email.';
                 } else if (error.message.includes("Local agent data not found")) {
                     errorMessage = error.message;
-                    signOut(auth);
+                    signOut(auth); // Log out the user from Firebase Auth if no local data
                 }
                 
                 showMessage(errorMessage, 'error');
@@ -622,6 +643,7 @@
                 if (lastError.code === 'auth/invalid-email') {
                     errorMessage = 'The email address is not properly formatted.';
                 } else if (lastError.code === 'auth/user-not-found') {
+                    // Firebase sometimes returns user-not-found but we show a generic message for security
                     messageContainer.innerHTML = `<span class="text-green-400">If that email is registered, a reset link has been sent.</span>`;
                     return;
                 } else if (lastError.code === 'auth/too-many-requests') {
@@ -663,6 +685,7 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);
                 const user = userCredential.user;
 
+                // Add new agent to the local AGENTS data store
                 AGENTS[user.uid] = {
                     name: agentName,
                     npn: agentNpn,
@@ -791,17 +814,17 @@
         function changeView(view) {
             activeView = view;
             document.getElementById('search-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('hidden'); // NEW: Hide profile view
+            document.getElementById('profile-view').classList.add('hidden'); 
             document.getElementById('admin-view').classList.add('hidden');
 
             document.getElementById('search-tab-button').classList.remove('active');
-            document.getElementById('profile-tab-button').classList.remove('active'); // NEW: Remove active class from profile
+            document.getElementById('profile-tab-button').classList.remove('active'); 
             document.getElementById('admin-tab-button').classList.remove('active');
 
             if (view === 'search') {
                 document.getElementById('search-view').classList.remove('hidden');
                 document.getElementById('search-tab-button').classList.add('active');
-            } else if (view === 'profile') { // NEW: Handle profile view
+            } else if (view === 'profile') { 
                 document.getElementById('profile-view').classList.remove('hidden');
                 document.getElementById('profile-tab-button').classList.add('active');
                 renderProfilePanel(); 
@@ -878,12 +901,14 @@
                 const toggleColor = isAdmin ? 'bg-red-700 hover:bg-red-600' : 'bg-green-700 hover:bg-green-600';
                 
                 const selfCheck = uid === auth.currentUser.uid ? ' (You)' : '';
+                // Disable promotion/demotion for the initial placeholder admin (to keep one admin)
+                // And disable for the current logged-in user to prevent locking themselves out
                 const toggleDisabled = uid === "admin_placeholder_uid" || uid === auth.currentUser.uid;
                 
                 return `
                     <div class="card p-4 rounded-xl mb-3 border border-slate-600 flex flex-col md:flex-row justify-between items-start md:items-center">
                         <div>
-                            <h4 class="font-semibold text-lg text-slate-100 flex items-center mb-1">
+                            <h4 class="font-semibold text-lg text-slate-100 mb-1 flex items-center">
                                 <i data-lucide="${isAdmin ? 'shield-check' : 'user'}" class="w-5 h-5 mr-2 ${isAdmin ? 'text-red-400' : 'text-cyan-400'}"></i>
                                 ${agent.name} ${selfCheck}
                             </h4>
