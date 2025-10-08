@@ -113,8 +113,8 @@
                             </button>
                         </form>
                         <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
-                            <p class="text-cyan-300 font-semibold">New to License Explorer?</p>
-                            <p class="text-gray-400">Create an account to get started</p>
+                            <p class="text-cyan-300 font-semibold">Demo Admin Account:</p>
+                            <p class="text-gray-400">admin@licenseexplorer.com / admin123</p>
                         </div>
                         <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
                             <p class="text-cyan-300 font-semibold mb-2">Forgot Password?</p>
@@ -325,10 +325,10 @@
             </div>
             <form id="add-license-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium mb-2">State</label>
-                    <select id="license-state" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white" required>
-                        <option value="">Select a state</option>
-                    </select>
+                    <label class="block text-sm font-medium mb-2">States (Select Multiple)</label>
+                    <div id="states-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg">
+                        <!-- States will be added here as checkboxes -->
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Carriers</label>
@@ -345,7 +345,7 @@
                         Cancel
                     </button>
                     <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg transition">
-                        Add License
+                        Add License(s)
                     </button>
                 </div>
             </form>
@@ -452,6 +452,7 @@
         let currentUser = null;
         let userProfile = null;
         let agents = [];
+        let currentEditingUserId = null;
 
         // DOM Elements
         const loadingScreen = document.getElementById('loading-screen');
@@ -482,9 +483,53 @@
             });
 
             setupEventListeners();
-            populateStateDropdown();
+            populateStatesCheckboxes();
             populateCarriersCheckboxes();
             loadCarriersFromFirestore();
+            createDefaultAdminAccount();
+        }
+
+        // Create default admin account if it doesn't exist
+        async function createDefaultAdminAccount() {
+            try {
+                const adminEmail = "admin@licenseexplorer.com";
+                const adminPassword = "admin123";
+                
+                // Try to sign in first to check if admin exists
+                try {
+                    await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+                } catch (error) {
+                    // If sign in fails, create the admin account
+                    if (error.code === 'auth/user-not-found') {
+                        const userCredential = await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
+                        const user = userCredential.user;
+
+                        const adminProfile = {
+                            uid: user.uid,
+                            firstname: "System",
+                            lastname: "Administrator",
+                            name: "System Administrator",
+                            email: adminEmail,
+                            npn: "ADMIN001",
+                            extension: "0001",
+                            isAdmin: true,
+                            licenses: [
+                                { state: "CA", carriers: ["State Farm", "Allstate", "Geico"], expiration: "2025-12-31" },
+                                { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2025-11-30" }
+                            ],
+                            joinDate: new Date().toISOString().split('T')[0]
+                        };
+
+                        await db.collection('users').doc(user.uid).set(adminProfile);
+                        console.log('Default admin account created');
+                        
+                        // Sign out after creating admin
+                        await auth.signOut();
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating admin account:', error);
+            }
         }
 
         // Load user profile from Firestore
@@ -507,8 +552,29 @@
                         licenses: userProfile.licenses || [],
                         joinDate: userProfile.joinDate
                     };
+                    console.log('User profile loaded:', currentUser);
                 } else {
-                    console.log('No user profile found');
+                    console.log('No user profile found, creating one...');
+                    // Create a basic user profile if it doesn't exist
+                    const user = auth.currentUser;
+                    if (user) {
+                        const basicProfile = {
+                            uid: user.uid,
+                            firstname: user.email.split('@')[0],
+                            lastname: "User",
+                            name: user.email.split('@')[0] + " User",
+                            email: user.email,
+                            npn: "000000000",
+                            extension: "0000",
+                            isAdmin: false,
+                            licenses: [],
+                            joinDate: new Date().toISOString().split('T')[0]
+                        };
+                        
+                        await db.collection('users').doc(user.uid).set(basicProfile);
+                        currentUser = { ...basicProfile };
+                        console.log('Basic user profile created');
+                    }
                 }
             } catch (error) {
                 console.error('Error loading user profile:', error);
@@ -541,6 +607,11 @@
                 if (docSnap.exists()) {
                     CARRIERS = docSnap.data().carriers || CARRIERS;
                     populateCarriersCheckboxes();
+                } else {
+                    // Create initial carriers document
+                    await db.collection('settings').doc('carriers').set({
+                        carriers: CARRIERS
+                    });
                 }
             } catch (error) {
                 console.error('Error loading carriers:', error);
@@ -682,72 +753,47 @@
         }
 
         // =============================================
-        // PASSWORD RESET MODAL FUNCTIONS
+        // LICENSE MANAGEMENT FUNCTIONS
         // =============================================
-        function openResetPasswordModal() {
-            document.getElementById('reset-password-modal').style.display = 'flex';
-            document.getElementById('reset-password-form').reset();
-        }
 
-        function closeResetPasswordModal() {
-            document.getElementById('reset-password-modal').style.display = 'none';
-        }
-
-        // =============================================
-        // VIEW MANAGEMENT
-        // =============================================
-        function showAuthScreen() {
-            loadingScreen.classList.add('hidden');
-            authScreen.classList.remove('hidden');
-            dashboard.classList.add('hidden');
-            navButtons.classList.add('hidden');
-        }
-
-        function showDashboard() {
-            loadingScreen.classList.add('hidden');
-            authScreen.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            navButtons.classList.remove('hidden');
+        // Open Add License Modal
+        function openAddLicenseModal() {
+            currentEditingUserId = null;
+            document.getElementById('add-license-title').textContent = 'Add New License';
+            document.getElementById('add-license-modal').style.display = 'flex';
+            document.getElementById('add-license-form').reset();
             
-            if (currentUser) {
-                document.getElementById('user-name').textContent = currentUser.firstname;
-                document.getElementById('profile-name').textContent = currentUser.name;
-                document.getElementById('profile-email').textContent = currentUser.email;
-                document.getElementById('profile-npn').textContent = currentUser.npn;
-                document.getElementById('profile-extension').textContent = currentUser.extension;
-                document.getElementById('member-since').textContent = currentUser.joinDate || '2024';
-                
-                // Show admin features if user is admin
-                if (currentUser.isAdmin) {
-                    adminTabBtn.classList.remove('hidden');
-                    adminBadge.classList.remove('hidden');
-                    document.getElementById('user-badge').classList.add('hidden');
-                } else {
-                    adminTabBtn.classList.add('hidden');
-                    adminBadge.classList.add('hidden');
-                    document.getElementById('user-badge').classList.remove('hidden');
-                }
-                
-                updateUserStats();
-                loadUserLicenses();
-            }
+            // Uncheck all states and carriers
+            document.querySelectorAll('.state-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
         }
 
-        // =============================================
-        // LICENSE MANAGEMENT (UPDATED FOR FIRESTORE)
-        // =============================================
+        function closeAddLicenseModal() {
+            document.getElementById('add-license-modal').style.display = 'none';
+            document.getElementById('add-license-form').reset();
+            currentEditingUserId = null;
+        }
+
+        // Handle Add License Form Submission
         async function handleAddLicense(e) {
             e.preventDefault();
             
-            const state = document.getElementById('license-state').value;
-            const expiration = document.getElementById('license-expiration').value;
+            // Get selected states
+            const selectedStates = Array.from(document.querySelectorAll('.state-checkbox:checked'))
+                .map(checkbox => checkbox.value);
             
             // Get selected carriers
             const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
                 .map(checkbox => checkbox.value);
             
-            if (!state) {
-                showNotification('Please select a state', 'error');
+            const expiration = document.getElementById('license-expiration').value;
+            
+            if (selectedStates.length === 0) {
+                showNotification('Please select at least one state', 'error');
                 return;
             }
             
@@ -761,15 +807,16 @@
                 return;
             }
 
-            const newLicense = {
-                state: state,
-                carriers: selectedCarriers,
-                expiration: expiration
-            };
-
             try {
+                // Create licenses for each selected state
+                const newLicenses = selectedStates.map(state => ({
+                    state: state,
+                    carriers: selectedCarriers,
+                    expiration: expiration
+                }));
+
                 // Update user profile in Firestore
-                const updatedLicenses = [...currentUser.licenses, newLicense];
+                const updatedLicenses = [...currentUser.licenses, ...newLicenses];
                 await db.collection('users').doc(currentUser.uid).update({
                     licenses: updatedLicenses
                 });
@@ -778,7 +825,7 @@
                 currentUser.licenses = updatedLicenses;
                 
                 closeAddLicenseModal();
-                showNotification('License added successfully!', 'success');
+                showNotification(`License(s) added successfully for ${selectedStates.length} state(s)!`, 'success');
                 loadUserLicenses();
                 updateUserStats();
             } catch (error) {
@@ -807,10 +854,34 @@
         }
 
         // =============================================
-        // CARRIER MANAGEMENT (UPDATED FOR FIRESTORE)
+        // CARRIER MANAGEMENT FUNCTIONS
         // =============================================
+        function loadCarriersList() {
+            if (!currentUser || !currentUser.isAdmin) return;
+            
+            const carriersList = document.getElementById('carriers-list');
+            carriersList.innerHTML = '';
+            
+            if (CARRIERS.length === 0) {
+                carriersList.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+                return;
+            }
+            
+            CARRIERS.forEach((carrier, index) => {
+                const carrierItem = document.createElement('div');
+                carrierItem.className = 'flex justify-between items-center bg-gray-600 p-3 rounded-lg';
+                carrierItem.innerHTML = `
+                    <span class="text-gray-300">${carrier}</span>
+                    <button onclick="removeCarrier(${index})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
+                        <i class="fas fa-trash mr-1"></i>Remove
+                    </button>
+                `;
+                carriersList.appendChild(carrierItem);
+            });
+        }
+
         async function addNewCarrier() {
-            if (!currentUser.isAdmin) {
+            if (!currentUser || !currentUser.isAdmin) {
                 showNotification('Access denied: Admin privileges required', 'error');
                 return;
             }
@@ -842,7 +913,7 @@
         }
 
         async function removeCarrier(index) {
-            if (!currentUser.isAdmin) {
+            if (!currentUser || !currentUser.isAdmin) {
                 showNotification('Access denied: Admin privileges required', 'error');
                 return;
             }
@@ -864,16 +935,132 @@
         }
 
         // =============================================
+        // ADMIN FUNCTIONS
+        // =============================================
+        function loadAdminPanel() {
+            if (!currentUser || !currentUser.isAdmin) return;
+
+            const usersList = document.getElementById('users-list');
+            const totalUsers = document.getElementById('total-users');
+            const adminCount = document.getElementById('admin-count');
+            const agentCount = document.getElementById('agent-count');
+            
+            const admins = agents.filter(a => a.isAdmin);
+            const regularAgents = agents.filter(a => !a.isAdmin);
+            
+            totalUsers.textContent = agents.length;
+            adminCount.textContent = admins.length;
+            agentCount.textContent = regularAgents.length;
+            
+            let usersHTML = '';
+            agents.forEach(agent => {
+                const licenseCount = agent.licenses ? agent.licenses.length : 0;
+                const stateCount = agent.licenses ? new Set(agent.licenses.map(l => l.state)).size : 0;
+                const isCurrentUser = agent.uid === currentUser.uid;
+                
+                usersHTML += `
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="text-lg font-semibold text-cyan-300">${agent.name} ${isCurrentUser ? '(You)' : ''}</h4>
+                                <p class="text-gray-400 text-sm">${agent.email} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p>
+                            </div>
+                            <span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">
+                                ${agent.isAdmin ? 'Admin' : 'Agent'}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div class="text-center bg-gray-800 p-2 rounded">
+                                <p class="text-2xl font-bold text-cyan-400">${licenseCount}</p>
+                                <p class="text-xs text-gray-400">Licenses</p>
+                            </div>
+                            <div class="text-center bg-gray-800 p-2 rounded">
+                                <p class="text-2xl font-bold text-cyan-400">${stateCount}</p>
+                                <p class="text-xs text-gray-400">States</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="openEditUserLicenses('${agent.uid}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded transition">
+                                <i class="fas fa-edit mr-1"></i>Edit Licenses
+                            </button>
+                            ${!isCurrentUser && !agent.isAdmin ? `
+                            <button onclick="deleteUser('${agent.uid}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded transition">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                            ` : ''}
+                            ${!isCurrentUser ? `
+                            <button onclick="toggleAdminStatus('${agent.uid}')" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded transition">
+                                <i class="fas fa-user-shield mr-1"></i>${agent.isAdmin ? 'Demote' : 'Promote'}
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            usersList.innerHTML = usersHTML || '<p class="text-gray-400 text-center">No users found</p>';
+            
+            // Load carriers management section
+            loadCarriersList();
+        }
+
+        async function toggleAdminStatus(userId) {
+            if (!currentUser || !currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+
+            const user = agents.find(a => a.uid === userId);
+            if (user) {
+                try {
+                    await db.collection('users').doc(userId).update({
+                        isAdmin: !user.isAdmin
+                    });
+                    
+                    // Reload admin panel
+                    await loadAllAgents();
+                    loadAdminPanel();
+                    showNotification(`User ${!user.isAdmin ? 'promoted to admin' : 'demoted to agent'}`, 'success');
+                } catch (error) {
+                    console.error('Error updating admin status:', error);
+                    showNotification('Error updating user status', 'error');
+                }
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!currentUser || !currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+                    await db.collection('users').doc(userId).delete();
+                    await loadAllAgents();
+                    loadAdminPanel();
+                    showNotification('User deleted successfully', 'success');
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    showNotification('Error deleting user', 'error');
+                }
+            }
+        }
+
+        // =============================================
         // HELPER FUNCTIONS
         // =============================================
-        function populateStateDropdown() {
-            const stateSelect = document.getElementById('license-state');
-            stateSelect.innerHTML = '<option value="">Select a state</option>';
+        function populateStatesCheckboxes() {
+            const statesContainer = document.getElementById('states-container');
+            statesContainer.innerHTML = '';
             STATES_DATA.forEach(state => {
-                const option = document.createElement('option');
-                option.value = state.abbreviation;
-                option.textContent = `${state.name} (${state.abbreviation})`;
-                stateSelect.appendChild(option);
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" value="${state.abbreviation}" class="state-checkbox rounded text-cyan-600">
+                    <span>${state.name} (${state.abbreviation})</span>
+                `;
+                statesContainer.appendChild(label);
             });
         }
 
@@ -942,13 +1129,15 @@
             document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 
             // Load admin panel if needed
-            if (tabName === 'admin' && currentUser.isAdmin) {
+            if (tabName === 'admin' && currentUser && currentUser.isAdmin) {
                 loadAdminPanel();
             }
         }
 
         function updateUserStats() {
-            const statesCount = currentUser.licenses.length;
+            if (!currentUser || !currentUser.licenses) return;
+            
+            const statesCount = new Set(currentUser.licenses.map(license => license.state)).size;
             const carriersCount = currentUser.licenses.reduce((total, license) => total + license.carriers.length, 0);
             
             document.getElementById('states-count').textContent = statesCount;
@@ -958,7 +1147,7 @@
         function loadUserLicenses() {
             const container = document.getElementById('licenses-container');
             
-            if (currentUser.licenses.length === 0) {
+            if (!currentUser || !currentUser.licenses || currentUser.licenses.length === 0) {
                 container.innerHTML = `
                     <div class="text-center text-gray-400 py-8">
                         <i class="fas fa-id-card text-4xl mb-4"></i>
@@ -1023,7 +1212,10 @@
         window.openAddLicenseModal = openAddLicenseModal;
         window.closeAddLicenseModal = closeAddLicenseModal;
         window.deleteLicense = deleteLicense;
-        // ... include other global functions as needed
+        window.addNewCarrier = addNewCarrier;
+        window.removeCarrier = removeCarrier;
+        window.toggleAdminStatus = toggleAdminStatus;
+        window.deleteUser = deleteUser;
     </script>
 </body>
 </html>
