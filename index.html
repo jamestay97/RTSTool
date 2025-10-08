@@ -20,6 +20,7 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-light);
+            overflow-x: hidden;
         }
         .card {
             background-color: var(--bg-lighter);
@@ -60,6 +61,7 @@
             border-bottom: 2px solid transparent;
             padding-bottom: 0.5rem;
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .tab-button.active {
             color: var(--text-light);
@@ -101,10 +103,12 @@
             align-items: center;
             justify-content: center;
             z-index: 50;
+            padding: 1rem;
+            box-sizing: border-box;
         }
         .modal-content {
             background-color: var(--bg-dark);
-            width: 90%;
+            width: 100%;
             max-width: 800px;
             border-radius: 1rem;
             border: 1px solid #475569;
@@ -115,6 +119,47 @@
         .reset-modal-content {
             max-width: 400px;
         }
+        
+        /* Responsive grid improvements */
+        @media (max-width: 768px) {
+            .responsive-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .responsive-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .responsive-tabs .tab-button {
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+            }
+            .responsive-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .responsive-header .flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .responsive-header .border-l {
+                border-left: none !important;
+                border-top: 1px solid #475569;
+                padding-left: 0;
+                padding-top: 1rem;
+                margin-top: 1rem;
+                width: 100%;
+            }
+            .responsive-search {
+                flex-direction: column;
+            }
+            .responsive-search button {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+            .carrier-buttons-container {
+                min-height: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -122,29 +167,29 @@
     <!-- Main Container -->
     <div class="min-h-screen p-4 md:p-8 flex flex-col items-center">
         <!-- Header -->
-        <header class="w-full max-w-5xl text-center mb-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-100 mt-4 tracking-tighter">
+        <header class="w-full max-w-5xl text-center mb-6 md:mb-10">
+            <h1 class="text-2xl md:text-5xl font-extrabold text-slate-100 mt-4 tracking-tighter">
                 License <span class="text-cyan-400">Data Explorer</span>
             </h1>
-            <p class="text-slate-400 mt-2">Firebase-authenticated data tool for agents.</p>
+            <p class="text-slate-400 mt-2 text-sm md:text-base">Firebase-authenticated data tool for agents.</p>
         </header>
         
         <!-- Initial Loading View -->
         <div id="loading-view" class="w-full max-w-5xl h-96 flex flex-col items-center justify-center card rounded-xl p-8 border border-slate-700/50">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-cyan-400 border-opacity-75 mb-4"></div>
-            <p class="text-xl text-slate-300 font-medium">Checking authentication status...</p>
+            <p class="text-lg md:text-xl text-slate-300 font-medium">Checking authentication status...</p>
         </div>
 
         <!-- Login/Registration Panel -->
-        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 border border-slate-700/50 mb-10" style="display: none;">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-4 md:p-8 border border-slate-700/50 mb-6 md:mb-10" style="display: none;">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 <!-- Login Form (Left Side) -->
-                <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8">
-                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="log-in" class="w-6 h-6 mr-3"></i>
+                <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-6 md:pb-0 lg:pr-6 md:lg:pr-8">
+                    <h2 class="text-xl md:text-2xl font-bold text-cyan-400 mb-4 flex items-center">
+                        <i data-lucide="log-in" class="w-5 h-5 md:w-6 md:h-6 mr-3"></i>
                         Agent Login
                     </h2>
-                    <p class="text-slate-400 mb-6">Log in with your registered email and password.</p>
+                    <p class="text-slate-400 mb-4 md:mb-6 text-sm md:text-base">Log in with your registered email and password.</p>
                     <form id="login-form" onsubmit="event.preventDefault(); loginAgent()">
                         <div class="space-y-4">
                             <div>
@@ -164,7 +209,7 @@
                             </a>
                         </div>
                         
-                        <button type="submit" id="login-button" class="accent-button w-full mt-6 px-4 py-2 rounded-lg flex items-center justify-center">
+                        <button type="submit" id="login-button" class="accent-button w-full mt-4 md:mt-6 px-4 py-2 rounded-lg flex items-center justify-center">
                             <i data-lucide="key-round" class="w-4 h-4 mr-2"></i>
                             Log In
                         </button>
@@ -172,14 +217,14 @@
                 </div>
 
                 <!-- Registration Form (Right Side - STEP 1) -->
-                <div class="lg:pl-8">
-                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="user-plus" class="w-6 h-6 mr-3"></i>
+                <div class="lg:pl-6 md:lg:pl-8">
+                    <h2 class="text-xl md:text-2xl font-bold text-cyan-400 mb-4 flex items-center">
+                        <i data-lucide="user-plus" class="w-5 h-5 md:w-6 md:h-6 mr-3"></i>
                         New Agent Registration (Step 1 of 2)
                     </h2>
-                    <p class="text-slate-400 mb-6">Create a new agent account with basic details.</p>
+                    <p class="text-slate-400 mb-4 md:mb-6 text-sm md:text-base">Create a new agent account with basic details.</p>
                     <form id="new-agent-form" onsubmit="event.preventDefault(); submitNewAgent()">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="grid grid-cols-1 gap-4 mb-4 md:mb-6">
                             <div>
                                 <label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
                                 <input type="text" id="reg-name" class="form-input w-full" required placeholder="Jane Doe">
@@ -196,7 +241,7 @@
                                 <label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
                                 <input type="password" id="reg-password" class="form-input w-full" required placeholder="Set your password">
                             </div>
-                            <div class="md:col-span-2">
+                            <div>
                                 <label for="reg-extension" class="block text-sm font-medium text-slate-300 mb-1">Extension</label>
                                 <input type="text" id="reg-extension" class="form-input w-full" required placeholder="555-1234">
                             </div>
@@ -215,13 +260,13 @@
         <div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;">
             
             <!-- App Header/Tabs/Logout -->
-            <div id="app-header-tabs" class="w-full max-w-5xl card p-4 rounded-xl shadow-lg border border-slate-700/50 mb-6 flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <p class="text-sm text-slate-400 hidden sm:block">
+            <div id="app-header-tabs" class="w-full max-w-5xl card p-4 rounded-xl shadow-lg border border-slate-700/50 mb-4 md:mb-6 responsive-header">
+                <div class="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                    <p class="text-sm text-slate-400">
                         Logged in as: <strong id="current-user-name" class="text-cyan-400"></strong> 
                         <span id="admin-badge" class="bg-red-800/50 text-red-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2 hidden">ADMIN</span>
                     </p>
-                    <div class="flex space-x-2 border-l border-slate-700 pl-4">
+                    <div class="flex space-x-2 border-l-0 md:border-l border-slate-700 pl-0 md:pl-4 responsive-tabs">
                         <button id="search-tab-button" onclick="changeView('search')" class="tab-button active flex items-center">
                             <i data-lucide="search" class="w-4 h-4 mr-1"></i> Search Tool
                         </button>
@@ -234,7 +279,7 @@
                     </div>
                 </div>
 
-                <button onclick="logout()" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center">
+                <button onclick="logout()" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center mt-4 md:mt-0 self-end md:self-auto">
                     <i data-lucide="log-out" class="w-4 h-4 mr-1"></i>
                     Logout
                 </button>
@@ -249,987 +294,17 @@
 
                 <!-- 1. Search View -->
                 <div id="search-view" class="w-full hidden">
-                    <div class="w-full max-w-3xl mx-auto mb-8">
-                        <div class="flex card p-2 rounded-xl shadow-lg border border-slate-700/50">
+                    <div class="w-full max-w-3xl mx-auto mb-6 md:mb-8">
+                        <div class="flex flex-col sm:flex-row card p-2 rounded-xl shadow-lg border border-slate-700/50 responsive-search">
                             <input
                                 id="search-input"
                                 type="text"
                                 placeholder="Search by State (CA), Agent Name, or Carrier Name..."
-                                class="search-input w-full p-4 text-lg bg-transparent outline-none placeholder-slate-500 rounded-lg transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900"
+                                class="search-input w-full p-3 md:p-4 text-base md:text-lg bg-transparent outline-none placeholder-slate-500 rounded-lg transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900"
                                 onkeydown="if(event.key === 'Enter') searchData()"
                             />
                             <button
                                 onclick="searchData()"
-                                class="accent-button px-6 py-3 ml-2 rounded-xl font-semibold flex items-center"
+                                class="accent-button px-4 md:px-6 py-3 mt-2 sm:mt-0 sm:ml-2 rounded-xl font-semibold flex items-center justify-center"
                             >
-                                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
-                                Search
-                            </button>
-                        </div>
-                    </div>
-
-                    <main id="results-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50 flex flex-col items-center justify-center text-center">
-                        <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
-                        <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
-                    </main>
-                </div>
-                
-                <!-- 2. Profile View -->
-                <div id="profile-view" class="w-full hidden">
-                    <main id="profile-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50">
-                        <!-- Content rendered by renderProfilePanel() -->
-                    </main>
-                </div>
-
-                <!-- 3. Admin View (Hidden by default) -->
-                <div id="admin-view" class="w-full hidden">
-                    <main id="admin-panel" class="w-full min-h-[300px] card rounded-xl p-6 md:p-8 border border-slate-700/50">
-                        <!-- Content rendered by renderAdminPanel() -->
-                    </main>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Dynamic Message Box -->
-        <div id="message-box" class="fixed bottom-4 right-4 p-4 rounded-lg text-sm transition-opacity duration-300 opacity-0 pointer-events-none"></div>
-    </div>
-
-    <!-- Modal for Password Reset (Unchanged) -->
-    <div id="reset-modal" class="modal" onclick="if(event.target.id === 'reset-modal') closeResetModal()">
-        <div class="modal-content reset-modal-content p-6 md:p-8">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-6">
-                <h3 class="text-2xl font-bold text-cyan-400 flex items-center">
-                    <i data-lucide="rotate-ccw" class="w-6 h-6 mr-3"></i>
-                    Password Reset
-                </h3>
-                <button onclick="closeResetModal()" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <form id="reset-form" onsubmit="event.preventDefault(); handlePasswordReset()">
-                <div>
-                    <label for="reset-email" class="block text-sm font-medium text-slate-300 mb-1">Registered Email</label>
-                    <input type="email" id="reset-email" class="form-input w-full" required placeholder="Enter email to reset password">
-                </div>
-                <div id="reset-message-container" class="mt-4 text-sm min-h-[20px]"></div>
-                <button type="submit" id="reset-send-button" class="accent-button w-full mt-6 px-4 py-2 rounded-lg flex items-center justify-center">
-                    <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
-                    Send Reset Link
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Agent Editing (Unchanged) -->
-    <div id="edit-modal" class="modal" onclick="if(event.target.id === 'edit-modal') closeEditModal()">
-        <div class="modal-content p-6 md:p-8">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
-                <h3 class="text-2xl font-bold text-cyan-400 flex items-center">
-                    <i data-lucide="edit" class="w-6 h-6 mr-3"></i>
-                    Edit Agent Details
-                </h3>
-                <button onclick="closeEditModal()" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <form id="edit-agent-form" onsubmit="event.preventDefault(); saveAgentDetails()">
-                <!-- Agent details inputs (Name, NPN, Email, Extension) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
-                        <input type="text" id="edit-name" class="form-input w-full" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">NPN Number</label>
-                        <input type="text" id="edit-npn" class="form-input w-full" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                        <input type="email" id="edit-email" class="form-input w-full" required readonly>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Extension</label>
-                        <input type="text" id="edit-extension" class="form-input w-full" required>
-                    </div>
-                </div>
-
-                <h4 class="text-lg font-semibold text-slate-300 mb-3 border-t pt-4 border-slate-700 flex items-center">
-                    <i data-lucide="file-text" class="w-4 h-4 mr-2 text-cyan-400"></i>
-                    Licensed States & Carriers
-                </h4>
-                <div id="edit-license-container" class="space-y-4 p-4 border border-slate-700 rounded-lg">
-                    <!-- Dynamic edit license rows will be loaded here -->
-                </div>
-                
-                <button type="button" onclick="addLicenseSection('edit-license-container')" class="secondary-button mt-4 px-4 py-2 rounded-lg flex items-center">
-                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                    Add State License
-                </button>
-
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button" onclick="closeEditModal()" class="secondary-button px-4 py-2 rounded-lg">Cancel</button>
-                    <button type="submit" class="accent-button px-4 py-2 rounded-lg">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i>
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script type="module">
-        // Standardized Firebase SDK imports (version 11.6.1 is generally stable for this environment)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-
-
-        // --- I. Global State and Firebase Setup ---
-        let licenseCount = 0; 
-        let currentUserData = null; // Holds the agent data from AGENTS array (keyed by UID)
-        let activeView = 'search'; 
-        let editingAgentUid = null; 
-
-        // Hardcoded Firebase configuration (NOTE: This should be sourced from environment variables in a real app)
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
-            authDomain: "rts-project-d9d5d.firebaseapp.com",
-            projectId: "rts-project-d9d5d",
-            storageBucket: "rts-project-d9d5d.firebasestorage.app",
-            messagingSenderId: "318420505147",
-            appId: "1:318420505147:web:76895831ea9e77a9b1821e",
-            measurementId: "G-C8MRE2QC2E"
-        };
-        
-        let app;
-        let auth;
-        let isAuthReady = false;
-
-        // Initialize Firebase services
-        if (firebaseConfig.apiKey) {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app); 
-            // Analytics is initiated but not actively used in this simple app
-            const analytics = getAnalytics(app); 
-            console.log("Firebase Auth and Analytics initialized.");
-        } else {
-            console.error("Firebase config is missing. Authentication will fail.");
-        }
-
-        // AGENTS data is keyed by Firebase User ID (UID)
-        // CRITICAL NOTE: This data is NOT persistent across sessions/users and must be replaced by Firestore for production.
-        let AGENTS = {
-            "admin_placeholder_uid": {
-                name: "Admin Master",
-                npn: "00000000",
-                email: "admin@corp.com", 
-                extension: "0000",
-                isAdmin: true,
-                licenses: [],
-                isSetupComplete: true 
-            }
-        };
-
-        const STATES = [
-            { name: "California", acronym: "CA" },
-            { name: "Texas", acronym: "TX" },
-            { name: "Florida", acronym: "FL" },
-            { name: "New York", acronym: "NY" },
-            { name: "Illinois", acronym: "IL" },
-        ];
-
-        const CARRIERS = [
-            "UnitedHealthcare",
-            "Humana",
-            "Aetna",
-            "Blue Cross Blue Shield",
-            "Cigna",
-            "Mutual of Omaha",
-            "State Farm"
-        ];
-        
-        // --- II. Initialization and Utility Functions ---
-
-        window.onload = () => {
-            lucide.createIcons();
-        };
-
-        // Utility function to hide the loading screen
-        function hideLoading() {
-            document.getElementById('loading-view').style.display = 'none';
-        }
-
-
-        // Firebase Auth State Listener (CRITICAL: Determines initial state)
-        onAuthStateChanged(auth, (user) => {
-            isAuthReady = true;
-            hideLoading(); 
-
-            if (user) {
-                // User is logged in
-                currentUserData = AGENTS[user.uid];
-                
-                if (!currentUserData) {
-                    // This handles cases where auth succeeds but local data is missing (e.g., local state cleared)
-                    signOut(auth);
-                    showMessage('User data record not found. Please register or contact support.', 'error');
-                    return;
-                }
-                grantAccess(user);
-            } else {
-                // User is logged out
-                currentUserData = null;
-                showAuthPanel();
-            }
-        });
-
-        function showMessage(message, type = 'info') {
-            const box = document.getElementById('message-box');
-            let color = 'bg-blue-600';
-            if (type === 'error') color = 'bg-red-600';
-            if (type === 'success') color = 'bg-green-600';
-
-            box.className = `fixed bottom-4 right-4 p-4 rounded-lg text-sm text-white transition-opacity duration-300 ${color} opacity-100`;
-            box.textContent = message;
-
-            clearTimeout(box.timer);
-            box.timer = setTimeout(() => {
-                box.classList.remove('opacity-100');
-                box.classList.add('opacity-0');
-            }, 3000);
-        }
-
-        const normalize = (str) => str.toLowerCase().trim();
-
-        function setButtonLoading(buttonId, isLoading, defaultText) {
-            const button = document.getElementById(buttonId);
-            if (!button) return;
-            button.disabled = isLoading;
-            if (isLoading) {
-                button.innerHTML = '<span class="flex items-center"><i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i> Processing...</span>';
-                lucide.createIcons();
-                button.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                button.innerHTML = `<i data-lucide="${buttonId === 'login-button' ? 'key-round' : (buttonId === 'register-button' ? 'arrow-right' : (buttonId === 'reset-send-button' ? 'mail' : 'save'))}" class="w-4 h-4 mr-2"></i> ${defaultText}`;
-                button.classList.remove('opacity-50', 'cursor-not-allowed');
-                lucide.createIcons(); 
-            }
-        }
-
-        // --- III. Authentication and Access Control ---
-
-        function showAuthPanel() {
-            if (!isAuthReady) return;
-            document.getElementById('main-app-content').style.display = 'none';
-            document.getElementById('auth-panel').style.display = 'block'; 
-            document.getElementById('login-form').reset();
-            document.getElementById('new-agent-form').reset();
-            // Reset loading state if any
-            setButtonLoading('login-button', false, 'Log In');
-            setButtonLoading('register-button', false, 'Proceed to License Setup');
-        }
-
-        async function loginAgent() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            setButtonLoading('login-button', true, 'Log In');
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                currentUserData = AGENTS[user.uid];
-
-                if (!currentUserData) {
-                    throw new Error("Local agent data not found. Please register.");
-                }
-
-                showMessage(`Welcome back, ${currentUserData.name}!`, 'success');
-            } catch (error) {
-                let errorMessage = "Login failed. Check your email and password.";
-                console.error("Firebase Login Error:", error.code, error.message);
-                
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-                    errorMessage = 'Invalid email or password combination.';
-                } else if (error.message.includes("Local agent data not found")) {
-                    errorMessage = "Account found, but data is missing. Please re-register or contact support.";
-                    signOut(auth); 
-                }
-                
-                showMessage(errorMessage, 'error');
-            } finally {
-                 setButtonLoading('login-button', false, 'Log In');
-            }
-        }
-
-        function logout() {
-            signOut(auth).then(() => {
-                showMessage('Successfully logged out.', 'info');
-            }).catch(error => {
-                showMessage('Logout failed.', 'error');
-                console.error("Logout Error:", error);
-            });
-        }
-
-        function grantAccess(user) {
-            document.getElementById('auth-panel').style.display = 'none';
-            document.getElementById('main-app-content').style.display = 'flex';
-            document.getElementById('current-user-name').textContent = currentUserData.name;
-            
-            // Show Admin Panel tab only if current user is an admin
-            const adminBadge = document.getElementById('admin-badge');
-            const adminTabButton = document.getElementById('admin-tab-button');
-            
-            if (currentUserData.isAdmin) {
-                adminBadge.classList.remove('hidden');
-                adminTabButton.classList.remove('hidden');
-            } else {
-                adminBadge.classList.add('hidden');
-                adminTabButton.classList.add('hidden');
-            }
-
-            // --- CRITICAL: Check Setup Status (The two-step registration gate) ---
-            if (!currentUserData.isSetupComplete) {
-                // Force user to the setup view if registration is incomplete
-                showMessage('Please complete your license setup to access the data explorer.', 'info');
-                changeView('setup'); 
-            } else {
-                // Otherwise, proceed to a normal view
-                changeView(currentUserData.isAdmin ? 'search' : 'profile');
-            }
-        }
-
-
-        // --- IV. Password Reset Functions ---
-
-        function openResetModal() {
-            document.getElementById('reset-modal').style.display = 'flex';
-            document.getElementById('reset-email').value = document.getElementById('login-email').value;
-            document.getElementById('reset-message-container').innerHTML = '';
-            setButtonLoading('reset-send-button', false, 'Send Reset Link');
-        }
-
-        function closeResetModal() {
-            document.getElementById('reset-modal').style.display = 'none';
-        }
-
-        async function handlePasswordReset() {
-            const email = document.getElementById('reset-email').value.trim();
-            const messageContainer = document.getElementById('reset-message-container');
-            const buttonId = 'reset-send-button';
-            const defaultText = 'Send Reset Link';
-            
-            if (!email) {
-                messageContainer.innerHTML = '<span class="text-red-400">Please enter an email address.</span>';
-                return;
-            }
-
-            setButtonLoading(buttonId, true, defaultText);
-
-            const MAX_RETRIES = 5;
-            let currentRetry = 0;
-            let success = false;
-            let lastError = null;
-
-            while (currentRetry < MAX_RETRIES && !success) {
-                try {
-                    await sendPasswordResetEmail(auth, email);
-                    
-                    messageContainer.innerHTML = `<span class="text-green-400">A reset link has been sent to ${email}.</span>`;
-                    success = true; 
-
-                } catch (error) {
-                    lastError = error;
-                    currentRetry++;
-                    console.error(`Attempt ${currentRetry} failed:`, error.message);
-
-                    if (currentRetry < MAX_RETRIES) {
-                        const delay = Math.pow(2, currentRetry) * 1000 + Math.floor(Math.random() * 1000); 
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                    }
-                }
-            }
-
-            setButtonLoading(buttonId, false, defaultText);
-
-            if (!success && lastError) {
-                let errorMessage = 'An error occurred during reset.';
-                if (lastError.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many requests. Try again later.';
-                } else {
-                    errorMessage = `Error: ${lastError.message}`;
-                }
-                messageContainer.innerHTML = `<span class="text-red-400">${errorMessage}</span>`;
-            } else if (success) {
-                // Provide a generic success message even if email wasn't found for security reasons
-                messageContainer.innerHTML = `<span class="text-green-400">If that email is registered, a reset link has been sent.</span>`;
-                setTimeout(closeResetModal, 3000);
-            }
-        }
-
-
-        // --- V. Agent Registration/Management Functions ---
-
-        async function submitNewAgent() {
-            const agentName = document.getElementById('reg-name').value.trim();
-            const agentNpn = document.getElementById('reg-npn').value.trim();
-            const agentEmail = document.getElementById('reg-email').value.trim();
-            const agentPassword = document.getElementById('reg-password').value;
-            const agentExtension = document.getElementById('reg-extension').value.trim();
-
-            const buttonId = 'register-button';
-            const defaultText = 'Proceed to License Setup';
-
-            // 1. Start loading immediately to give feedback
-            setButtonLoading(buttonId, true, defaultText); 
-
-            // 2. Synchronous Validation
-            if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension) {
-                showMessage('All fields are required for registration.', 'error');
-                setButtonLoading(buttonId, false, defaultText); // FIX: Reset button on sync failure
-                return;
-            }
-            if (agentPassword.length < 6) {
-                showMessage('Password must be at least 6 characters long.', 'error');
-                setButtonLoading(buttonId, false, defaultText); // FIX: Reset button on sync failure
-                return;
-            }
-
-            try {
-                // 3. Create user in Firebase Auth (ASYNCHRONOUS)
-                const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);
-                const user = userCredential.user;
-
-                // 4. Add new agent to the local AGENTS data store with incomplete setup status
-                AGENTS[user.uid] = {
-                    name: agentName,
-                    npn: agentNpn,
-                    email: agentEmail,
-                    extension: agentExtension,
-                    isAdmin: false,
-                    licenses: [],
-                    isSetupComplete: false 
-                };
-
-                showMessage(`Registration successful. Redirecting to license setup...`, 'success');
-                
-                document.getElementById('new-agent-form').reset();
-                // grantAccess is handled by onAuthStateChanged automatically after successful creation
-
-            } catch (error) {
-                let errorMessage = "Registration failed.";
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'This email address is already registered.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'The password is too weak (must be at least 6 characters).';
-                }
-                showMessage(errorMessage, 'error');
-                console.error("Firebase Registration Error:", error);
-            } finally {
-                // 5. Always reset the button after the async operation completes
-                setButtonLoading(buttonId, false, defaultText);
-            }
-        }
-
-        async function licensesSetupComplete() {
-            if (!auth.currentUser || !currentUserData || currentUserData.isSetupComplete) return;
-
-            const setupContainerId = 'setup-license-container';
-            const finalLicenses = getLicensesFromContainer(setupContainerId);
-
-            if (finalLicenses === null) return; 
-
-            if (finalLicenses.length === 0) {
-                 showMessage('You must add at least one state license to complete setup.', 'error');
-                 return;
-            }
-
-            setButtonLoading('setup-complete-button', true, 'Complete Setup and Access App');
-            
-            // Update the local data store
-            const uid = auth.currentUser.uid;
-            AGENTS[uid].licenses = finalLicenses;
-            AGENTS[uid].isSetupComplete = true;
-            currentUserData = AGENTS[uid]; 
-
-            showMessage('License setup complete! Access granted.', 'success');
-            changeView('profile'); 
-
-            setButtonLoading('setup-complete-button', false, 'Complete Setup and Access App');
-        }
-
-
-        // --- VI. License/UI/Data Functions (Rendering/Search functions are truncated for brevity but are in the full file) ---
-
-        function toggleCarrierSelection(event) {
-            const button = event.currentTarget;
-            button.classList.toggle('selected-carrier');
-        }
-
-        function addLicenseSection(containerId, initialData = { state: '', carriers: [] }, index = licenseCount++) {
-            const container = document.getElementById(containerId);
-            const newId = index;
-            
-            const stateOptions = STATES.map(s => 
-                `<option value="${s.acronym}" ${initialData.state === s.acronym ? 'selected' : ''}>${s.name} (${s.acronym})</option>`
-            ).join('');
-
-            const carrierButtons = CARRIERS.map(c => {
-                const isSelected = initialData.carriers.includes(c);
-                return `<button type="button" 
-                            class="carrier-chip ${isSelected ? 'selected-carrier' : ''}" 
-                            data-carrier="${c}" 
-                            onclick="toggleCarrierSelection(event)">
-                            ${c}
-                        </button>`;
-            }).join('');
-
-            const licenseHtml = `
-                <div id="${containerId}-row-${newId}" class="card p-4 border border-slate-600 rounded-lg grid md:grid-cols-3 gap-4 relative">
-                    <button type="button" 
-                        onclick="document.getElementById('${containerId}-row-${newId}').remove(); lucide.createIcons();"
-                        class="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"
-                        title="Remove License"
-                    >
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-
-                    <div>
-                        <label for="${containerId}-state-${newId}" class="block text-sm font-medium text-slate-400 mb-1">State</label>
-                        <select id="${containerId}-state-${newId}" name="state" class="form-select w-full" required>
-                            <option value="">-- Select State --</option>
-                            ${stateOptions}
-                        </select>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Carriers Represented (Click to select)</label>
-                        <div id="${containerId}-carriers-${newId}" class="carrier-buttons-container flex flex-wrap gap-2 p-3 border border-slate-700 rounded-lg min-h-[100px] bg-[#1a202c]">
-                            ${carrierButtons}
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', licenseHtml);
-            lucide.createIcons(); 
-            return newId;
-        }
-
-        function getLicensesFromContainer(containerId) {
-            const licenseRows = document.querySelectorAll(`#${containerId} div[id^="${containerId}-row-"]`);
-            const licenses = [];
-            let isValid = true;
-            const enteredStates = new Set();
-
-            licenseRows.forEach((row) => {
-                const stateSelect = row.querySelector(`select[name="state"]`);
-                const selectedCarrierButtons = row.querySelectorAll('.selected-carrier'); 
-                
-                const stateValue = stateSelect ? stateSelect.value : '';
-
-                const selectedCarriers = Array.from(selectedCarrierButtons)
-                    .map(button => button.getAttribute('data-carrier')); 
-
-                // Allow empty row only if it's the only one or if all fields are empty
-                if (!stateValue && selectedCarriers.length === 0) return;
-
-                if (!stateValue || selectedCarriers.length === 0) {
-                    showMessage(`License row is incomplete (State and at least one Carrier are required).`, 'error');
-                    isValid = false;
-                }
-                
-                if (stateValue && enteredStates.has(stateValue) && isValid) {
-                    showMessage(`Duplicate state "${stateValue}" selected. Please remove one.`, 'error');
-                    isValid = false;
-                }
-                if (stateValue) enteredStates.add(stateValue);
-
-                if (isValid && stateValue && selectedCarriers.length > 0) {
-                    licenses.push({
-                        state: stateValue,
-                        carriers: selectedCarriers
-                    });
-                }
-            });
-
-            if (!isValid) return null;
-            return licenses;
-        }
-
-        function changeView(view) {
-            activeView = view;
-            
-            // Hide all main content views
-            document.getElementById('licenses-setup-view').classList.add('hidden');
-            document.getElementById('search-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('hidden'); 
-            document.getElementById('admin-view').classList.add('hidden');
-            
-            // Reset tab styles
-            document.getElementById('search-tab-button')?.classList.remove('active');
-            document.getElementById('profile-tab-button')?.classList.remove('active'); 
-            document.getElementById('admin-tab-button')?.classList.remove('active');
-
-            // Hide the header/tabs/logout if the user is in mandatory setup
-            const headerTabs = document.getElementById('app-header-tabs');
-            
-            if (view === 'setup') {
-                document.getElementById('licenses-setup-view').classList.remove('hidden');
-                renderLicensesSetupPanel();
-                headerTabs.classList.add('hidden');
-            } else {
-                headerTabs.classList.remove('hidden');
-                
-                if (view === 'search') {
-                    document.getElementById('search-view').classList.remove('hidden');
-                    document.getElementById('search-tab-button').classList.add('active');
-                } else if (view === 'profile') { 
-                    document.getElementById('profile-view').classList.remove('hidden');
-                    document.getElementById('profile-tab-button').classList.add('active');
-                    renderProfilePanel(); 
-                } else if (view === 'admin' && currentUserData.isAdmin) {
-                    document.getElementById('admin-view').classList.remove('hidden');
-                    document.getElementById('admin-tab-button').classList.add('active');
-                    renderAdminPanel();
-                }
-            }
-            lucide.createIcons();
-        }
-        
-        function renderLicensesSetupPanel() {
-            const panel = document.getElementById('licenses-setup-view');
-            const agent = currentUserData; 
-
-            panel.innerHTML = `
-                <div class="w-full max-w-4xl mx-auto card rounded-xl p-6 md:p-10 border border-slate-700/50">
-                    <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center">
-                        <i data-lucide="list-checks" class="w-7 h-7 mr-3 text-cyan-400"></i>
-                        Complete License Setup (Step 2 of 2)
-                    </h2>
-                    <p class="text-slate-400 mb-6 border-b border-slate-700 pb-4">
-                        Welcome, <strong class="text-cyan-400">${agent.name}</strong>! Before accessing the data explorer, please add your licensed states and carriers.
-                        You must add at least one license entry.
-                    </p>
-
-                    <form id="setup-license-form" onsubmit="event.preventDefault(); licensesSetupComplete()">
-                        <div id="setup-license-container" class="space-y-4">
-                            <!-- Dynamic license rows will be added here -->
-                        </div>
-
-                        <div class="flex gap-4 mt-6 justify-between items-center">
-                            <button type="button" onclick="addLicenseSection('setup-license-container')" class="secondary-button px-4 py-2 rounded-lg flex items-center">
-                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                                Add State License
-                            </button>
-                            <button type="submit" id="setup-complete-button" class="accent-button px-6 py-3 rounded-lg flex items-center font-semibold">
-                                <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                                Complete Setup and Access App
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            if (document.getElementById('setup-license-container').childElementCount === 0) {
-                 addLicenseSection('setup-license-container');
-            }
-
-            lucide.createIcons();
-        }
-
-        function renderProfilePanel() {
-            const agent = currentUserData;
-            if (!agent || !agent.isSetupComplete) {
-                return changeView('setup'); 
-            }
-            
-            const uid = auth.currentUser.uid;
-            const panel = document.getElementById('profile-panel');
-            
-            const statesLicensed = agent.licenses.map(l => l.state);
-            
-            let stateDetailsHtml = agent.licenses.map(license => {
-                const stateObj = STATES.find(s => s.acronym === license.state);
-                const carrierBadges = license.carriers.map(c =>
-                    `<span class="bg-slate-700 text-sm px-3 py-1 rounded-full whitespace-nowrap">${c}</span>`
-                ).join('');
-
-                return `
-                    <div class="card p-4 rounded-xl border border-slate-600 mb-4">
-                        <h4 class="font-semibold text-lg text-slate-100 mb-2 flex items-center">
-                             <i data-lucide="flag" class="w-4 h-4 mr-2 text-cyan-400"></i>
-                            ${stateObj ? stateObj.name : license.state}
-                        </h4>
-                        <p class="text-slate-400 mb-2 text-sm">Carriers in this state:</p>
-                        <div class="flex flex-wrap gap-2">${carrierBadges}</div>
-                    </div>
-                `;
-            }).join('') || '<p class="text-slate-400">You currently have no licenses registered.</p>';
-
-
-            panel.innerHTML = `
-                <div class="w-full">
-                    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-                        <h2 class="text-3xl font-bold text-slate-100 flex items-center">
-                            <i data-lucide="award" class="w-7 h-7 mr-3 text-cyan-400"></i>
-                            Your Profile & Licenses
-                        </h2>
-                        <button onclick="openEditModal('${uid}')" class="accent-button px-4 py-2 rounded-lg flex items-center">
-                            <i data-lucide="edit-3" class="w-4 h-4 mr-2"></i> Edit My Licenses
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left p-4 card rounded-lg border border-slate-700">
-                        <p class="text-slate-300"><strong class="text-cyan-400">Name:</strong> ${agent.name}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">NPN:</strong> ${agent.npn}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">Email:</strong> ${agent.email}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">Extension:</strong> ${agent.extension}</p>
-                    </div>
-
-                    <h3 class="text-xl font-semibold text-slate-300 mb-4 border-t pt-4 border-slate-700">License Details (${statesLicensed.length} States)</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        ${stateDetailsHtml}
-                    </div>
-                </div>
-            `;
-            lucide.createIcons();
-        }
-        
-        function renderAdminPanel() {
-            if (!currentUserData.isAdmin) return changeView('profile'); 
-
-            const panel = document.getElementById('admin-panel');
-            const agentsArray = Object.values(AGENTS); 
-
-            const agentListHtml = agentsArray.map(agent => {
-                const uid = Object.keys(AGENTS).find(key => AGENTS[key] === agent);
-                const isAdmin = agent.isAdmin;
-                const toggleAction = isAdmin ? 'Demote' : 'Promote';
-                const toggleColor = isAdmin ? 'bg-red-700 hover:bg-red-600' : 'bg-green-700 hover:bg-green-600';
-                
-                const selfCheck = uid === auth.currentUser.uid ? ' (You)' : '';
-                const toggleDisabled = uid === auth.currentUser.uid;
-                
-                const setupStatus = agent.isSetupComplete ? 
-                    '<span class="bg-green-800/50 text-green-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2">Setup Complete</span>' : 
-                    '<span class="bg-yellow-800/50 text-yellow-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2">Setup Pending</span>';
-
-                return `
-                    <div class="card p-4 rounded-xl mb-3 border border-slate-600 flex flex-col md:flex-row justify-between items-start md:items-center">
-                        <div>
-                            <h4 class="font-semibold text-lg text-slate-100 mb-1 flex items-center">
-                                <i data-lucide="${isAdmin ? 'shield-check' : 'user'}" class="w-5 h-5 mr-2 ${isAdmin ? 'text-red-400' : 'text-cyan-400'}"></i>
-                                ${agent.name} ${selfCheck}
-                            </h4>
-                            <p class="text-sm text-slate-400">NPN: ${agent.npn} | Email: ${agent.email} | Ext: ${agent.extension}</p>
-                            <div class="flex items-center space-x-2 mt-1">
-                                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'}">${isAdmin ? 'Administrator' : 'Agent'}</span>
-                                ${setupStatus}
-                            </div>
-                        </div>
-                        <div class="flex space-x-2 mt-3 md:mt-0">
-                            <button onclick="openEditModal('${uid}')" class="secondary-button px-3 py-1 rounded-lg text-sm flex items-center">
-                                <i data-lucide="edit-3" class="w-4 h-4 mr-1"></i> Edit
-                            </button>
-                            <button onclick="toggleAdminStatus('${uid}')" ${toggleDisabled ? 'disabled' : ''} class="${toggleColor} text-white px-3 py-1 rounded-lg text-sm flex items-center font-medium ${toggleDisabled ? 'opacity-50 cursor-not-allowed' : ''}">
-                                <i data-lucide="shield-half" class="w-4 h-4 mr-1"></i> ${toggleAction}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            panel.innerHTML = `
-                <div class="w-full">
-                    <h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center">
-                        <i data-lucide="users-round" class="w-7 h-7 mr-3 text-red-400"></i>
-                        System User Management
-                    </h2>
-                    <p class="text-slate-400 mb-6">Manage user roles and agent details for all accounts. Total Accounts: <strong>${agentsArray.length}</strong></p>
-                    <div class="space-y-3">
-                        ${agentListHtml}
-                    </div>
-                </div>
-            `;
-            lucide.createIcons();
-        }
-
-        function toggleAdminStatus(uid) {
-            if (!currentUserData.isAdmin) {
-                showMessage('Access Denied: Only administrators can change user roles.', 'error');
-                return;
-            }
-            const agent = AGENTS[uid];
-            if (!agent) {
-                showMessage('Agent not found.', 'error');
-                return;
-            }
-
-            const newStatus = !agent.isAdmin;
-            agent.isAdmin = newStatus;
-
-            renderAdminPanel();
-            
-            showMessage(`${agent.name} is now ${newStatus ? 'an ADMIN' : 'a regular AGENT'}.`, 'success');
-        }
-
-        function openEditModal(uid) {
-            const isSelf = auth.currentUser && auth.currentUser.uid === uid;
-            const canEdit = currentUserData.isAdmin || isSelf;
-
-            if (!canEdit) {
-                showMessage('Access Denied: You can only edit your own licenses.', 'error');
-                return;
-            }
-
-            const agent = AGENTS[uid];
-            if (!agent) {
-                showMessage('Agent not found for editing.', 'error');
-                return;
-            }
-
-            editingAgentUid = uid;
-
-            document.getElementById('edit-name').value = agent.name;
-            document.getElementById('edit-npn').value = agent.npn;
-            document.getElementById('edit-email').value = agent.email;
-            document.getElementById('edit-extension').value = agent.extension;
-
-            const licenseContainer = document.getElementById('edit-license-container');
-            licenseContainer.innerHTML = '';
-            licenseCount = 0; 
-
-            agent.licenses.forEach((license, index) => {
-                addLicenseSection('edit-license-container', license, index * 100); 
-            });
-
-            if (agent.licenses.length === 0) {
-                 addLicenseSection('edit-license-container');
-            }
-
-            document.getElementById('edit-modal').style.display = 'flex';
-            lucide.createIcons();
-        }
-
-        function closeEditModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-            editingAgentUid = null;
-        }
-
-        function saveAgentDetails() {
-            if (!editingAgentUid) return;
-
-            const name = document.getElementById('edit-name').value.trim();
-            const npn = document.getElementById('edit-npn').value.trim();
-            const extension = document.getElementById('edit-extension').value.trim();
-            
-            const newLicenses = getLicensesFromContainer('edit-license-container');
-            if (newLicenses === null) return; 
-
-            if (!name || !npn || !extension) {
-                showMessage('All main fields are required.', 'error');
-                return;
-            }
-
-            const agent = AGENTS[editingAgentUid];
-            if (!agent) {
-                showMessage('Error saving: Agent not found in system.', 'error');
-                return;
-            }
-
-            agent.name = name;
-            agent.npn = npn;
-            agent.extension = extension;
-            agent.licenses = newLicenses; 
-            
-            if (!agent.isSetupComplete && newLicenses.length > 0) {
-                agent.isSetupComplete = true;
-            }
-
-            if (auth.currentUser && auth.currentUser.uid === editingAgentUid) {
-                currentUserData = agent;
-                document.getElementById('current-user-name').textContent = currentUserData.name;
-            }
-            
-            showMessage(`Agent ${name} details updated successfully.`, 'success');
-            
-            if (activeView === 'admin' && currentUserData.isAdmin) {
-                renderAdminPanel();
-            } else if (activeView === 'profile') {
-                renderProfilePanel();
-            }
-
-            closeEditModal();
-        }
-
-        // (Search functions omitted for file size, they remain unchanged from the previous version)
-
-        function searchData() {
-            const input = normalize(document.getElementById('search-input').value);
-            const resultsPanel = document.getElementById('results-panel');
-
-            if (!input) {
-                resultsPanel.innerHTML = `
-                    <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
-                    <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
-                `;
-                lucide.createIcons();
-                return;
-            }
-            
-            const agentsArray = Object.values(AGENTS);
-
-            const matchedState = STATES.find(s => normalize(s.name) === input || normalize(s.acronym) === input);
-            if (matchedState) {
-                renderStateResults(matchedState, agentsArray);
-                return;
-            }
-
-            const matchedAgent = agentsArray.find(a => 
-                normalize(a.name).includes(input) || 
-                normalize(a.npn) === input || 
-                normalize(a.email).includes(input) ||
-                normalize(a.extension) === input
-            );
-            if (matchedAgent) {
-                renderAgentResults(matchedAgent);
-                return;
-            }
-
-            const matchedCarrier = CARRIERS.find(c => normalize(c).includes(input));
-            if (matchedCarrier) {
-                renderCarrierResults(matchedCarrier, agentsArray);
-                return;
-            }
-
-            resultsPanel.innerHTML = `
-                <i data-lucide="alert-triangle" class="w-12 h-12 text-amber-400 mb-4 opacity-70"></i>
-                <h2 class="text-2xl font-bold text-slate-100 mb-2">No Matches Found</h2>
-                <p class="text-lg text-slate-400">Could not find a State, Agent, or Carrier matching "${document.getElementById('search-input').value}".</p>
-            `;
-            lucide.createIcons();
-            showMessage('Search failed. No match found.', 'error');
-        }
-
-        // --- Dummy Render Functions (Required for completeness) ---
-
-        function renderStateResults(state, agentsArray) {
-            const resultsPanel = document.getElementById('results-panel');
-            resultsPanel.innerHTML = `<h2 class="text-2xl font-bold text-cyan-400">State Results for ${state.name}</h2><p>Agent list generated successfully.</p>`;
-            lucide.createIcons();
-        }
-
-        function renderAgentResults(agent) {
-            const resultsPanel = document.getElementById('results-panel');
-            resultsPanel.innerHTML = `<h2 class="text-2xl font-bold text-cyan-400">Agent Profile for ${agent.name}</h2><p>Profile details generated successfully.</p>`;
-            lucide.createIcons();
-        }
-
-        function renderCarrierResults(carrierName, agentsArray) {
-            const resultsPanel = document.getElementById('results-panel');
-            resultsPanel.innerHTML = `<h2 class="text-2xl font-bold text-cyan-400">Carrier Roster for ${carrierName}</h2><p>Agent list generated successfully.</p>`;
-            lucide.createIcons();
-        }
-    </script>
-</body>
-</html>
+                                <i data-lucide="search" class="w-4
