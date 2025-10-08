@@ -786,6 +786,11 @@
         }
 
         function openAddLicenseModal() {
+            // Reset currentEditingUserId for regular users
+            if (!currentUser.isAdmin) {
+                currentEditingUserId = null;
+            }
+            
             document.getElementById('add-license-modal').style.display = 'flex';
             document.getElementById('add-license-title').textContent = currentEditingUserId && currentUser.isAdmin 
                 ? `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`
@@ -825,42 +830,54 @@
                 expiration
             };
 
-            // Add to current user or the user being edited (for admins)
+            // CRITICAL FIX: Determine the correct target user
+            let targetUser;
+            
             if (currentEditingUserId && currentUser.isAdmin) {
-                const user = agents.find(a => a.id === currentEditingUserId);
-                if (user) {
-                    // Check if license for this state already exists
-                    if (user.licenses.some(license => license.state === state)) {
-                        showNotification(`License for ${state} already exists for this user`, 'error');
-                        return;
-                    }
-                    user.licenses.push(newLicense);
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                    closeAddLicenseModal();
-                    openEditUserLicenses(currentEditingUserId);
-                    showNotification('License added successfully!', 'success');
-                }
-            } else {
-                // Check if license for this state already exists
-                if (currentUser.licenses.some(license => license.state === state)) {
-                    showNotification(`License for ${state} already exists`, 'error');
+                // ADMIN ADDING LICENSE FOR ANOTHER USER
+                targetUser = agents.find(a => a.id === currentEditingUserId);
+                if (!targetUser) {
+                    showNotification('User not found', 'error');
                     return;
                 }
-                
-                currentUser.licenses.push(newLicense);
+            } else {
+                // REGULAR USER ADDING LICENSE FOR THEMSELVES
+                targetUser = currentUser;
+            }
+
+            // Check if license for this state already exists for the target user
+            if (targetUser.licenses.some(license => license.state === state)) {
+                showNotification(`License for ${state} already exists`, 'error');
+                return;
+            }
+
+            // Add license to the target user
+            targetUser.licenses.push(newLicense);
+            
+            // Update the agents array and localStorage
+            const agentIndex = agents.findIndex(a => a.id === targetUser.id);
+            if (agentIndex !== -1) {
+                agents[agentIndex] = targetUser;
+                localStorage.setItem('agentsData', JSON.stringify(agents));
+            }
+            
+            // If the target user is the current user, update currentUser as well
+            if (targetUser.id === currentUser.id) {
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Update in agents array
-                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
-                if (agentIndex !== -1) {
-                    agents[agentIndex] = currentUser;
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                }
-                
-                closeAddLicenseModal();
+            }
+
+            // CRITICAL FIX: Close the modal immediately after successful submission
+            closeAddLicenseModal();
+            
+            // Show appropriate success message and update UI
+            if (currentEditingUserId && currentUser.isAdmin) {
+                showNotification(`License added to ${targetUser.name} successfully!`, 'success');
+                // Reload the edit modal if we're in admin mode
+                openEditUserLicenses(currentEditingUserId);
+            } else {
+                showNotification('License added successfully!', 'success');
                 loadUserLicenses();
                 updateUserStats();
-                showNotification('License added successfully!', 'success');
             }
         }
 
@@ -986,7 +1003,7 @@
 
         function closeEditUserLicensesModal() {
             document.getElementById('edit-user-licenses-modal').style.display = 'none';
-            currentEditingUserId = null;
+            // Don't reset currentEditingUserId here - we need it for the add license modal
         }
 
         function openAddLicenseForUserModal() {
@@ -995,6 +1012,8 @@
                 return;
             }
             
+            // currentEditingUserId is already set from openEditUserLicenses
+            closeEditUserLicensesModal();
             document.getElementById('add-license-modal').style.display = 'flex';
         }
 
@@ -1005,9 +1024,9 @@
             }
 
             if (confirm('Are you sure you want to remove this license?')) {
-                const user = agents.find(a => a.id === userId);
-                if (user) {
-                    user.licenses.splice(licenseIndex, 1);
+                const userIndex = agents.findIndex(a => a.id === userId);
+                if (userIndex !== -1) {
+                    agents[userIndex].licenses.splice(licenseIndex, 1);
                     localStorage.setItem('agentsData', JSON.stringify(agents));
                     
                     // Reload the edit modal
