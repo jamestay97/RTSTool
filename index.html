@@ -819,18 +819,25 @@
                 expiration: expiration
             };
 
-            // DETERMINE TARGET USER
-            let targetUser = currentUser;
-            let targetUserId = currentUser.id;
+            // DETERMINE TARGET USER - THIS IS THE CRITICAL FIX
+            let targetUserId;
             
-            // If we're in admin mode and editing a specific user
             if (currentEditingUserId && currentUser.isAdmin) {
-                const userIndex = agents.findIndex(a => a.id === currentEditingUserId);
-                if (userIndex !== -1) {
-                    targetUser = agents[userIndex];
-                    targetUserId = currentEditingUserId;
-                }
+                // ADMIN ADDING LICENSE FOR ANOTHER USER
+                targetUserId = currentEditingUserId;
+            } else {
+                // USER ADDING LICENSE FOR THEMSELVES
+                targetUserId = currentUser.id;
             }
+
+            // Find the target user
+            const targetUserIndex = agents.findIndex(a => a.id === targetUserId);
+            if (targetUserIndex === -1) {
+                showNotification('User not found', 'error');
+                return;
+            }
+
+            const targetUser = agents[targetUserIndex];
 
             // Check if license for this state already exists for the target user
             if (targetUser.licenses.some(license => license.state === state)) {
@@ -841,16 +848,14 @@
             // Add license to the target user
             targetUser.licenses.push(newLicense);
             
-            // Update localStorage - find the agent and update them
-            const agentIndex = agents.findIndex(a => a.id === targetUserId);
-            if (agentIndex !== -1) {
-                agents[agentIndex] = targetUser;
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                
-                // If the target user is the current user, update currentUser as well
-                if (targetUserId === currentUser.id) {
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                }
+            // Update localStorage
+            agents[targetUserIndex] = targetUser;
+            localStorage.setItem('agentsData', JSON.stringify(agents));
+            
+            // If the target user is the current user, update currentUser as well
+            if (targetUserId === currentUser.id) {
+                currentUser = targetUser;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
 
             closeAddLicenseModal();
@@ -859,9 +864,7 @@
             if (currentEditingUserId && currentUser.isAdmin) {
                 showNotification(`License added to ${targetUser.name} successfully!`, 'success');
                 // Reload the edit modal if we're in admin mode
-                if (currentEditingUserId) {
-                    openEditUserLicenses(currentEditingUserId);
-                }
+                openEditUserLicenses(currentEditingUserId);
             } else {
                 showNotification('License added successfully!', 'success');
                 loadUserLicenses();
@@ -929,7 +932,7 @@
 
         function closeEditUserLicensesModal() {
             document.getElementById('edit-user-licenses-modal').style.display = 'none';
-            currentEditingUserId = null;
+            // DO NOT reset currentEditingUserId here - we need it for the add license modal
         }
 
         function openAddLicenseForUserModal() {
@@ -938,6 +941,7 @@
                 return;
             }
             
+            // currentEditingUserId is already set from openEditUserLicenses
             document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`;
             closeEditUserLicensesModal();
             document.getElementById('add-license-modal').style.display = 'flex';
