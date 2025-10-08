@@ -649,7 +649,7 @@
         }
 
         function performSearch() {
-            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const query = document.getElementById('search-input').value.trim();
             const resultsContainer = document.getElementById('search-results');
             
             if (!query) {
@@ -662,30 +662,33 @@
                 return;
             }
 
-            // Search through agents and licenses with full state name support
+            // Search through agents and licenses with EXACT matches
             const results = agents.filter(agent => {
-                // Basic agent info search
-                if (agent.name.toLowerCase().includes(query) ||
-                    agent.email.toLowerCase().includes(query) ||
-                    agent.npn.includes(query)) {
+                // Split agent name into first and last name for exact matching
+                const [firstName, lastName] = agent.name.split(' ');
+                
+                // Basic agent info search with EXACT matches
+                if (agent.name.toLowerCase() === query.toLowerCase() ||
+                    firstName.toLowerCase() === query.toLowerCase() ||
+                    lastName.toLowerCase() === query.toLowerCase() ||
+                    agent.email.toLowerCase() === query.toLowerCase() ||
+                    agent.npn === query) {
                     return true;
                 }
 
-                // License search with state name/abbreviation support
+                // License search with EXACT state name/abbreviation support
                 return agent.licenses.some(license => {
                     const state = STATES_DATA.find(s => 
-                        s.abbreviation === license.state || 
-                        s.name.toLowerCase() === license.state.toLowerCase()
+                        s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                        s.name.toLowerCase() === query.toLowerCase()
                     );
                     
-                    const stateName = state ? state.name.toLowerCase() : '';
-                    const stateAbbr = license.state.toLowerCase();
+                    // Check for exact carrier match
+                    const exactCarrierMatch = license.carriers.some(carrier => 
+                        carrier.toLowerCase() === query.toLowerCase()
+                    );
                     
-                    return stateName.includes(query) ||
-                           stateAbbr.includes(query) ||
-                           license.carriers.some(carrier => 
-                               carrier.toLowerCase().includes(query)
-                           );
+                    return (state !== undefined) || exactCarrierMatch;
                 });
             });
 
@@ -693,7 +696,8 @@
                 resultsContainer.innerHTML = `
                     <div class="text-center text-gray-400">
                         <i class="fas fa-search text-4xl mb-4"></i>
-                        <p class="text-xl">No results found for "${query}"</p>
+                        <p class="text-xl">No exact matches found for "${query}"</p>
+                        <p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, or carrier name</p>
                     </div>
                 `;
                 return;
