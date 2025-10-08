@@ -26,6 +26,26 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: #374151;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
@@ -232,7 +252,7 @@
                             <div id="licenses-container" class="space-y-4">
                                 <!-- Licenses will be dynamically added here -->
                             </div>
-                            <button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition">
+                            <button onclick="openAddLicenseModal()" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition">
                                 <i class="fas fa-plus mr-2"></i>Add License
                             </button>
                         </div>
@@ -255,6 +275,67 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add License Modal -->
+    <div id="add-license-modal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-cyan-400">Add New License</h3>
+                <button onclick="closeAddLicenseModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-license-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">State</label>
+                    <select id="license-state" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white" required>
+                        <option value="">Select a state</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Carriers</label>
+                    <div id="carriers-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg">
+                        <!-- Carriers will be added here -->
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Expiration Date</label>
+                    <input type="date" id="license-expiration" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white" required>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddLicenseModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg transition">
+                        Add License
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit License Modal (for Admins) -->
+    <div id="edit-user-licenses-modal" class="modal">
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
+                <button onclick="closeEditUserLicensesModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto">
+                <!-- User licenses will be listed here -->
+            </div>
+            <button onclick="openAddLicenseForUserModal()" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4">
+                <i class="fas fa-plus mr-2"></i>Add License for User
+            </button>
+            <div class="flex justify-end">
+                <button onclick="closeEditUserLicensesModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -374,6 +455,7 @@
         // App State
         let currentUser = null;
         let agents = [DEFAULT_ADMIN, ...SAMPLE_AGENTS];
+        let editingUserId = null;
 
         // DOM Elements
         const loadingScreen = document.getElementById('loading-screen');
@@ -408,7 +490,35 @@
                 localStorage.setItem('agentsData', JSON.stringify(agents));
             }
 
+            // Populate state dropdown
+            populateStateDropdown();
+            // Populate carriers checkboxes
+            populateCarriersCheckboxes();
+
             setupEventListeners();
+        }
+
+        function populateStateDropdown() {
+            const stateSelect = document.getElementById('license-state');
+            STATES_DATA.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.abbreviation;
+                option.textContent = `${state.name} (${state.abbreviation})`;
+                stateSelect.appendChild(option);
+            });
+        }
+
+        function populateCarriersCheckboxes() {
+            const carriersContainer = document.getElementById('carriers-container');
+            CARRIERS.forEach(carrier => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" value="${carrier}" class="carrier-checkbox rounded text-cyan-600">
+                    <span>${carrier}</span>
+                `;
+                carriersContainer.appendChild(label);
+            });
         }
 
         function setupEventListeners() {
@@ -429,8 +539,8 @@
             // Search button
             document.getElementById('search-btn').addEventListener('click', performSearch);
             
-            // Add license button
-            document.getElementById('add-license-btn').addEventListener('click', addNewLicense);
+            // Add license form
+            document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
         }
 
         function showAuthScreen() {
@@ -665,13 +775,18 @@
             }
 
             let licensesHTML = '';
-            currentUser.licenses.forEach(license => {
+            currentUser.licenses.forEach((license, index) => {
                 const state = STATES_DATA.find(s => s.abbreviation === license.state);
                 licensesHTML += `
                     <div class="bg-gray-700 p-4 rounded-lg">
                         <div class="flex justify-between items-start mb-3">
                             <h4 class="text-lg font-semibold text-cyan-300">${state ? state.name : license.state} License</h4>
-                            <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+                            <div class="flex space-x-2">
+                                <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+                                <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                         <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
                         <p class="text-gray-400 text-sm">Expires: ${license.expiration}</p>
@@ -682,17 +797,55 @@
             container.innerHTML = licensesHTML;
         }
 
-        function addNewLicense() {
-            // For demo purposes, add a random license
-            const randomState = STATES_DATA[Math.floor(Math.random() * STATES_DATA.length)];
-            const randomCarriers = CARRIERS
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 2);
+        // License Management Functions
+        function openAddLicenseModal() {
+            document.getElementById('add-license-modal').style.display = 'flex';
+        }
+
+        function closeAddLicenseModal() {
+            document.getElementById('add-license-modal').style.display = 'none';
+            document.getElementById('add-license-form').reset();
+            // Uncheck all carriers
+            document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+
+        function handleAddLicense(e) {
+            e.preventDefault();
             
+            const state = document.getElementById('license-state').value;
+            const expiration = document.getElementById('license-expiration').value;
+            
+            // Get selected carriers
+            const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (!state) {
+                showNotification('Please select a state', 'error');
+                return;
+            }
+            
+            if (selectedCarriers.length === 0) {
+                showNotification('Please select at least one carrier', 'error');
+                return;
+            }
+            
+            if (!expiration) {
+                showNotification('Please select an expiration date', 'error');
+                return;
+            }
+
+            // Check if license for this state already exists
+            if (currentUser.licenses.some(license => license.state === state)) {
+                showNotification('License for this state already exists', 'error');
+                return;
+            }
+
             const newLicense = {
-                state: randomState.abbreviation,
-                carriers: randomCarriers,
-                expiration: "2024-12-31"
+                state: state,
+                carriers: selectedCarriers,
+                expiration: expiration
             };
             
             currentUser.licenses.push(newLicense);
@@ -705,9 +858,89 @@
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
             
+            closeAddLicenseModal();
             loadUserLicenses();
             updateUserStats();
-            showNotification('New license added!', 'success');
+            showNotification('License added successfully!', 'success');
+        }
+
+        function deleteLicense(licenseIndex) {
+            if (confirm('Are you sure you want to delete this license?')) {
+                currentUser.licenses.splice(licenseIndex, 1);
+                
+                // Update localStorage
+                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
+                if (agentIndex !== -1) {
+                    agents[agentIndex] = currentUser;
+                    localStorage.setItem('agentsData', JSON.stringify(agents));
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                loadUserLicenses();
+                updateUserStats();
+                showNotification('License deleted successfully', 'success');
+            }
+        }
+
+        // Admin License Management Functions
+        function openEditUserLicenses(userId) {
+            editingUserId = userId;
+            const user = agents.find(a => a.id === userId);
+            document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
+            
+            const container = document.getElementById('user-licenses-container');
+            container.innerHTML = '';
+            
+            if (user.licenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+            } else {
+                user.licenses.forEach((license, index) => {
+                    const state = STATES_DATA.find(s => s.abbreviation === license.state);
+                    const licenseDiv = document.createElement('div');
+                    licenseDiv.className = 'bg-gray-600 p-3 rounded-lg';
+                    licenseDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h5 class="font-semibold text-cyan-300">${state ? state.name : license.state}</h5>
+                                <p class="text-sm text-gray-300">${license.carriers.join(', ')}</p>
+                                <p class="text-xs text-gray-400">Expires: ${license.expiration}</p>
+                            </div>
+                            <button onclick="deleteUserLicense(${userId}, ${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(licenseDiv);
+                });
+            }
+            
+            document.getElementById('edit-user-licenses-modal').style.display = 'flex';
+        }
+
+        function closeEditUserLicensesModal() {
+            document.getElementById('edit-user-licenses-modal').style.display = 'none';
+            editingUserId = null;
+        }
+
+        function openAddLicenseForUserModal() {
+            closeEditUserLicensesModal();
+            openAddLicenseModal();
+            // Set a flag to indicate this is for another user
+            document.getElementById('add-license-form').dataset.forUser = editingUserId;
+        }
+
+        function deleteUserLicense(userId, licenseIndex) {
+            if (confirm('Are you sure you want to delete this license?')) {
+                const userIndex = agents.findIndex(a => a.id === userId);
+                if (userIndex !== -1) {
+                    agents[userIndex].licenses.splice(licenseIndex, 1);
+                    localStorage.setItem('agentsData', JSON.stringify(agents));
+                    
+                    // Reload the edit modal
+                    openEditUserLicenses(userId);
+                    showNotification('License deleted successfully', 'success');
+                }
+            }
         }
 
         function loadAdminPanel() {
@@ -731,14 +964,15 @@
                                 </h4>
                                 <p class="text-gray-300">${user.email} | NPN: ${user.npn}</p>
                                 <p class="text-gray-400 text-sm">Joined: ${user.joinDate}</p>
+                                <p class="text-gray-400 text-sm">Licenses: ${user.licenses.length} states</p>
                             </div>
                             <div class="flex space-x-2">
+                                <button onclick="openEditUserLicenses(${user.id})" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition">
+                                    <i class="fas fa-edit mr-1"></i>Licenses
+                                </button>
                                 ${!isCurrentUser ? `
                                     <button onclick="toggleAdminStatus(${user.id})" class="${user.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'} px-3 py-1 rounded text-sm transition">
                                         ${user.isAdmin ? 'Demote' : 'Promote'}
-                                    </button>
-                                    <button onclick="editUser(${user.id})" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition">
-                                        Edit
                                     </button>
                                     ${!user.isAdmin ? `
                                         <button onclick="deleteUser(${user.id})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
@@ -751,9 +985,6 @@
                         <div class="flex items-center space-x-2">
                             <span class="text-xs font-medium px-2 py-1 rounded-full ${user.isAdmin ? 'bg-red-800 text-red-300' : 'bg-green-800 text-green-300'}">
                                 ${user.isAdmin ? 'Administrator' : 'Agent'}
-                            </span>
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-600 text-gray-300">
-                                Licenses: ${user.licenses.length}
                             </span>
                         </div>
                     </div>
@@ -779,12 +1010,6 @@
                 loadAdminPanel();
                 showNotification(`User ${agents[userIndex].isAdmin ? 'promoted to admin' : 'demoted to agent'}`, 'success');
             }
-        }
-
-        function editUser(userId) {
-            // For demo purposes, just show a notification
-            const user = agents.find(a => a.id === userId);
-            showNotification(`Edit user: ${user.name}`, 'info');
         }
 
         function deleteUser(userId) {
@@ -824,10 +1049,17 @@
             }, 3000);
         }
 
-        // Make admin functions globally available
+        // Make functions globally available
         window.toggleAdminStatus = toggleAdminStatus;
         window.editUser = editUser;
         window.deleteUser = deleteUser;
+        window.openAddLicenseModal = openAddLicenseModal;
+        window.closeAddLicenseModal = closeAddLicenseModal;
+        window.deleteLicense = deleteLicense;
+        window.openEditUserLicenses = openEditUserLicenses;
+        window.closeEditUserLicensesModal = closeEditUserLicensesModal;
+        window.openAddLicenseForUserModal = openAddLicenseForUserModal;
+        window.deleteUserLicense = deleteUserLicense;
     </script>
 </body>
 </html>
