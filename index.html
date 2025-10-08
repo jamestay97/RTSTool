@@ -629,7 +629,7 @@
         }
 
         function performSearch() {
-            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const query = document.getElementById('search-input').value.trim();
             const resultsContainer = document.getElementById('search-results');
             
             if (!query) {
@@ -642,59 +642,98 @@
                 return;
             }
 
-            // FIXED SEARCH LOGIC - Only show agents that have matching licenses
+            // UPDATED SEARCH LOGIC - EXACT MATCHES ONLY
             const results = agents.filter(agent => {
-                // First check if agent info matches (name, email, npn, extension)
-                const agentInfoMatch = 
-                    agent.name.toLowerCase().includes(query) ||
-                    agent.email.toLowerCase().includes(query) ||
-                    agent.npn.includes(query) ||
-                    agent.extension.includes(query);
+                // Split agent name into first and last name for exact matching
+                const [firstName, lastName] = agent.name.split(' ');
+                
+                // Check for EXACT agent info matches (case-insensitive)
+                const agentMatch = 
+                    agent.name.toLowerCase() === query.toLowerCase() ||
+                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
+                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
+                    agent.email.toLowerCase() === query.toLowerCase() ||
+                    agent.npn === query ||
+                    agent.extension === query;
 
-                // Then check if agent has licenses that match the search
-                const licenseMatch = agent.licenses.some(license => {
-                    // Check state match (both name and abbreviation)
-                    const stateMatch = STATES_DATA.some(state => 
-                        (state.name.toLowerCase().includes(query) || 
-                         state.abbreviation.toLowerCase().includes(query)) &&
-                        license.state === state.abbreviation
+                // Check for EXACT state matches in licenses (both name and abbreviation)
+                const stateMatch = agent.licenses.some(license => {
+                    const state = STATES_DATA.find(s => 
+                        s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                        s.name.toLowerCase() === query.toLowerCase()
                     );
+                    return state !== undefined && license.state === state.abbreviation;
+                });
 
-                    // Check carrier match
+                // Check for EXACT carrier matches in licenses
+                const carrierMatch = agent.licenses.some(license => 
+                    license.carriers.some(carrier => 
+                        carrier.toLowerCase() === query.toLowerCase()
+                    )
+                );
+
+                // Return true only if the agent has matching licenses OR matches agent info
+                return (stateMatch || carrierMatch) || agentMatch;
+            });
+
+            // Filter out agents that don't have any licenses when searching for states/carriers
+            const filteredResults = results.filter(agent => {
+                // If searching for agent info (name, email, npn, extension), include them regardless of licenses
+                const [firstName, lastName] = agent.name.split(' ');
+                const isAgentInfoSearch = 
+                    agent.name.toLowerCase() === query.toLowerCase() ||
+                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
+                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
+                    agent.email.toLowerCase() === query.toLowerCase() ||
+                    agent.npn === query ||
+                    agent.extension === query;
+
+                // If it's an agent info search, include them
+                if (isAgentInfoSearch) {
+                    return true;
+                }
+
+                // For state/carrier searches, only include agents that have licenses matching the search
+                const hasMatchingLicense = agent.licenses.some(license => {
+                    const stateMatch = STATES_DATA.some(s => 
+                        (s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                         s.name.toLowerCase() === query.toLowerCase()) && 
+                        license.state === s.abbreviation
+                    );
+                    
                     const carrierMatch = license.carriers.some(carrier => 
-                        carrier.toLowerCase().includes(query)
+                        carrier.toLowerCase() === query.toLowerCase()
                     );
 
                     return stateMatch || carrierMatch;
                 });
 
-                // Return true if either agent info matches OR they have matching licenses
-                return agentInfoMatch || licenseMatch;
+                return hasMatchingLicense;
             });
 
-            if (results.length === 0) {
+            if (filteredResults.length === 0) {
                 resultsContainer.innerHTML = `
                     <div class="text-center text-gray-400">
                         <i class="fas fa-search text-4xl mb-4"></i>
-                        <p class="text-xl">No matches found for "${query}"</p>
-                        <p class="text-sm mt-2">Search by state name, state code, agent name, email, NPN, extension, or carrier name</p>
+                        <p class="text-xl">No exact matches found for "${query}"</p>
+                        <p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, NPN, extension, or carrier name</p>
                     </div>
                 `;
                 return;
             }
 
             let resultsHTML = '<div class="space-y-4">';
-            results.forEach(agent => {
+            filteredResults.forEach(agent => {
                 // Filter licenses to only show those that match the search
                 const matchingLicenses = agent.licenses.filter(license => {
-                    const stateMatch = STATES_DATA.some(state => 
-                        (state.name.toLowerCase().includes(query) || 
-                         state.abbreviation.toLowerCase().includes(query)) &&
-                        license.state === state.abbreviation
+                    const stateMatch = STATES_DATA.some(s => 
+                        (s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                         s.name.toLowerCase() === query.toLowerCase()) && 
+                        license.state === s.abbreviation
                     );
-
+                    
                     const carrierMatch = license.carriers.some(carrier => 
-                        carrier.toLowerCase().includes(query)
+                        carrier.toLowerCase() === query.toLowerCase()
                     );
 
                     return stateMatch || carrierMatch;
