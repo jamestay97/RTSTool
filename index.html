@@ -662,37 +662,74 @@
                 return;
             }
 
-            // Search through agents and licenses with EXACT matches
+            // Search through agents with EXACT matches
             const results = agents.filter(agent => {
                 // Split agent name into first and last name for exact matching
                 const [firstName, lastName] = agent.name.split(' ');
                 
-                // Basic agent info search with EXACT matches
-                if (agent.name.toLowerCase() === query.toLowerCase() ||
-                    firstName.toLowerCase() === query.toLowerCase() ||
-                    lastName.toLowerCase() === query.toLowerCase() ||
+                // Check for exact agent info matches (name, email, npn)
+                const agentMatch = 
+                    agent.name.toLowerCase() === query.toLowerCase() ||
+                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
+                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
                     agent.email.toLowerCase() === query.toLowerCase() ||
-                    agent.npn === query) {
-                    return true;
-                }
+                    agent.npn === query;
 
-                // License search with EXACT state name/abbreviation support
-                return agent.licenses.some(license => {
+                // Check for exact state matches in licenses
+                const stateMatch = agent.licenses.some(license => {
                     const state = STATES_DATA.find(s => 
                         s.abbreviation.toLowerCase() === query.toLowerCase() || 
                         s.name.toLowerCase() === query.toLowerCase()
                     );
-                    
-                    // Check for exact carrier match
-                    const exactCarrierMatch = license.carriers.some(carrier => 
-                        carrier.toLowerCase() === query.toLowerCase()
-                    );
-                    
-                    return (state !== undefined) || exactCarrierMatch;
+                    return state !== undefined;
                 });
+
+                // Check for exact carrier matches in licenses
+                const carrierMatch = agent.licenses.some(license => 
+                    license.carriers.some(carrier => 
+                        carrier.toLowerCase() === query.toLowerCase()
+                    )
+                );
+
+                // Return true only if the agent has matching licenses OR matches agent info
+                return (stateMatch || carrierMatch) || agentMatch;
             });
 
-            if (results.length === 0) {
+            // Filter out agents that don't have any licenses when searching for states/carriers
+            const filteredResults = results.filter(agent => {
+                // If searching for agent info (name, email, npn), include them regardless of licenses
+                const [firstName, lastName] = agent.name.split(' ');
+                const isAgentInfoSearch = 
+                    agent.name.toLowerCase() === query.toLowerCase() ||
+                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
+                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
+                    agent.email.toLowerCase() === query.toLowerCase() ||
+                    agent.npn === query;
+
+                // If it's an agent info search, include them
+                if (isAgentInfoSearch) {
+                    return true;
+                }
+
+                // For state/carrier searches, only include agents that have licenses matching the search
+                const hasMatchingLicense = agent.licenses.some(license => {
+                    const stateMatch = STATES_DATA.some(s => 
+                        (s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                         s.name.toLowerCase() === query.toLowerCase()) && 
+                        license.state === s.abbreviation
+                    );
+                    
+                    const carrierMatch = license.carriers.some(carrier => 
+                        carrier.toLowerCase() === query.toLowerCase()
+                    );
+
+                    return stateMatch || carrierMatch;
+                });
+
+                return hasMatchingLicense;
+            });
+
+            if (filteredResults.length === 0) {
                 resultsContainer.innerHTML = `
                     <div class="text-center text-gray-400">
                         <i class="fas fa-search text-4xl mb-4"></i>
@@ -704,7 +741,7 @@
             }
 
             let resultsHTML = '<div class="space-y-4">';
-            results.forEach(agent => {
+            filteredResults.forEach(agent => {
                 const licenseInfo = agent.licenses.map(license => {
                     const state = STATES_DATA.find(s => s.abbreviation === license.state);
                     return `${state ? state.name : license.state}: ${license.carriers.join(', ')}`;
@@ -725,368 +762,4 @@
                     </div>
                 `;
             });
-            resultsHTML += '</div>';
-            
-            resultsContainer.innerHTML = resultsHTML;
-        }
-
-        function updateUserStats() {
-            const statesCount = currentUser.licenses.length;
-            const carriersCount = currentUser.licenses.reduce((total, license) => total + license.carriers.length, 0);
-            
-            document.getElementById('states-count').textContent = statesCount;
-            document.getElementById('carriers-count').textContent = carriersCount;
-        }
-
-        function loadUserLicenses() {
-            const container = document.getElementById('licenses-container');
-            
-            if (currentUser.licenses.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-400 py-8">
-                        <i class="fas fa-id-card text-4xl mb-4"></i>
-                        <p class="text-xl">No licenses added yet</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let licensesHTML = '';
-            currentUser.licenses.forEach((license, index) => {
-                const state = STATES_DATA.find(s => s.abbreviation === license.state);
-                licensesHTML += `
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-3">
-                            <h4 class="text-lg font-semibold text-cyan-300">${state ? state.name : license.state} License</h4>
-                            <div class="flex space-x-2">
-                                <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
-                                <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
-                        <p class="text-gray-400 text-sm">Expires: ${license.expiration}</p>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = licensesHTML;
-        }
-
-        // License Management Functions
-        function openAddLicenseModal() {
-            // Regular user adding license to themselves
-            currentEditingUserId = null;
-            document.getElementById('add-license-title').textContent = 'Add New License';
-            document.getElementById('add-license-modal').style.display = 'flex';
-        }
-
-        function closeAddLicenseModal() {
-            document.getElementById('add-license-modal').style.display = 'none';
-            document.getElementById('add-license-form').reset();
-            // Uncheck all carriers
-            document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            currentEditingUserId = null;
-        }
-
-        function handleAddLicense(e) {
-            e.preventDefault();
-            
-            const state = document.getElementById('license-state').value;
-            const expiration = document.getElementById('license-expiration').value;
-            
-            // Get selected carriers
-            const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            if (!state) {
-                showNotification('Please select a state', 'error');
-                return;
-            }
-            
-            if (selectedCarriers.length === 0) {
-                showNotification('Please select at least one carrier', 'error');
-                return;
-            }
-            
-            if (!expiration) {
-                showNotification('Please select an expiration date', 'error');
-                return;
-            }
-
-            const newLicense = {
-                state: state,
-                carriers: selectedCarriers,
-                expiration: expiration
-            };
-
-            // DETERMINE TARGET USER - THIS IS THE CRITICAL FIX
-            let targetUserId;
-            
-            if (currentEditingUserId && currentUser.isAdmin) {
-                // ADMIN ADDING LICENSE FOR ANOTHER USER
-                targetUserId = currentEditingUserId;
-            } else {
-                // USER ADDING LICENSE FOR THEMSELVES
-                targetUserId = currentUser.id;
-            }
-
-            // Find the target user
-            const targetUserIndex = agents.findIndex(a => a.id === targetUserId);
-            if (targetUserIndex === -1) {
-                showNotification('User not found', 'error');
-                return;
-            }
-
-            const targetUser = agents[targetUserIndex];
-
-            // Check if license for this state already exists for the target user
-            if (targetUser.licenses.some(license => license.state === state)) {
-                showNotification(`License for ${state} already exists for ${targetUser.name}`, 'error');
-                return;
-            }
-
-            // Add license to the target user
-            targetUser.licenses.push(newLicense);
-            
-            // Update localStorage
-            agents[targetUserIndex] = targetUser;
-            localStorage.setItem('agentsData', JSON.stringify(agents));
-            
-            // If the target user is the current user, update currentUser as well
-            if (targetUserId === currentUser.id) {
-                currentUser = targetUser;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            }
-
-            closeAddLicenseModal();
-            
-            // Show appropriate success message
-            if (currentEditingUserId && currentUser.isAdmin) {
-                showNotification(`License added to ${targetUser.name} successfully!`, 'success');
-                // Reload the edit modal if we're in admin mode
-                openEditUserLicenses(currentEditingUserId);
-            } else {
-                showNotification('License added successfully!', 'success');
-                loadUserLicenses();
-                updateUserStats();
-            }
-        }
-
-        function deleteLicense(licenseIndex) {
-            if (confirm('Are you sure you want to delete this license?')) {
-                currentUser.licenses.splice(licenseIndex, 1);
-                
-                // Update localStorage
-                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
-                if (agentIndex !== -1) {
-                    agents[agentIndex] = currentUser;
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                }
-                
-                loadUserLicenses();
-                updateUserStats();
-                showNotification('License deleted successfully', 'success');
-            }
-        }
-
-        // Admin License Management Functions
-        function openEditUserLicenses(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            currentEditingUserId = userId;
-            const user = agents.find(a => a.id === userId);
-            document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
-            
-            const container = document.getElementById('user-licenses-container');
-            container.innerHTML = '';
-            
-            if (user.licenses.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
-            } else {
-                user.licenses.forEach((license, index) => {
-                    const state = STATES_DATA.find(s => s.abbreviation === license.state);
-                    const licenseDiv = document.createElement('div');
-                    licenseDiv.className = 'bg-gray-600 p-3 rounded-lg';
-                    licenseDiv.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h5 class="font-semibold text-cyan-300">${state ? state.name : license.state}</h5>
-                                <p class="text-sm text-gray-300">${license.carriers.join(', ')}</p>
-                                <p class="text-xs text-gray-400">Expires: ${license.expiration}</p>
-                            </div>
-                            <button onclick="deleteUserLicense(${userId}, ${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    container.appendChild(licenseDiv);
-                });
-            }
-            
-            document.getElementById('edit-user-licenses-modal').style.display = 'flex';
-        }
-
-        function closeEditUserLicensesModal() {
-            document.getElementById('edit-user-licenses-modal').style.display = 'none';
-            // DO NOT reset currentEditingUserId here - we need it for the add license modal
-        }
-
-        function openAddLicenseForUserModal() {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-            
-            // currentEditingUserId is already set from openEditUserLicenses
-            document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`;
-            closeEditUserLicensesModal();
-            document.getElementById('add-license-modal').style.display = 'flex';
-        }
-
-        function deleteUserLicense(userId, licenseIndex) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            if (confirm('Are you sure you want to delete this license?')) {
-                const userIndex = agents.findIndex(a => a.id === userId);
-                if (userIndex !== -1) {
-                    agents[userIndex].licenses.splice(licenseIndex, 1);
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                    
-                    // Reload the edit modal
-                    openEditUserLicenses(userId);
-                    showNotification('License deleted successfully', 'success');
-                }
-            }
-        }
-
-        function loadAdminPanel() {
-            const totalUsers = agents.length;
-            const adminCount = agents.filter(a => a.isAdmin).length;
-            const agentCount = totalUsers - adminCount;
-
-            document.getElementById('total-users').textContent = totalUsers;
-            document.getElementById('admin-count').textContent = adminCount;
-            document.getElementById('agent-count').textContent = agentCount;
-
-            let usersHTML = '';
-            agents.forEach(user => {
-                const isCurrentUser = user.id === currentUser.id;
-                usersHTML += `
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="text-lg font-semibold ${user.isAdmin ? 'text-red-400' : 'text-cyan-300'}">
-                                    ${user.name} ${isCurrentUser ? '(You)' : ''}
-                                </h4>
-                                <p class="text-gray-300">${user.email} | NPN: ${user.npn}</p>
-                                <p class="text-gray-400 text-sm">Extension: ${user.extension}</p>
-                                <p class="text-gray-400 text-sm">Joined: ${user.joinDate}</p>
-                                <p class="text-gray-400 text-sm">Licenses: ${user.licenses.length} states</p>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="openEditUserLicenses(${user.id})" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition">
-                                    <i class="fas fa-edit mr-1"></i>Licenses
-                                </button>
-                                ${!isCurrentUser ? `
-                                    <button onclick="toggleAdminStatus(${user.id})" class="${user.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'} px-3 py-1 rounded text-sm transition">
-                                        ${user.isAdmin ? 'Demote' : 'Promote'}
-                                    </button>
-                                    ${!user.isAdmin ? `
-                                        <button onclick="deleteUser(${user.id})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
-                                            Delete
-                                        </button>
-                                    ` : ''}
-                                ` : ''}
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full ${user.isAdmin ? 'bg-red-800 text-red-300' : 'bg-green-800 text-green-300'}">
-                                ${user.isAdmin ? 'Administrator' : 'Agent'}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('users-list').innerHTML = usersHTML;
-        }
-
-        // Admin functions
-        function toggleAdminStatus(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            const userIndex = agents.findIndex(a => a.id === userId);
-            if (userIndex !== -1) {
-                agents[userIndex].isAdmin = !agents[userIndex].isAdmin;
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                
-                // Reload admin panel
-                loadAdminPanel();
-                showNotification(`User ${agents[userIndex].isAdmin ? 'promoted to admin' : 'demoted to agent'}`, 'success');
-            }
-        }
-
-        function deleteUser(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            if (confirm('Are you sure you want to delete this user?')) {
-                agents = agents.filter(a => a.id !== userId);
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                loadAdminPanel();
-                showNotification('User deleted successfully', 'success');
-            }
-        }
-
-        function showNotification(message, type) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
-                type === 'success' ? 'bg-green-600' :
-                type === 'error' ? 'bg-red-600' :
-                'bg-blue-600'
-            }`;
-            notification.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-2"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // Make functions globally available
-        window.toggleAdminStatus = toggleAdminStatus;
-        window.deleteUser = deleteUser;
-        window.openAddLicenseModal = openAddLicenseModal;
-        window.closeAddLicenseModal = closeAddLicenseModal;
-        window.deleteLicense = deleteLicense;
-        window.openEditUserLicenses = openEditUserLicenses;
-        window.closeEditUserLicensesModal = closeEditUserLicensesModal;
-        window.openAddLicenseForUserModal = openAddLicenseForUserModal;
-        window.deleteUserLicense = deleteUserLicense;
-    </script>
-</body>
-</html>
+            resultsHTML += '</
