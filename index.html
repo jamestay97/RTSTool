@@ -617,13 +617,15 @@
         async function handlePasswordReset() {
             const email = document.getElementById('reset-email').value.trim();
             const messageContainer = document.getElementById('reset-message-container');
+            const buttonId = 'reset-send-button';
+            const defaultText = 'Send Reset Link';
             
             if (!email) {
                 messageContainer.innerHTML = '<span class="text-red-400">Please enter an email address.</span>';
                 return;
             }
 
-            setButtonLoading('reset-send-button', true, 'Send Reset Link');
+            setButtonLoading(buttonId, true, defaultText);
 
             const MAX_RETRIES = 5;
             let currentRetry = 0;
@@ -649,7 +651,7 @@
                 }
             }
 
-            setButtonLoading('reset-send-button', false, 'Send Reset Link');
+            setButtonLoading(buttonId, false, defaultText);
 
             if (!success && lastError) {
                 let errorMessage = 'An error occurred during reset.';
@@ -676,23 +678,30 @@
             const agentPassword = document.getElementById('reg-password').value;
             const agentExtension = document.getElementById('reg-extension').value.trim();
 
+            const buttonId = 'register-button';
+            const defaultText = 'Proceed to License Setup';
+
+            // 1. Start loading immediately to give feedback
+            setButtonLoading(buttonId, true, defaultText); 
+
+            // 2. Synchronous Validation
             if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension) {
                 showMessage('All fields are required for registration.', 'error');
+                setButtonLoading(buttonId, false, defaultText); // FIX: Reset button on sync failure
                 return;
             }
             if (agentPassword.length < 6) {
                 showMessage('Password must be at least 6 characters long.', 'error');
+                setButtonLoading(buttonId, false, defaultText); // FIX: Reset button on sync failure
                 return;
             }
 
-            setButtonLoading('register-button', true, 'Proceed to License Setup');
-
             try {
-                // 1. Create user in Firebase Auth
+                // 3. Create user in Firebase Auth (ASYNCHRONOUS)
                 const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);
                 const user = userCredential.user;
 
-                // 2. Add new agent to the local AGENTS data store with incomplete setup status
+                // 4. Add new agent to the local AGENTS data store with incomplete setup status
                 AGENTS[user.uid] = {
                     name: agentName,
                     npn: agentNpn,
@@ -718,7 +727,8 @@
                 showMessage(errorMessage, 'error');
                 console.error("Firebase Registration Error:", error);
             } finally {
-                setButtonLoading('register-button', false, 'Proceed to License Setup');
+                // 5. Always reset the button after the async operation completes
+                setButtonLoading(buttonId, false, defaultText);
             }
         }
 
