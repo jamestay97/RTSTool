@@ -4,649 +4,428 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Insurance License Data Explorer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --bg-dark: #1f2937;
-            --bg-lighter: #374151;
-            --accent-primary: #22d3ee;
-            --text-light: #f3f4f6;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-        }
-        .card {
-            background-color: var(--bg-lighter);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
         .loading-spinner {
-            animation: spin 1s linear infinite;
-            border: 4px solid rgba(34, 211, 238, 0.3);
-            border-top: 4px solid #22d3ee;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #22d3ee;
             border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .carrier-chip {
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem; 
-            font-weight: 500; 
-            border-radius: 9999px;
-            cursor: pointer; 
-            transition: all 0.2s; 
-            border: 1px solid #475569;
-            background-color: #374151;
-            color: #d1d5db;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
         }
-        .selected-carrier {
-            background-color: #22d3ee !important;
-            color: #1f2937 !important;
-            border-color: #22d3ee;
-        }
-        .tab-button {
-            background-color: transparent;
-            color: #94a3b8;
-            border-bottom: 2px solid transparent;
-            padding-bottom: 0.5rem;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .tab-button.active {
-            color: #f3f4f6;
-            border-bottom: 2px solid #22d3ee;
-            font-weight: 600;
-        }
-        @media (max-width: 768px) {
-            .responsive-tabs {
-                flex-wrap: wrap;
-            }
-            .responsive-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .responsive-search {
-                flex-direction: column;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
-<body>
-    <div class="min-h-screen p-4 md:p-8 flex flex-col items-center">
-        <header class="w-full max-w-5xl text-center mb-8">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-100 mt-4">
-                License <span class="text-cyan-400">Data Explorer</span>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-cyan-400">
+                <i class="fas fa-id-card-alt mr-2"></i>License Explorer
             </h1>
-            <p class="text-slate-400 mt-2">Firebase-authenticated data tool for agents.</p>
-        </header>
-        
-        <!-- Loading Screen -->
-        <div id="loading-view" class="w-full max-w-5xl h-96 flex flex-col items-center justify-center card rounded-xl p-8">
-            <div class="loading-spinner h-12 w-12 mb-4"></div>
-            <p class="text-xl text-slate-300 font-medium">Checking authentication status...</p>
-        </div>
-
-        <!-- Login/Registration Panel -->
-        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 mb-8" style="display: none;">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Login Form -->
-                <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8">
-                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="log-in" class="w-6 h-6 mr-3"></i>
-                        Agent Login
-                    </h2>
-                    <form id="login-form">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="login-email" class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-                                <input type="email" id="login-email" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="name@corp.com">
-                            </div>
-                            <div>
-                                <label for="login-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                                <input type="password" id="login-password" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Enter your password">
-                            </div>
-                        </div>
-                        <button type="button" onclick="handleLogin()" class="w-full mt-6 bg-cyan-400 text-slate-900 py-3 rounded-lg font-semibold hover:bg-cyan-300 transition">
-                            Log In
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Registration Form -->
-                <div class="lg:pl-8">
-                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="user-plus" class="w-6 h-6 mr-3"></i>
-                        New Agent Registration
-                    </h2>
-                    <form id="new-agent-form">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
-                                <input type="text" id="reg-name" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Jane Doe">
-                            </div>
-                            <div>
-                                <label for="reg-npn" class="block text-sm font-medium text-slate-300 mb-1">NPN Number</label>
-                                <input type="text" id="reg-npn" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="12345678">
-                            </div>
-                            <div>
-                                <label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                                <input type="email" id="reg-email" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="jane@example.com">
-                            </div>
-                            <div>
-                                <label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                                <input type="password" id="reg-password" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Set your password">
-                            </div>
-                            <div>
-                                <label for="reg-extension" class="block text-sm font-medium text-slate-300 mb-1">Extension</label>
-                                <input type="text" id="reg-extension" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="555-1234">
-                            </div>
-                        </div>
-                        <button type="button" onclick="handleRegister()" class="w-full mt-6 bg-cyan-400 text-slate-900 py-3 rounded-lg font-semibold hover:bg-cyan-300 transition">
-                            Register
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main App Content -->
-        <div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;">
-            <!-- App Header/Tabs/Logout -->
-            <div id="app-header-tabs" class="w-full max-w-5xl card p-4 rounded-xl mb-6 responsive-header flex justify-between items-center">
-                <div class="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
-                    <p class="text-sm text-slate-400">
-                        Logged in as: <strong id="current-user-name" class="text-cyan-400"></strong> 
-                        <span id="admin-badge" class="bg-red-800/50 text-red-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2 hidden">ADMIN</span>
-                    </p>
-                    <div class="flex space-x-2 border-l-0 md:border-l border-slate-700 pl-0 md:pl-4 responsive-tabs">
-                        <button id="search-tab-button" onclick="changeView('search')" class="tab-button active flex items-center">
-                            <i data-lucide="search" class="w-4 h-4 mr-1"></i> Search Tool
-                        </button>
-                        <button id="profile-tab-button" onclick="changeView('profile')" class="tab-button flex items-center">
-                            <i data-lucide="award" class="w-4 h-4 mr-1"></i> My Licenses
-                        </button>
-                        <button id="admin-tab-button" onclick="changeView('admin')" class="tab-button hidden flex items-center">
-                            <i data-lucide="shield" class="w-4 h-4 mr-1"></i> Admin Panel
-                        </button>
-                    </div>
-                </div>
-
-                <button onclick="handleLogout()" class="bg-slate-600 text-white px-3 py-1 rounded-lg text-sm flex items-center mt-4 md:mt-0">
-                    <i data-lucide="log-out" class="w-4 h-4 mr-1"></i>
-                    Logout
+            <div id="nav-buttons" class="hidden">
+                <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
                 </button>
             </div>
+        </div>
+    </nav>
 
-            <!-- Content Area -->
-            <div class="w-full max-w-5xl">
-                <!-- License Setup View -->
-                <div id="licenses-setup-view" class="w-full hidden">
-                    <!-- Content will be loaded here -->
+    <!-- Main Content -->
+    <div class="container mx-auto p-4">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh] fade-in">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-xl">Loading Application...</p>
+        </div>
+
+        <!-- Login/Register Screen -->
+        <div id="auth-screen" class="hidden max-w-4xl mx-auto fade-in">
+            <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+                <h2 class="text-3xl font-bold text-center mb-8 text-cyan-400">
+                    <i class="fas fa-shield-alt mr-3"></i>Agent Portal
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Login Form -->
+                    <div class="bg-gray-700 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold mb-4 text-green-400">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </h3>
+                        <form id="login-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Email</label>
+                                <input type="email" id="login-email" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="agent@company.com" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Password</label>
+                                <input type="password" id="login-password" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="Enter password" required>
+                            </div>
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold transition">
+                                <i class="fas fa-unlock mr-2"></i>Login to Dashboard
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div class="bg-gray-700 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold mb-4 text-blue-400">
+                            <i class="fas fa-user-plus mr-2"></i>Register
+                        </h3>
+                        <form id="register-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Full Name</label>
+                                <input type="text" id="register-name" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="John Smith" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Email</label>
+                                <input type="email" id="register-email" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="john@company.com" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">NPN Number</label>
+                                <input type="text" id="register-npn" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="123456789" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Password</label>
+                                <input type="password" id="register-password" 
+                                       class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="Create password" required>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold transition">
+                                <i class="fas fa-user-check mr-2"></i>Create Account
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
+            <!-- Welcome Header -->
+            <div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Welcome back, <span id="user-name" class="text-cyan-300"></span>!</h2>
+                        <p class="text-gray-300">License Data Explorer Dashboard</p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <span id="user-badge" class="bg-green-600 px-3 py-1 rounded-full text-sm font-semibold">
+                            Licensed Agent
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tabs -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-2xl">
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+                    <button class="tab-btn active bg-cyan-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="search">
+                        <i class="fas fa-search mr-2"></i>Search Licenses
+                    </button>
+                    <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="profile">
+                        <i class="fas fa-user mr-2"></i>My Profile
+                    </button>
+                    <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="licenses">
+                        <i class="fas fa-id-card mr-2"></i>My Licenses
+                    </button>
                 </div>
 
-                <!-- Search View -->
-                <div id="search-view" class="w-full">
-                    <div class="w-full max-w-3xl mx-auto mb-8">
-                        <div class="flex flex-col sm:flex-row card p-2 rounded-xl responsive-search">
-                            <input
-                                id="search-input"
-                                type="text"
-                                placeholder="Search by State (CA), Agent Name, or Carrier Name..."
-                                class="w-full p-4 bg-transparent outline-none placeholder-slate-500 rounded-lg"
-                            />
-                            <button
-                                onclick="searchData()"
-                                class="bg-cyan-400 text-slate-900 px-6 py-3 mt-2 sm:mt-0 sm:ml-2 rounded-xl font-semibold flex items-center justify-center"
-                            >
-                                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
-                                Search
+                <!-- Tab Content -->
+                <div id="tab-content">
+                    <!-- Search Tab -->
+                    <div id="search-tab" class="tab-panel active">
+                        <div class="mb-6">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <input type="text" id="search-input" 
+                                       class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600 focus:border-cyan-400 focus:outline-none transition"
+                                       placeholder="Search by state, agent name, or carrier...">
+                                <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap">
+                                    <i class="fas fa-search mr-2"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
+                            <div class="text-center text-gray-400">
+                                <i class="fas fa-compass text-4xl mb-4"></i>
+                                <p class="text-xl">Enter a search term to find license data</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Tab -->
+                    <div id="profile-tab" class="tab-panel hidden">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-gray-700 p-6 rounded-lg">
+                                <h3 class="text-xl font-semibold mb-4 text-cyan-400">Agent Information</h3>
+                                <div class="space-y-3">
+                                    <p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
+                                    <p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
+                                    <p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
+                                    <p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 p-6 rounded-lg">
+                                <h3 class="text-xl font-semibold mb-4 text-cyan-400">Quick Stats</h3>
+                                <div class="space-y-3">
+                                    <p><strong class="text-gray-300">Licensed States:</strong> <span id="states-count" class="text-white">0</span></p>
+                                    <p><strong class="text-gray-300">Carriers:</strong> <span id="carriers-count" class="text-white">0</span></p>
+                                    <p><strong class="text-gray-300">Member Since:</strong> <span class="text-white" id="member-since">2024</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Licenses Tab -->
+                    <div id="licenses-tab" class="tab-panel hidden">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
+                            <div id="licenses-container" class="space-y-4">
+                                <!-- Licenses will be dynamically added here -->
+                            </div>
+                            <button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition">
+                                <i class="fas fa-plus mr-2"></i>Add License
                             </button>
                         </div>
                     </div>
-
-                    <main id="results-panel" class="w-full min-h-[300px] card rounded-xl p-8 border border-slate-700/50 flex flex-col items-center justify-center text-center">
-                        <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
-                        <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
-                    </main>
-                </div>
-                
-                <!-- Profile View -->
-                <div id="profile-view" class="w-full hidden">
-                    <main id="profile-panel" class="w-full min-h-[300px] card rounded-xl p-8">
-                        <!-- Content will be loaded here -->
-                    </main>
-                </div>
-
-                <!-- Admin View -->
-                <div id="admin-view" class="w-full hidden">
-                    <main id="admin-panel" class="w-full min-h-[300px] card rounded-xl p-8">
-                        <!-- Content will be loaded here -->
-                    </main>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-
-        // Sample data
-        const STATES = [
-            { name: "California", acronym: "CA" },
-            { name: "Texas", acronym: "TX" },
-            { name: "Florida", acronym: "FL" },
-            { name: "New York", acronym: "NY" },
-            { name: "Illinois", acronym: "IL" },
+        // Sample Data - In a real app, this would come from a database
+        const SAMPLE_AGENTS = [
+            {
+                id: 1,
+                name: "John Smith",
+                email: "john@insurance.com",
+                npn: "123456789",
+                password: "password123",
+                licenses: [
+                    { state: "CA", carriers: ["State Farm", "Allstate"], expiration: "2024-12-31" },
+                    { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2024-11-30" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Sarah Johnson",
+                email: "sarah@insurance.com",
+                npn: "987654321",
+                password: "password123",
+                licenses: [
+                    { state: "FL", carriers: ["Geico", "Nationwide"], expiration: "2024-10-31" },
+                    { state: "NY", carriers: ["Farmers", "Travelers"], expiration: "2024-09-30" }
+                ]
+            }
         ];
 
-        const CARRIERS = [
-            "UnitedHealthcare",
-            "Humana",
-            "Aetna",
-            "Blue Cross Blue Shield",
-            "Cigna",
-            "Mutual of Omaha",
-            "State Farm"
-        ];
+        const STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"];
+        const CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
 
-        // Global state
+        // App State
         let currentUser = null;
-        let AGENTS = {};
-        let activeView = 'search';
+        let agents = [...SAMPLE_AGENTS];
 
-        // Check authentication status
-        function checkAuthStatus() {
-            setTimeout(() => {
-                const savedUser = localStorage.getItem('currentUser');
-                const savedAgents = localStorage.getItem('agentsData');
-                
-                if (savedAgents) {
-                    AGENTS = JSON.parse(savedAgents);
-                }
-                
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                    
-                    // Add to AGENTS if not exists
-                    if (!AGENTS[currentUser.email]) {
-                        AGENTS[currentUser.email] = currentUser;
-                        localStorage.setItem('agentsData', JSON.stringify(AGENTS));
-                    }
-                    
-                    showMainApp();
-                } else {
-                    showAuthPanel();
-                }
-            }, 1000);
-        }
+        // DOM Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const authScreen = document.getElementById('auth-screen');
+        const dashboard = document.getElementById('dashboard');
+        const navButtons = document.getElementById('nav-buttons');
+        const logoutBtn = document.getElementById('logout-btn');
 
-        function hideLoading() {
-            document.getElementById('loading-view').style.display = 'none';
-        }
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initApp, 1000); // Simulate loading time
+        });
 
-        function showAuthPanel() {
-            hideLoading();
-            document.getElementById('auth-panel').style.display = 'block';
-        }
-
-        function showMainApp() {
-            hideLoading();
-            document.getElementById('auth-panel').style.display = 'none';
-            document.getElementById('main-app-content').style.display = 'flex';
-            
-            // Update UI with user data
-            document.getElementById('current-user-name').textContent = currentUser.name;
-            
-            // Show admin tab if user is admin
-            if (currentUser.isAdmin) {
-                document.getElementById('admin-badge').classList.remove('hidden');
-                document.getElementById('admin-tab-button').classList.remove('hidden');
-            }
-            
-            // Check if setup is complete
-            if (!currentUser.isSetupComplete) {
-                changeView('setup');
-                renderLicensesSetupPanel();
+        function initApp() {
+            // Check if user is logged in (from localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
             } else {
-                changeView('search');
+                showAuthScreen();
             }
-            
-            // Refresh icons
-            lucide.createIcons();
+
+            // Load saved agents data
+            const savedAgents = localStorage.getItem('agentsData');
+            if (savedAgents) {
+                agents = JSON.parse(savedAgents);
+            } else {
+                // Save sample data to localStorage
+                localStorage.setItem('agentsData', JSON.stringify(agents));
+            }
+
+            setupEventListeners();
         }
 
-        // Auth handlers
-        function handleLogin() {
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            
+            // Register form
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            
+            // Logout button
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            // Tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            
+            // Search button
+            document.getElementById('search-btn').addEventListener('click', performSearch);
+            
+            // Add license button
+            document.getElementById('add-license-btn').addEventListener('click', addNewLicense);
+        }
+
+        function showAuthScreen() {
+            loadingScreen.classList.add('hidden');
+            authScreen.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            navButtons.classList.add('hidden');
+        }
+
+        function showDashboard() {
+            loadingScreen.classList.add('hidden');
+            authScreen.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            navButtons.classList.remove('hidden');
+            
+            // Update user info
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-email').textContent = currentUser.email;
+            document.getElementById('profile-npn').textContent = currentUser.npn;
+            
+            // Update stats
+            updateUserStats();
+            
+            // Load licenses
+            loadUserLicenses();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
+
+            const user = agents.find(agent => agent.email === email && agent.password === password);
             
-            if (!email || !password) {
-                alert('Please enter both email and password');
-                return;
-            }
-            
-            // Check if user exists
-            if (AGENTS[email]) {
-                currentUser = AGENTS[email];
+            if (user) {
+                currentUser = user;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showMainApp();
+                showDashboard();
+                showNotification('Login successful!', 'success');
             } else {
-                alert('No account found with this email. Please register.');
+                showNotification('Invalid email or password', 'error');
             }
         }
 
-        function handleRegister() {
-            const name = document.getElementById('reg-name').value;
-            const npn = document.getElementById('reg-npn').value;
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const extension = document.getElementById('reg-extension').value;
-            
-            if (!name || !npn || !email || !password || !extension) {
-                alert('Please fill all fields');
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const npn = document.getElementById('register-npn').value;
+            const password = document.getElementById('register-password').value;
+
+            // Check if email already exists
+            if (agents.find(agent => agent.email === email)) {
+                showNotification('Email already registered', 'error');
                 return;
             }
-            
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters');
-                return;
-            }
-            
+
             // Create new user
-            currentUser = {
-                name: name,
-                npn: npn,
-                email: email,
-                extension: extension,
-                isAdmin: false,
-                licenses: [],
-                isSetupComplete: false
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                npn,
+                password,
+                licenses: []
             };
+
+            agents.push(newUser);
+            localStorage.setItem('agentsData', JSON.stringify(agents));
             
-            // Save to agents data
-            AGENTS[email] = currentUser;
-            localStorage.setItem('agentsData', JSON.stringify(AGENTS));
+            currentUser = newUser;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             
-            showMainApp();
+            showDashboard();
+            showNotification('Registration successful!', 'success');
         }
 
         function handleLogout() {
-            localStorage.removeItem('currentUser');
             currentUser = null;
-            document.getElementById('main-app-content').style.display = 'none';
-            document.getElementById('auth-panel').style.display = 'block';
-            
-            // Reset forms
-            document.getElementById('login-form').reset();
-            document.getElementById('new-agent-form').reset();
+            localStorage.removeItem('currentUser');
+            showAuthScreen();
+            showNotification('Logged out successfully', 'info');
         }
 
-        // View management
-        function changeView(view) {
-            activeView = view;
-            
-            // Hide all views
-            document.getElementById('licenses-setup-view').classList.add('hidden');
-            document.getElementById('search-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('hidden');
-            document.getElementById('admin-view').classList.add('hidden');
-            
-            // Reset tab styles
-            document.getElementById('search-tab-button').classList.remove('active');
-            document.getElementById('profile-tab-button').classList.remove('active');
-            document.getElementById('admin-tab-button').classList.remove('active');
-            
-            // Show selected view and update tab
-            if (view === 'setup') {
-                document.getElementById('licenses-setup-view').classList.remove('hidden');
-                document.getElementById('app-header-tabs').classList.add('hidden');
-            } else {
-                document.getElementById('app-header-tabs').classList.remove('hidden');
-                
-                if (view === 'search') {
-                    document.getElementById('search-view').classList.remove('hidden');
-                    document.getElementById('search-tab-button').classList.add('active');
-                } else if (view === 'profile') {
-                    document.getElementById('profile-view').classList.remove('hidden');
-                    document.getElementById('profile-tab-button').classList.add('active');
-                    renderProfilePanel();
-                } else if (view === 'admin' && currentUser.isAdmin) {
-                    document.getElementById('admin-view').classList.remove('hidden');
-                    document.getElementById('admin-tab-button').classList.add('active');
-                    renderAdminPanel();
-                }
-            }
-            
-            lucide.createIcons();
-        }
-
-        // License setup functions
-        function renderLicensesSetupPanel() {
-            const panel = document.getElementById('licenses-setup-view');
-            
-            panel.innerHTML = `
-                <div class="w-full max-w-4xl mx-auto card rounded-xl p-8">
-                    <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center">
-                        <i data-lucide="list-checks" class="w-7 h-7 mr-3 text-cyan-400"></i>
-                        Complete License Setup
-                    </h2>
-                    <p class="text-slate-400 mb-6">
-                        Welcome, <strong class="text-cyan-400">${currentUser.name}</strong>! Please add your licensed states and carriers.
-                    </p>
-
-                    <div id="setup-license-container" class="space-y-4 mb-6">
-                        <!-- License rows will be added here -->
-                    </div>
-
-                    <div class="flex gap-4 justify-between items-center">
-                        <button onclick="addLicenseSection('setup-license-container')" class="bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center">
-                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                            Add State License
-                        </button>
-                        <button onclick="completeSetup()" class="bg-cyan-400 text-slate-900 px-6 py-3 rounded-lg flex items-center font-semibold">
-                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                            Complete Setup
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            // Add initial license section
-            addLicenseSection('setup-license-container');
-            lucide.createIcons();
-        }
-
-        function addLicenseSection(containerId, initialData = { state: '', carriers: [] }) {
-            const container = document.getElementById(containerId);
-            const id = Date.now(); // Simple unique ID
-            
-            const stateOptions = STATES.map(s => 
-                `<option value="${s.acronym}">${s.name} (${s.acronym})</option>`
-            ).join('');
-
-            const carrierButtons = CARRIERS.map(c => {
-                return `<button type="button" class="carrier-chip" data-carrier="${c}">${c}</button>`;
-            }).join('');
-
-            const licenseHtml = `
-                <div class="card p-4 border border-slate-600 rounded-lg grid md:grid-cols-3 gap-4 relative">
-                    <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-1">State</label>
-                        <select class="w-full p-2 rounded-lg bg-slate-800 border border-slate-600 text-white">
-                            <option value="">-- Select State --</option>
-                            ${stateOptions}
-                        </select>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-slate-400 mb-1">Carriers</label>
-                        <div class="carrier-buttons-container flex flex-wrap gap-2 p-3 border border-slate-700 rounded-lg min-h-[100px]">
-                            ${carrierButtons}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            container.insertAdjacentHTML('beforeend', licenseHtml);
-            
-            // Add click handlers for carrier chips
-            const newChips = container.lastElementChild.querySelectorAll('.carrier-chip');
-            newChips.forEach(chip => {
-                chip.addEventListener('click', function() {
-                    this.classList.toggle('selected-carrier');
-                });
+        function switchTab(tabName) {
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-cyan-600');
+                btn.classList.add('bg-gray-700');
             });
             
-            lucide.createIcons();
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active', 'bg-cyan-600');
+            activeBtn.classList.remove('bg-gray-700');
+            
+            // Show active tab content
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
         }
 
-        function completeSetup() {
-            const licenseRows = document.querySelectorAll('#setup-license-container > div');
-            const licenses = [];
-            
-            for (const row of licenseRows) {
-                const stateSelect = row.querySelector('select');
-                const carrierChips = row.querySelectorAll('.carrier-chip.selected-carrier');
-                
-                const state = stateSelect.value;
-                const carriers = Array.from(carrierChips).map(chip => chip.getAttribute('data-carrier'));
-                
-                if (state && carriers.length > 0) {
-                    licenses.push({ state, carriers });
-                }
-            }
-            
-            if (licenses.length === 0) {
-                alert('Please add at least one state license with carriers');
-                return;
-            }
-            
-            // Update user data
-            currentUser.licenses = licenses;
-            currentUser.isSetupComplete = true;
-            AGENTS[currentUser.email] = currentUser;
-            
-            // Save to localStorage
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            localStorage.setItem('agentsData', JSON.stringify(AGENTS));
-            
-            changeView('profile');
-        }
-
-        // Profile panel
-        function renderProfilePanel() {
-            const panel = document.getElementById('profile-panel');
-            
-            const licenseHtml = currentUser.licenses.map(license => {
-                const state = STATES.find(s => s.acronym === license.state);
-                const carriers = license.carriers.map(c => 
-                    `<span class="bg-slate-700 text-sm px-3 py-1 rounded-full">${c}</span>`
-                ).join('');
-                
-                return `
-                    <div class="card p-4 rounded-xl border border-slate-600 mb-4">
-                        <h4 class="font-semibold text-lg text-slate-100 mb-2">
-                            ${state ? state.name : license.state}
-                        </h4>
-                        <div class="flex flex-wrap gap-2">${carriers}</div>
-                    </div>
-                `;
-            }).join('') || '<p class="text-slate-400">No licenses registered.</p>';
-
-            panel.innerHTML = `
-                <div class="w-full">
-                    <h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center">
-                        <i data-lucide="award" class="w-7 h-7 mr-3 text-cyan-400"></i>
-                        Your Profile & Licenses
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 card rounded-lg border border-slate-700">
-                        <p class="text-slate-300"><strong class="text-cyan-400">Name:</strong> ${currentUser.name}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">NPN:</strong> ${currentUser.npn}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">Email:</strong> ${currentUser.email}</p>
-                        <p class="text-slate-300"><strong class="text-cyan-400">Extension:</strong> ${currentUser.extension}</p>
-                    </div>
-
-                    <h3 class="text-xl font-semibold text-slate-300 mb-4">License Details</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        ${licenseHtml}
-                    </div>
-                </div>
-            `;
-            
-            lucide.createIcons();
-        }
-
-        // Admin panel
-        function renderAdminPanel() {
-            const panel = document.getElementById('admin-panel');
-            const agents = Object.values(AGENTS);
-            
-            const agentsHtml = agents.map(agent => `
-                <div class="card p-4 rounded-xl mb-3 border border-slate-600">
-                    <h4 class="font-semibold text-lg text-slate-100 mb-1">
-                        ${agent.name} ${agent.email === currentUser.email ? '(You)' : ''}
-                    </h4>
-                    <p class="text-sm text-slate-400">NPN: ${agent.npn} | Email: ${agent.email}</p>
-                    <div class="flex items-center space-x-2 mt-2">
-                        <span class="text-xs font-medium px-2 py-0.5 rounded-full ${agent.isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'}">
-                            ${agent.isAdmin ? 'Administrator' : 'Agent'}
-                        </span>
-                        <span class="text-xs font-medium px-2 py-0.5 rounded-full ${agent.isSetupComplete ? 'bg-green-800 text-green-300' : 'bg-yellow-800 text-yellow-300'}">
-                            ${agent.isSetupComplete ? 'Setup Complete' : 'Setup Pending'}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-
-            panel.innerHTML = `
-                <div class="w-full">
-                    <h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center">
-                        <i data-lucide="users-round" class="w-7 h-7 mr-3 text-red-400"></i>
-                        System User Management
-                    </h2>
-                    <p class="text-slate-400 mb-6">Total Accounts: <strong>${agents.length}</strong></p>
-                    <div class="space-y-3">
-                        ${agentsHtml}
-                    </div>
-                </div>
-            `;
-            
-            lucide.createIcons();
-        }
-
-        // Search function
-        function searchData() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const resultsPanel = document.getElementById('results-panel');
+        function performSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('search-results');
             
             if (!query) {
-                resultsPanel.innerHTML = `
-                    <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
-                    <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
+                resultsContainer.innerHTML = `
+                    <div class="text-center text-gray-400">
+                        <i class="fas fa-compass text-4xl mb-4"></i>
+                        <p class="text-xl">Enter a search term to find license data</p>
+                    </div>
                 `;
-                lucide.createIcons();
                 return;
             }
-            
-            // Simple search implementation
-            const agents = Object.values(AGENTS);
-            const matchingAgents = agents.filter(agent => 
+
+            // Search through agents and licenses
+            const results = agents.filter(agent => 
                 agent.name.toLowerCase().includes(query) ||
                 agent.email.toLowerCase().includes(query) ||
+                agent.npn.includes(query) ||
                 agent.licenses.some(license => 
                     license.state.toLowerCase().includes(query) ||
                     license.carriers.some(carrier => 
@@ -654,37 +433,128 @@
                     )
                 )
             );
-            
-            if (matchingAgents.length > 0) {
-                const resultsHtml = matchingAgents.map(agent => `
-                    <div class="card p-4 rounded-xl border border-slate-600 mb-4">
-                        <h4 class="font-semibold text-lg text-cyan-400 mb-2">${agent.name}</h4>
-                        <p class="text-slate-300">Email: ${agent.email} | NPN: ${agent.npn}</p>
-                        <p class="text-slate-400 mt-2">Licensed in: ${agent.licenses.map(l => l.state).join(', ')}</p>
-                    </div>
-                `).join('');
-                
-                resultsPanel.innerHTML = `
-                    <div class="w-full text-left">
-                        <h3 class="text-2xl font-bold text-cyan-400 mb-4">Search Results (${matchingAgents.length})</h3>
-                        ${resultsHtml}
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="text-center text-gray-400">
+                        <i class="fas fa-search text-4xl mb-4"></i>
+                        <p class="text-xl">No results found for "${query}"</p>
                     </div>
                 `;
-            } else {
-                resultsPanel.innerHTML = `
-                    <i data-lucide="alert-triangle" class="w-12 h-12 text-amber-400 mb-4 opacity-70"></i>
-                    <h2 class="text-2xl font-bold text-slate-100 mb-2">No Matches Found</h2>
-                    <p class="text-lg text-slate-400">No agents found matching "${query}".</p>
-                `;
+                return;
             }
+
+            let resultsHTML = '<div class="space-y-4">';
+            results.forEach(agent => {
+                resultsHTML += `
+                    <div class="bg-gray-600 p-4 rounded-lg">
+                        <h4 class="text-xl font-semibold text-cyan-300 mb-2">${agent.name}</h4>
+                        <p class="text-gray-300 mb-2">Email: ${agent.email} | NPN: ${agent.npn}</p>
+                        <div class="mt-3">
+                            <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
+                            ${agent.licenses.map(license => `
+                                <div class="ml-4 mb-2">
+                                    <span class="font-semibold">${license.state}:</span>
+                                    <span class="text-gray-300 ml-2">${license.carriers.join(', ')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            resultsHTML += '</div>';
             
-            lucide.createIcons();
+            resultsContainer.innerHTML = resultsHTML;
         }
 
-        // Initialize the app
-        setTimeout(() => {
-            checkAuthStatus();
-        }, 500);
+        function updateUserStats() {
+            const statesCount = currentUser.licenses.length;
+            const carriersCount = currentUser.licenses.reduce((total, license) => total + license.carriers.length, 0);
+            
+            document.getElementById('states-count').textContent = statesCount;
+            document.getElementById('carriers-count').textContent = carriersCount;
+        }
+
+        function loadUserLicenses() {
+            const container = document.getElementById('licenses-container');
+            
+            if (currentUser.licenses.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <i class="fas fa-id-card text-4xl mb-4"></i>
+                        <p class="text-xl">No licenses added yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let licensesHTML = '';
+            currentUser.licenses.forEach(license => {
+                licensesHTML += `
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-lg font-semibold text-cyan-300">${license.state} License</h4>
+                            <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+                        </div>
+                        <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
+                        <p class="text-gray-400 text-sm">Expires: ${license.expiration}</p>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = licensesHTML;
+        }
+
+        function addNewLicense() {
+            // For demo purposes, add a random license
+            const randomState = STATES[Math.floor(Math.random() * STATES.length)];
+            const randomCarriers = CARRIERS
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 2);
+            
+            const newLicense = {
+                state: randomState,
+                carriers: randomCarriers,
+                expiration: "2024-12-31"
+            };
+            
+            currentUser.licenses.push(newLicense);
+            
+            // Update localStorage
+            const agentIndex = agents.findIndex(a => a.id === currentUser.id);
+            if (agentIndex !== -1) {
+                agents[agentIndex] = currentUser;
+                localStorage.setItem('agentsData', JSON.stringify(agents));
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            loadUserLicenses();
+            updateUserStats();
+            showNotification('New license added!', 'success');
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' :
+                'bg-blue-600'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
     </script>
 </body>
 </html>
