@@ -854,7 +854,7 @@
             };
 
             if (isAddingForUser && editingUserId) {
-                // Admin adding license for another user
+                // ADMIN ADDING LICENSE FOR ANOTHER USER
                 const userIndex = agents.findIndex(a => a.id === editingUserId);
                 if (userIndex !== -1) {
                     // Check if license for this state already exists for the target user
@@ -863,16 +863,17 @@
                         return;
                     }
                     
+                    // Add license to the TARGET USER, not the admin
                     agents[userIndex].licenses.push(newLicense);
                     localStorage.setItem('agentsData', JSON.stringify(agents));
                     
                     closeAddLicenseModal();
                     // Reopen the edit modal to show updated licenses
                     openEditUserLicenses(editingUserId);
-                    showNotification('License added to user successfully!', 'success');
+                    showNotification(`License added to ${agents[userIndex].name} successfully!`, 'success');
                 }
             } else {
-                // User adding license for themselves
+                // USER ADDING LICENSE FOR THEMSELVES
                 // Check if license for this state already exists
                 if (currentUser.licenses.some(license => license.state === state)) {
                     showNotification('License for this state already exists', 'error');
