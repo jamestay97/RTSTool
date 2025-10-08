@@ -348,802 +348,922 @@
         </div>
     </div>
 
-    <script>
-        // State data with full names and abbreviations
-        const STATES_DATA = [
-            { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
-            { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
-            { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" }, { name: "Florida", abbreviation: "FL" },
-            { name: "Georgia", abbreviation: "GA" }, { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
-            { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" }, { name: "Iowa", abbreviation: "IA" },
-            { name: "Kansas", abbreviation: "KS" }, { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
-            { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" }, { name: "Massachusetts", abbreviation: "MA" },
-            { name: "Michigan", abbreviation: "MI" }, { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
-            { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" }, { name: "Nebraska", abbreviation: "NE" },
-            { name: "Nevada", abbreviation: "NV" }, { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
-            { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" }, { name: "North Carolina", abbreviation: "NC" },
-            { name: "North Dakota", abbreviation: "ND" }, { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
-            { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" }, { name: "Rhode Island", abbreviation: "RI" },
-            { name: "South Carolina", abbreviation: "SC" }, { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
-            { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" }, { name: "Vermont", abbreviation: "VT" },
-            { name: "Virginia", abbreviation: "VA" }, { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
-            { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
-        ];
+   <script>
+    // State data with full names and abbreviations
+    const STATES_DATA = [
+        { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
+        { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
+        { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" }, { name: "Florida", abbreviation: "FL" },
+        { name: "Georgia", abbreviation: "GA" }, { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
+        { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" }, { name: "Iowa", abbreviation: "IA" },
+        { name: "Kansas", abbreviation: "KS" }, { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
+        { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" }, { name: "Massachusetts", abbreviation: "MA" },
+        { name: "Michigan", abbreviation: "MI" }, { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
+        { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" }, { name: "Nebraska", abbreviation: "NE" },
+        { name: "Nevada", abbreviation: "NV" }, { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
+        { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" }, { name: "North Carolina", abbreviation: "NC" },
+        { name: "North Dakota", abbreviation: "ND" }, { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
+        { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" }, { name: "Rhode Island", abbreviation: "RI" },
+        { name: "South Carolina", abbreviation: "SC" }, { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
+        { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" }, { name: "Vermont", abbreviation: "VT" },
+        { name: "Virginia", abbreviation: "VA" }, { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
+        { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
+    ];
 
-        const CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
+    // Load carriers from localStorage or use default - FIX FOR DATA PERSISTENCE
+    let CARRIERS = JSON.parse(localStorage.getItem('carriersData')) || ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
 
-        // Default Admin Account
-        const DEFAULT_ADMIN = {
-            id: 1,
-            firstname: "System",
-            lastname: "Administrator",
-            name: "System Administrator",
-            email: "admin@licenseexplorer.com",
-            npn: "ADMIN001",
-            extension: "0001",
-            password: "admin123",
-            isAdmin: true,
+    // Default Admin Account
+    const DEFAULT_ADMIN = {
+        id: 1,
+        firstname: "System",
+        lastname: "Administrator",
+        name: "System Administrator",
+        email: "admin@licenseexplorer.com",
+        npn: "ADMIN001",
+        extension: "0001",
+        password: "admin123",
+        isAdmin: true,
+        licenses: [
+            { state: "CA", carriers: ["State Farm", "Allstate", "Geico"], expiration: "2025-12-31" },
+            { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2025-11-30" }
+        ],
+        joinDate: "2024-01-01"
+    };
+
+    // Sample Agents
+    const SAMPLE_AGENTS = [
+        {
+            id: 2,
+            firstname: "John",
+            lastname: "Smith",
+            name: "John Smith",
+            email: "john@insurance.com",
+            npn: "123456789",
+            extension: "1234",
+            password: "password123",
+            isAdmin: false,
             licenses: [
-                { state: "CA", carriers: ["State Farm", "Allstate", "Geico"], expiration: "2025-12-31" },
-                { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2025-11-30" }
+                { state: "CA", carriers: ["State Farm", "Allstate"], expiration: "2024-12-31" }
             ],
-            joinDate: "2024-01-01"
+            joinDate: "2024-02-15"
+        },
+        {
+            id: 3,
+            firstname: "Sarah",
+            lastname: "Johnson",
+            name: "Sarah Johnson",
+            email: "sarah@insurance.com",
+            npn: "987654321",
+            extension: "5678",
+            password: "password123",
+            isAdmin: false,
+            licenses: [
+                { state: "FL", carriers: ["Geico", "Nationwide"], expiration: "2024-10-31" }
+            ],
+            joinDate: "2024-03-10"
+        }
+    ];
+
+    // App State
+    let currentUser = null;
+    let agents = [DEFAULT_ADMIN, ...SAMPLE_AGENTS];
+    let currentEditingUserId = null;
+
+    // DOM Elements
+    const loadingScreen = document.getElementById('loading-screen');
+    const authScreen = document.getElementById('auth-screen');
+    const dashboard = document.getElementById('dashboard');
+    const navButtons = document.getElementById('nav-buttons');
+    const logoutBtn = document.getElementById('logout-btn');
+    const adminTabBtn = document.getElementById('admin-tab-btn');
+    const adminBadge = document.getElementById('admin-badge');
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initApp, 1000);
+    });
+
+    function initApp() {
+        // Check if user is logged in (from localStorage)
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            showDashboard();
+        } else {
+            showAuthScreen();
+        }
+
+        // Load saved agents data - FIX FOR DATA PERSISTENCE
+        const savedAgents = localStorage.getItem('agentsData');
+        if (savedAgents) {
+            const parsedAgents = JSON.parse(savedAgents);
+            // Merge with default admin to ensure admin account always exists
+            const defaultAdminExists = parsedAgents.some(agent => agent.id === DEFAULT_ADMIN.id);
+            if (!defaultAdminExists) {
+                agents = [DEFAULT_ADMIN, ...parsedAgents];
+            } else {
+                agents = parsedAgents;
+            }
+        } else {
+            // Save sample data to localStorage
+            localStorage.setItem('agentsData', JSON.stringify(agents));
+        }
+
+        // Save carriers to localStorage if not already saved
+        if (!localStorage.getItem('carriersData')) {
+            localStorage.setItem('carriersData', JSON.stringify(CARRIERS));
+        }
+
+        // Populate state dropdown
+        populateStateDropdown();
+        // Populate carriers checkboxes
+        populateCarriersCheckboxes();
+
+        setupEventListeners();
+    }
+
+    function populateStateDropdown() {
+        const stateSelect = document.getElementById('license-state');
+        stateSelect.innerHTML = '<option value="">Select a state</option>';
+        STATES_DATA.forEach(state => {
+            const option = document.createElement('option');
+            option.value = state.abbreviation;
+            option.textContent = `${state.name} (${state.abbreviation})`;
+            stateSelect.appendChild(option);
+        });
+    }
+
+    function populateCarriersCheckboxes() {
+        const carriersContainer = document.getElementById('carriers-container');
+        carriersContainer.innerHTML = '';
+        CARRIERS.forEach(carrier => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center space-x-2 cursor-pointer';
+            label.innerHTML = `
+                <input type="checkbox" value="${carrier}" class="carrier-checkbox rounded text-cyan-600">
+                <span>${carrier}</span>
+            `;
+            carriersContainer.appendChild(label);
+        });
+    }
+
+    function setupEventListeners() {
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        
+        // Register form
+        document.getElementById('register-form').addEventListener('submit', handleRegister);
+        
+        // Logout button
+        logoutBtn.addEventListener('click', handleLogout);
+        
+        // Tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+        
+        // Search button
+        document.getElementById('search-btn').addEventListener('click', performSearch);
+        
+        // Add license form
+        document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
+
+        // Password reset form
+        document.getElementById('reset-password-form').addEventListener('submit', handlePasswordReset);
+
+        // Carrier management
+        document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
+        document.getElementById('new-carrier-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addNewCarrier();
+            }
+        });
+    }
+
+    // PASSWORD RESET FUNCTIONS
+    function openResetPasswordModal() {
+        document.getElementById('reset-password-modal').style.display = 'flex';
+        document.getElementById('reset-password-form').reset();
+    }
+
+    function closeResetPasswordModal() {
+        document.getElementById('reset-password-modal').style.display = 'none';
+    }
+
+    function handlePasswordReset(e) {
+        e.preventDefault();
+        const email = document.getElementById('reset-email').value;
+        const npn = document.getElementById('reset-npn').value;
+        const newPassword = document.getElementById('reset-password').value;
+
+        // Find user by email and NPN
+        const userIndex = agents.findIndex(agent => agent.email === email && agent.npn === npn);
+        
+        if (userIndex === -1) {
+            showNotification('No account found with that email and NPN combination', 'error');
+            return;
+        }
+
+        if (!newPassword) {
+            showNotification('Please enter a new password', 'error');
+            return;
+        }
+
+        // Update password
+        agents[userIndex].password = newPassword;
+        localStorage.setItem('agentsData', JSON.stringify(agents));
+        
+        // If current user is resetting their own password, update currentUser
+        if (currentUser && currentUser.id === agents[userIndex].id) {
+            currentUser.password = newPassword;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+        
+        closeResetPasswordModal();
+        showNotification('Password reset successfully! You can now login with your new password.', 'success');
+    }
+
+    // CARRIER MANAGEMENT FUNCTIONS
+    function loadCarriersList() {
+        if (!currentUser.isAdmin) return;
+        
+        const carriersList = document.getElementById('carriers-list');
+        carriersList.innerHTML = '';
+        
+        if (CARRIERS.length === 0) {
+            carriersList.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+            return;
+        }
+        
+        CARRIERS.forEach((carrier, index) => {
+            const carrierItem = document.createElement('div');
+            carrierItem.className = 'flex justify-between items-center bg-gray-600 p-3 rounded-lg';
+            carrierItem.innerHTML = `
+                <span class="text-gray-300">${carrier}</span>
+                <button onclick="removeCarrier(${index})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
+                    <i class="fas fa-trash mr-1"></i>Remove
+                </button>
+            `;
+            carriersList.appendChild(carrierItem);
+        });
+    }
+
+    function addNewCarrier() {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+        
+        const newCarrierInput = document.getElementById('new-carrier-input');
+        const carrierName = newCarrierInput.value.trim();
+        
+        if (!carrierName) {
+            showNotification('Please enter a carrier name', 'error');
+            return;
+        }
+        
+        if (CARRIERS.includes(carrierName)) {
+            showNotification('Carrier already exists', 'error');
+            return;
+        }
+        
+        CARRIERS.push(carrierName);
+        // Save to localStorage
+        localStorage.setItem('carriersData', JSON.stringify(CARRIERS));
+        newCarrierInput.value = '';
+        
+        // Update carriers checkboxes in add license modal
+        populateCarriersCheckboxes();
+        
+        // Reload carriers list
+        loadCarriersList();
+        
+        showNotification(`Carrier "${carrierName}" added successfully`, 'success');
+    }
+
+    function removeCarrier(index) {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to remove "${CARRIERS[index]}"? This will affect all licenses using this carrier.`)) {
+            const removedCarrier = CARRIERS.splice(index, 1)[0];
+            
+            // Remove this carrier from all user licenses
+            agents.forEach(agent => {
+                agent.licenses.forEach(license => {
+                    const carrierIndex = license.carriers.indexOf(removedCarrier);
+                    if (carrierIndex !== -1) {
+                        license.carriers.splice(carrierIndex, 1);
+                    }
+                });
+            });
+            
+            // Update localStorage
+            localStorage.setItem('agentsData', JSON.stringify(agents));
+            localStorage.setItem('carriersData', JSON.stringify(CARRIERS));
+            
+            // Update carriers checkboxes
+            populateCarriersCheckboxes();
+            
+            // Reload carriers list and user licenses if current user is affected
+            loadCarriersList();
+            if (currentUser.licenses.some(license => license.carriers.length > 0)) {
+                loadUserLicenses();
+                updateUserStats();
+            }
+            
+            showNotification(`Carrier "${removedCarrier}" removed successfully`, 'info');
+        }
+    }
+
+    function showAuthScreen() {
+        loadingScreen.classList.add('hidden');
+        authScreen.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+        navButtons.classList.add('hidden');
+    }
+
+    function showDashboard() {
+        loadingScreen.classList.add('hidden');
+        authScreen.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        navButtons.classList.remove('hidden');
+        
+        // Update user info
+        document.getElementById('user-name').textContent = currentUser.name;
+        document.getElementById('profile-name').textContent = currentUser.name;
+        document.getElementById('profile-email').textContent = currentUser.email;
+        document.getElementById('profile-npn').textContent = currentUser.npn;
+        document.getElementById('profile-extension').textContent = currentUser.extension;
+        document.getElementById('member-since').textContent = currentUser.joinDate || '2024';
+        
+        // Show admin features if user is admin
+        if (currentUser.isAdmin) {
+            adminTabBtn.classList.remove('hidden');
+            adminBadge.classList.remove('hidden');
+            document.getElementById('user-badge').classList.add('hidden');
+        } else {
+            adminTabBtn.classList.add('hidden');
+            adminBadge.classList.add('hidden');
+            document.getElementById('user-badge').classList.remove('hidden');
+        }
+        
+        // Update stats
+        updateUserStats();
+        
+        // Load licenses
+        loadUserLicenses();
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        const user = agents.find(agent => agent.email === email && agent.password === password);
+        
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showDashboard();
+            showNotification('Login successful!', 'success');
+        } else {
+            showNotification('Invalid email or password', 'error');
+        }
+    }
+
+    function handleRegister(e) {
+        e.preventDefault();
+        const firstname = document.getElementById('register-firstname').value;
+        const lastname = document.getElementById('register-lastname').value;
+        const email = document.getElementById('register-email').value;
+        const npn = document.getElementById('register-npn').value;
+        const extension = document.getElementById('register-extension').value;
+        const password = document.getElementById('register-password').value;
+
+        // Validate extension is 4 digits
+        if (!/^\d{4}$/.test(extension)) {
+            showNotification('Extension must be a 4-digit number', 'error');
+            return;
+        }
+
+        // Check if email already exists
+        if (agents.find(agent => agent.email === email)) {
+            showNotification('Email already registered', 'error');
+            return;
+        }
+
+        // Check if NPN already exists
+        if (agents.find(agent => agent.npn === npn)) {
+            showNotification('NPN number already registered', 'error');
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            id: Date.now(),
+            firstname,
+            lastname,
+            name: `${firstname} ${lastname}`,
+            email,
+            npn,
+            extension,
+            password,
+            isAdmin: false,
+            licenses: [],
+            joinDate: new Date().toISOString().split('T')[0]
         };
 
-        // Sample Agents
-        const SAMPLE_AGENTS = [
-            {
-                id: 2,
-                firstname: "John",
-                lastname: "Smith",
-                name: "John Smith",
-                email: "john@insurance.com",
-                npn: "123456789",
-                extension: "1234",
-                password: "password123",
-                isAdmin: false,
-                licenses: [
-                    { state: "CA", carriers: ["State Farm", "Allstate"], expiration: "2024-12-31" }
-                ],
-                joinDate: "2024-02-15"
-            },
-            {
-                id: 3,
-                firstname: "Sarah",
-                lastname: "Johnson",
-                name: "Sarah Johnson",
-                email: "sarah@insurance.com",
-                npn: "987654321",
-                extension: "5678",
-                password: "password123",
-                isAdmin: false,
-                licenses: [
-                    { state: "FL", carriers: ["Geico", "Nationwide"], expiration: "2024-10-31" }
-                ],
-                joinDate: "2024-03-10"
-            }
-        ];
+        agents.push(newUser);
+        // Save to localStorage for data persistence
+        localStorage.setItem('agentsData', JSON.stringify(agents));
+        
+        currentUser = newUser;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        showDashboard();
+        showNotification('Registration successful!', 'success');
+    }
 
-        // App State
-        let currentUser = null;
-        let agents = [DEFAULT_ADMIN, ...SAMPLE_AGENTS];
-        let currentEditingUserId = null;
+    function handleLogout() {
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        showAuthScreen();
+        showNotification('Logged out successfully', 'info');
+    }
 
-        // DOM Elements
-        const loadingScreen = document.getElementById('loading-screen');
-        const authScreen = document.getElementById('auth-screen');
-        const dashboard = document.getElementById('dashboard');
-        const navButtons = document.getElementById('nav-buttons');
-        const logoutBtn = document.getElementById('logout-btn');
-        const adminTabBtn = document.getElementById('admin-tab-btn');
-        const adminBadge = document.getElementById('admin-badge');
-
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initApp, 1000);
+    function switchTab(tabName) {
+        // Update active tab button
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-cyan-600');
+            btn.classList.add('bg-gray-700');
         });
+        
+        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        activeBtn.classList.add('active', 'bg-cyan-600');
+        activeBtn.classList.remove('bg-gray-700');
+        
+        // Show active tab content
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 
-        function initApp() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                showDashboard();
-            } else {
-                showAuthScreen();
-            }
-
-            const savedAgents = localStorage.getItem('agentsData');
-            if (savedAgents) {
-                agents = JSON.parse(savedAgents);
-            } else {
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-            }
-
-            populateStateDropdown();
-            populateCarriersCheckboxes();
-            setupEventListeners();
+        // Load admin panel if needed
+        if (tabName === 'admin' && currentUser.isAdmin) {
+            loadAdminPanel();
         }
+    }
 
-        function populateStateDropdown() {
-            const stateSelect = document.getElementById('license-state');
-            stateSelect.innerHTML = '<option value="">Select a state</option>';
-            STATES_DATA.forEach(state => {
-                const option = document.createElement('option');
-                option.value = state.abbreviation;
-                option.textContent = `${state.name} (${state.abbreviation})`;
-                stateSelect.appendChild(option);
-            });
-        }
-
-        function populateCarriersCheckboxes() {
-            const carriersContainer = document.getElementById('carriers-container');
-            carriersContainer.innerHTML = '';
-            CARRIERS.forEach(carrier => {
-                const label = document.createElement('label');
-                label.className = 'flex items-center space-x-2 cursor-pointer';
-                label.innerHTML = `
-                    <input type="checkbox" value="${carrier}" class="carrier-checkbox rounded text-cyan-600">
-                    <span>${carrier}</span>
-                `;
-                carriersContainer.appendChild(label);
-            });
-        }
-
-        function setupEventListeners() {
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-            document.getElementById('register-form').addEventListener('submit', handleRegister);
-            logoutBtn.addEventListener('click', handleLogout);
-            
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-            });
-            
-            document.getElementById('search-btn').addEventListener('click', performSearch);
-            document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
-        }
-
-        function showAuthScreen() {
-            loadingScreen.classList.add('hidden');
-            authScreen.classList.remove('hidden');
-            dashboard.classList.add('hidden');
-            navButtons.classList.add('hidden');
-        }
-
-        function showDashboard() {
-            loadingScreen.classList.add('hidden');
-            authScreen.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            navButtons.classList.remove('hidden');
-            
-            document.getElementById('user-name').textContent = currentUser.name;
-            document.getElementById('profile-name').textContent = currentUser.name;
-            document.getElementById('profile-email').textContent = currentUser.email;
-            document.getElementById('profile-npn').textContent = currentUser.npn;
-            document.getElementById('profile-extension').textContent = currentUser.extension;
-            document.getElementById('member-since').textContent = currentUser.joinDate || '2024';
-            
-            if (currentUser.isAdmin) {
-                adminTabBtn.classList.remove('hidden');
-                adminBadge.classList.remove('hidden');
-                document.getElementById('user-badge').classList.add('hidden');
-            } else {
-                adminTabBtn.classList.add('hidden');
-                adminBadge.classList.add('hidden');
-                document.getElementById('user-badge').classList.remove('hidden');
-            }
-            
-            updateUserStats();
-            loadUserLicenses();
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            const user = agents.find(agent => agent.email === email && agent.password === password);
-            
-            if (user) {
-                currentUser = user;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showDashboard();
-                showNotification('Login successful!', 'success');
-            } else {
-                showNotification('Invalid email or password', 'error');
-            }
-        }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            const firstname = document.getElementById('register-firstname').value;
-            const lastname = document.getElementById('register-lastname').value;
-            const email = document.getElementById('register-email').value;
-            const npn = document.getElementById('register-npn').value;
-            const extension = document.getElementById('register-extension').value;
-            const password = document.getElementById('register-password').value;
-
-            if (!/^\d{4}$/.test(extension)) {
-                showNotification('Extension must be a 4-digit number', 'error');
-                return;
-            }
-
-            if (agents.find(agent => agent.email === email)) {
-                showNotification('Email already registered', 'error');
-                return;
-            }
-
-            if (agents.find(agent => agent.npn === npn)) {
-                showNotification('NPN number already registered', 'error');
-                return;
-            }
-
-            const newUser = {
-                id: Date.now(),
-                firstname,
-                lastname,
-                name: `${firstname} ${lastname}`,
-                email,
-                npn,
-                extension,
-                password,
-                isAdmin: false,
-                licenses: [],
-                joinDate: new Date().toISOString().split('T')[0]
-            };
-
-            agents.push(newUser);
-            localStorage.setItem('agentsData', JSON.stringify(agents));
-            
-            currentUser = newUser;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            showDashboard();
-            showNotification('Registration successful!', 'success');
-        }
-
-        function handleLogout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            showAuthScreen();
-            showNotification('Logged out successfully', 'info');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-cyan-600');
-                btn.classList.add('bg-gray-700');
-            });
-            
-            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-            activeBtn.classList.add('active', 'bg-cyan-600');
-            activeBtn.classList.remove('bg-gray-700');
-            
-            document.querySelectorAll('.tab-panel').forEach(panel => {
-                panel.classList.add('hidden');
-            });
-            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-
-            if (tabName === 'admin' && currentUser.isAdmin) {
-                loadAdminPanel();
-            }
-        }
-
-        function performSearch() {
-            const query = document.getElementById('search-input').value.trim();
-            const resultsContainer = document.getElementById('search-results');
-            
-            if (!query) {
-                resultsContainer.innerHTML = `
-                    <div class="text-center text-gray-400">
-                        <i class="fas fa-compass text-4xl mb-4"></i>
-                        <p class="text-xl">Enter a search term to find license data</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // UPDATED SEARCH LOGIC - EXACT MATCHES ONLY
-            const results = agents.filter(agent => {
-                // Split agent name into first and last name for exact matching
-                const [firstName, lastName] = agent.name.split(' ');
-                
-                // Check for EXACT agent info matches (case-insensitive)
-                const agentMatch = 
-                    agent.name.toLowerCase() === query.toLowerCase() ||
-                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
-                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
-                    agent.email.toLowerCase() === query.toLowerCase() ||
-                    agent.npn === query ||
-                    agent.extension === query;
-
-                // Check for EXACT state matches in licenses (both name and abbreviation)
-                const stateMatch = agent.licenses.some(license => {
-                    const state = STATES_DATA.find(s => 
-                        s.abbreviation.toLowerCase() === query.toLowerCase() || 
-                        s.name.toLowerCase() === query.toLowerCase()
-                    );
-                    return state !== undefined && license.state === state.abbreviation;
-                });
-
-                // Check for EXACT carrier matches in licenses
-                const carrierMatch = agent.licenses.some(license => 
-                    license.carriers.some(carrier => 
-                        carrier.toLowerCase() === query.toLowerCase()
-                    )
-                );
-
-                // Return true only if the agent has matching licenses OR matches agent info
-                return (stateMatch || carrierMatch) || agentMatch;
-            });
-
-            // Filter out agents that don't have any licenses when searching for states/carriers
-            const filteredResults = results.filter(agent => {
-                // If searching for agent info (name, email, npn, extension), include them regardless of licenses
-                const [firstName, lastName] = agent.name.split(' ');
-                const isAgentInfoSearch = 
-                    agent.name.toLowerCase() === query.toLowerCase() ||
-                    (firstName && firstName.toLowerCase() === query.toLowerCase()) ||
-                    (lastName && lastName.toLowerCase() === query.toLowerCase()) ||
-                    agent.email.toLowerCase() === query.toLowerCase() ||
-                    agent.npn === query ||
-                    agent.extension === query;
-
-                // If it's an agent info search, include them
-                if (isAgentInfoSearch) {
-                    return true;
-                }
-
-                // For state/carrier searches, only include agents that have licenses matching the search
-                const hasMatchingLicense = agent.licenses.some(license => {
-                    const stateMatch = STATES_DATA.some(s => 
-                        (s.abbreviation.toLowerCase() === query.toLowerCase() || 
-                         s.name.toLowerCase() === query.toLowerCase()) && 
-                        license.state === s.abbreviation
-                    );
-                    
-                    const carrierMatch = license.carriers.some(carrier => 
-                        carrier.toLowerCase() === query.toLowerCase()
-                    );
-
-                    return stateMatch || carrierMatch;
-                });
-
-                return hasMatchingLicense;
-            });
-
-            if (filteredResults.length === 0) {
-                resultsContainer.innerHTML = `
-                    <div class="text-center text-gray-400">
-                        <i class="fas fa-search text-4xl mb-4"></i>
-                        <p class="text-xl">No exact matches found for "${query}"</p>
-                        <p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, NPN, extension, or carrier name</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let resultsHTML = '<div class="space-y-4">';
-            filteredResults.forEach(agent => {
-                // Filter licenses to only show those that match the search
-                const matchingLicenses = agent.licenses.filter(license => {
-                    const stateMatch = STATES_DATA.some(s => 
-                        (s.abbreviation.toLowerCase() === query.toLowerCase() || 
-                         s.name.toLowerCase() === query.toLowerCase()) && 
-                        license.state === s.abbreviation
-                    );
-                    
-                    const carrierMatch = license.carriers.some(carrier => 
-                        carrier.toLowerCase() === query.toLowerCase()
-                    );
-
-                    return stateMatch || carrierMatch;
-                });
-
-                const licenseInfo = matchingLicenses.map(license => {
-                    const state = STATES_DATA.find(s => s.abbreviation === license.state);
-                    return `${state ? state.name : license.state}: ${license.carriers.join(', ')}`;
-                }).join('; ');
-
-                resultsHTML += `
-                    <div class="bg-gray-600 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="text-xl font-semibold text-cyan-300">${agent.name}</h4>
-                            ${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
-                        </div>
-                        <p class="text-gray-300 mb-2">Email: ${agent.email} | NPN: ${agent.npn}</p>
-                        <p class="text-gray-300 mb-2">Extension: ${agent.extension}</p>
-                        <div class="mt-3">
-                            <h5 class="font-semibold text-gray-300 mb-2">Matching Licenses:</h5>
-                            <p class="text-gray-400">${licenseInfo || 'No matching licenses found'}</p>
-                        </div>
-                    </div>
-                `;
-            });
-            resultsHTML += '</div>';
-            
-            resultsContainer.innerHTML = resultsHTML;
-        }
-
-        function updateUserStats() {
-            const statesCount = new Set(currentUser.licenses.map(license => license.state)).size;
-            const carriersCount = new Set(currentUser.licenses.flatMap(license => license.carriers)).size;
-            
-            document.getElementById('states-count').textContent = statesCount;
-            document.getElementById('carriers-count').textContent = carriersCount;
-        }
-
-        function loadUserLicenses() {
-            const container = document.getElementById('licenses-container');
-            
-            if (currentUser.licenses.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-400 py-8">
-                        <i class="fas fa-id-card text-4xl mb-4"></i>
-                        <p class="text-xl">No licenses found</p>
-                        <p class="text-sm mt-2">Add your first license to get started</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let licensesHTML = '<div class="space-y-4">';
-            currentUser.licenses.forEach((license, index) => {
-                const state = STATES_DATA.find(s => s.abbreviation === license.state);
-                const daysUntilExpiry = Math.ceil((new Date(license.expiration) - new Date()) / (1000 * 60 * 60 * 24));
-                const isExpiringSoon = daysUntilExpiry <= 30;
-                const isExpired = daysUntilExpiry < 0;
-                
-                let statusClass = 'bg-green-600';
-                let statusText = 'Active';
-                
-                if (isExpired) {
-                    statusClass = 'bg-red-600';
-                    statusText = 'Expired';
-                } else if (isExpiringSoon) {
-                    statusClass = 'bg-yellow-600';
-                    statusText = 'Expiring Soon';
-                }
-                
-                licensesHTML += `
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="text-lg font-semibold text-cyan-300">${state ? state.name : license.state}</h4>
-                            <span class="${statusClass} px-2 py-1 rounded text-xs font-semibold">${statusText}</span>
-                        </div>
-                        <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
-                        <p class="text-gray-300"><strong>Expires:</strong> ${license.expiration} (${isExpired ? 'Expired' : `${daysUntilExpiry} days`})</p>
-                        <div class="mt-3 flex justify-end">
-                            <button onclick="removeLicense(${index})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
-                                <i class="fas fa-trash mr-1"></i>Remove
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            licensesHTML += '</div>';
-            container.innerHTML = licensesHTML;
-        }
-
-        function openAddLicenseModal() {
-            // Reset currentEditingUserId for regular users
-            if (!currentUser.isAdmin) {
-                currentEditingUserId = null;
-            }
-            
-            document.getElementById('add-license-modal').style.display = 'flex';
-            document.getElementById('add-license-title').textContent = currentEditingUserId && currentUser.isAdmin 
-                ? `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`
-                : 'Add New License';
-            document.getElementById('add-license-form').reset();
-            
-            // Clear all checkboxes
-            document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-        }
-
-        function closeAddLicenseModal() {
-            document.getElementById('add-license-modal').style.display = 'none';
-            // Only reset currentEditingUserId if we're not in admin mode
-            if (!currentUser.isAdmin) {
-                currentEditingUserId = null;
-            }
-        }
-
-        function handleAddLicense(e) {
-            e.preventDefault();
-            const state = document.getElementById('license-state').value;
-            const expiration = document.getElementById('license-expiration').value;
-            
-            const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            if (!state || selectedCarriers.length === 0 || !expiration) {
-                showNotification('Please fill all fields', 'error');
-                return;
-            }
-
-            const newLicense = {
-                state,
-                carriers: selectedCarriers,
-                expiration
-            };
-
-            // CRITICAL FIX: Determine the correct target user
-            let targetUser;
-            
-            if (currentEditingUserId && currentUser.isAdmin) {
-                // ADMIN ADDING LICENSE FOR ANOTHER USER
-                targetUser = agents.find(a => a.id === currentEditingUserId);
-                if (!targetUser) {
-                    showNotification('User not found', 'error');
-                    return;
-                }
-            } else {
-                // REGULAR USER ADDING LICENSE FOR THEMSELVES
-                targetUser = currentUser;
-            }
-
-            // Check if license for this state already exists for the target user
-            if (targetUser.licenses.some(license => license.state === state)) {
-                showNotification(`License for ${state} already exists`, 'error');
-                return;
-            }
-
-            // Add license to the target user
-            targetUser.licenses.push(newLicense);
-            
-            // Update the agents array and localStorage
-            const agentIndex = agents.findIndex(a => a.id === targetUser.id);
-            if (agentIndex !== -1) {
-                agents[agentIndex] = targetUser;
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-            }
-            
-            // If the target user is the current user, update currentUser as well
-            if (targetUser.id === currentUser.id) {
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            }
-
-            // CRITICAL FIX: Close the modal immediately after successful submission
-            closeAddLicenseModal();
-            
-            // Show appropriate success message and update UI
-            if (currentEditingUserId && currentUser.isAdmin) {
-                showNotification(`License added to ${targetUser.name} successfully!`, 'success');
-                // Reload the edit modal if we're in admin mode
-                openEditUserLicenses(currentEditingUserId);
-            } else {
-                showNotification('License added successfully!', 'success');
-                loadUserLicenses();
-                updateUserStats();
-            }
-        }
-
-        function removeLicense(licenseIndex) {
-            if (confirm('Are you sure you want to remove this license?')) {
-                currentUser.licenses.splice(licenseIndex, 1);
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                // Update in agents array
-                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
-                if (agentIndex !== -1) {
-                    agents[agentIndex] = currentUser;
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                }
-                
-                loadUserLicenses();
-                updateUserStats();
-                showNotification('License removed successfully', 'info');
-            }
-        }
-
-        function loadAdminPanel() {
-            const usersList = document.getElementById('users-list');
-            const totalUsers = document.getElementById('total-users');
-            const adminCount = document.getElementById('admin-count');
-            const agentCount = document.getElementById('agent-count');
-            
-            const admins = agents.filter(a => a.isAdmin);
-            const regularAgents = agents.filter(a => !a.isAdmin);
-            
-            totalUsers.textContent = agents.length;
-            adminCount.textContent = admins.length;
-            agentCount.textContent = regularAgents.length;
-            
-            let usersHTML = '';
-            agents.forEach(agent => {
-                const licenseCount = agent.licenses.length;
-                const stateCount = new Set(agent.licenses.map(l => l.state)).size;
-                const isCurrentUser = agent.id === currentUser.id;
-                
-                usersHTML += `
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 class="text-lg font-semibold text-cyan-300">${agent.name} ${isCurrentUser ? '(You)' : ''}</h4>
-                                <p class="text-gray-400 text-sm">${agent.email} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p>
-                            </div>
-                            <span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">
-                                ${agent.isAdmin ? 'Admin' : 'Agent'}
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mb-3">
-                            <div class="text-center bg-gray-800 p-2 rounded">
-                                <p class="text-2xl font-bold text-cyan-400">${licenseCount}</p>
-                                <p class="text-xs text-gray-400">Licenses</p>
-                            </div>
-                            <div class="text-center bg-gray-800 p-2 rounded">
-                                <p class="text-2xl font-bold text-cyan-400">${stateCount}</p>
-                                <p class="text-xs text-gray-400">States</p>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="openEditUserLicenses(${agent.id})" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded transition">
-                                <i class="fas fa-edit mr-1"></i>Edit Licenses
-                            </button>
-                            ${!isCurrentUser && !agent.isAdmin ? `
-                            <button onclick="deleteUser(${agent.id})" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded transition">
-                                <i class="fas fa-trash mr-1"></i>Delete
-                            </button>
-                            ` : ''}
-                            ${!isCurrentUser ? `
-                            <button onclick="toggleAdminStatus(${agent.id})" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded transition">
-                                <i class="fas fa-user-shield mr-1"></i>${agent.isAdmin ? 'Demote' : 'Promote'}
-                            </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            usersList.innerHTML = usersHTML || '<p class="text-gray-400 text-center">No users found</p>';
-        }
-
-        function openEditUserLicenses(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            currentEditingUserId = userId;
-            const user = agents.find(a => a.id === userId);
-            if (!user) return;
-            
-            document.getElementById('edit-user-title').textContent = `Edit Licenses for ${user.name}`;
-            const container = document.getElementById('user-licenses-container');
-            
-            if (user.licenses.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
-            } else {
-                let licensesHTML = '';
-                user.licenses.forEach((license, index) => {
-                    const state = STATES_DATA.find(s => s.abbreviation === license.state);
-                    licensesHTML += `
-                        <div class="bg-gray-600 p-3 rounded">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold">${state ? state.name : license.state}</p>
-                                    <p class="text-sm text-gray-400">${license.carriers.join(', ')}</p>
-                                    <p class="text-sm text-gray-400">Expires: ${license.expiration}</p>
-                                </div>
-                                <button onclick="removeUserLicense(${userId}, ${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = licensesHTML;
-            }
-            
-            document.getElementById('edit-user-licenses-modal').style.display = 'flex';
-        }
-
-        function closeEditUserLicensesModal() {
-            document.getElementById('edit-user-licenses-modal').style.display = 'none';
-            // Don't reset currentEditingUserId here - we need it for the add license modal
-        }
-
-        function openAddLicenseForUserModal() {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-            
-            // currentEditingUserId is already set from openEditUserLicenses
-            closeEditUserLicensesModal();
-            document.getElementById('add-license-modal').style.display = 'flex';
-        }
-
-        function removeUserLicense(userId, licenseIndex) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            if (confirm('Are you sure you want to remove this license?')) {
-                const userIndex = agents.findIndex(a => a.id === userId);
-                if (userIndex !== -1) {
-                    agents[userIndex].licenses.splice(licenseIndex, 1);
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                    
-                    // Reload the edit modal
-                    openEditUserLicenses(userId);
-                    showNotification('License removed successfully', 'info');
-                }
-            }
-        }
-
-        function deleteUser(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                agents = agents.filter(a => a.id !== userId);
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                loadAdminPanel();
-                showNotification('User deleted successfully', 'info');
-            }
-        }
-
-        function toggleAdminStatus(userId) {
-            if (!currentUser.isAdmin) {
-                showNotification('Access denied: Admin privileges required', 'error');
-                return;
-            }
-
-            const userIndex = agents.findIndex(a => a.id === userId);
-            if (userIndex !== -1) {
-                agents[userIndex].isAdmin = !agents[userIndex].isAdmin;
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                
-                // Reload admin panel
-                loadAdminPanel();
-                showNotification(`User ${agents[userIndex].isAdmin ? 'promoted to admin' : 'demoted to agent'}`, 'success');
-            }
-        }
-
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 fade-in ${
-                type === 'success' ? 'bg-green-600' : 
-                type === 'error' ? 'bg-red-600' : 
-                type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
-            }`;
-            notification.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info'} mr-2"></i>
-                    <span>${message}</span>
+    function performSearch() {
+        const query = document.getElementById('search-input').value.trim();
+        const resultsContainer = document.getElementById('search-results');
+        
+        if (!query) {
+            resultsContainer.innerHTML = `
+                <div class="text-center text-gray-400">
+                    <i class="fas fa-compass text-4xl mb-4"></i>
+                    <p class="text-xl">Enter a search term to find license data</p>
                 </div>
             `;
-            
-            document.body.appendChild(notification);
-            
-            // Remove notification after 3 seconds
-            setTimeout(() => {
-                notification.classList.add('fade-out');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 500);
-            }, 3000);
+            return;
         }
 
-        // Make functions globally available
-        window.openAddLicenseModal = openAddLicenseModal;
-        window.closeAddLicenseModal = closeAddLicenseModal;
-        window.removeLicense = removeLicense;
-        window.openEditUserLicenses = openEditUserLicenses;
-        window.closeEditUserLicensesModal = closeEditUserLicensesModal;
-        window.openAddLicenseForUserModal = openAddLicenseForUserModal;
-        window.removeUserLicense = removeUserLicense;
-        window.deleteUser = deleteUser;
-        window.toggleAdminStatus = toggleAdminStatus;
-    </script>
+        // Search through agents and licenses with EXACT matches
+        const results = agents.filter(agent => {
+            // Split agent name into first and last name for exact matching
+            const [firstName, lastName] = agent.name.split(' ');
+            
+            // Basic agent info search with EXACT matches
+            if (agent.name.toLowerCase() === query.toLowerCase() ||
+                firstName.toLowerCase() === query.toLowerCase() ||
+                lastName.toLowerCase() === query.toLowerCase() ||
+                agent.email.toLowerCase() === query.toLowerCase() ||
+                agent.npn === query) {
+                return true;
+            }
+
+            // License search with EXACT state name/abbreviation support
+            return agent.licenses.some(license => {
+                const state = STATES_DATA.find(s => 
+                    s.abbreviation.toLowerCase() === query.toLowerCase() || 
+                    s.name.toLowerCase() === query.toLowerCase()
+                );
+                
+                // Check for exact carrier match
+                const exactCarrierMatch = license.carriers.some(carrier => 
+                    carrier.toLowerCase() === query.toLowerCase()
+                );
+                
+                return (state !== undefined) || exactCarrierMatch;
+            });
+        });
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="text-center text-gray-400">
+                    <i class="fas fa-search text-4xl mb-4"></i>
+                    <p class="text-xl">No exact matches found for "${query}"</p>
+                    <p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, or carrier name</p>
+                </div>
+            `;
+            return;
+        }
+
+        let resultsHTML = '<div class="space-y-4">';
+        results.forEach(agent => {
+            const licenseInfo = agent.licenses.map(license => {
+                const state = STATES_DATA.find(s => s.abbreviation === license.state);
+                return `${state ? state.name : license.state}: ${license.carriers.join(', ')}`;
+            }).join('; ');
+
+            resultsHTML += `
+                <div class="bg-gray-600 p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-xl font-semibold text-cyan-300">${agent.name}</h4>
+                        ${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
+                    </div>
+                    <p class="text-gray-300 mb-2">Email: ${agent.email} | NPN: ${agent.npn}</p>
+                    <p class="text-gray-300 mb-2">Extension: ${agent.extension}</p>
+                    <div class="mt-3">
+                        <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
+                        <p class="text-gray-400">${licenseInfo || 'No licenses'}</p>
+                    </div>
+                </div>
+            `;
+        });
+        resultsHTML += '</div>';
+        
+        resultsContainer.innerHTML = resultsHTML;
+    }
+
+    function updateUserStats() {
+        const statesCount = currentUser.licenses.length;
+        const carriersCount = currentUser.licenses.reduce((total, license) => total + license.carriers.length, 0);
+        
+        document.getElementById('states-count').textContent = statesCount;
+        document.getElementById('carriers-count').textContent = carriersCount;
+    }
+
+    function loadUserLicenses() {
+        const container = document.getElementById('licenses-container');
+        
+        if (currentUser.licenses.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-400 py-8">
+                    <i class="fas fa-id-card text-4xl mb-4"></i>
+                    <p class="text-xl">No licenses added yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        let licensesHTML = '';
+        currentUser.licenses.forEach((license, index) => {
+            const state = STATES_DATA.find(s => s.abbreviation === license.state);
+            licensesHTML += `
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="text-lg font-semibold text-cyan-300">${state ? state.name : license.state} License</h4>
+                        <div class="flex space-x-2">
+                            <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+                            <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
+                    <p class="text-gray-400 text-sm">Expires: ${license.expiration}</p>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = licensesHTML;
+    }
+
+    // License Management Functions
+    function openAddLicenseModal() {
+        // Regular user adding license to themselves
+        currentEditingUserId = null;
+        document.getElementById('add-license-title').textContent = 'Add New License';
+        document.getElementById('add-license-modal').style.display = 'flex';
+    }
+
+    function closeAddLicenseModal() {
+        document.getElementById('add-license-modal').style.display = 'none';
+        document.getElementById('add-license-form').reset();
+        // Uncheck all carriers
+        document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        currentEditingUserId = null;
+    }
+
+    function handleAddLicense(e) {
+        e.preventDefault();
+        
+        const state = document.getElementById('license-state').value;
+        const expiration = document.getElementById('license-expiration').value;
+        
+        // Get selected carriers
+        const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
+            .map(checkbox => checkbox.value);
+        
+        if (!state) {
+            showNotification('Please select a state', 'error');
+            return;
+        }
+        
+        if (selectedCarriers.length === 0) {
+            showNotification('Please select at least one carrier', 'error');
+            return;
+        }
+        
+        if (!expiration) {
+            showNotification('Please select an expiration date', 'error');
+            return;
+        }
+
+        const newLicense = {
+            state: state,
+            carriers: selectedCarriers,
+            expiration: expiration
+        };
+
+        // DETERMINE TARGET USER - THIS IS THE CRITICAL FIX
+        let targetUserId;
+        
+        if (currentEditingUserId && currentUser.isAdmin) {
+            // ADMIN ADDING LICENSE FOR ANOTHER USER
+            targetUserId = currentEditingUserId;
+        } else {
+            // USER ADDING LICENSE FOR THEMSELVES
+            targetUserId = currentUser.id;
+        }
+
+        // Find the target user
+        const targetUserIndex = agents.findIndex(a => a.id === targetUserId);
+        if (targetUserIndex === -1) {
+            showNotification('User not found', 'error');
+            return;
+        }
+
+        const targetUser = agents[targetUserIndex];
+
+        // Check if license for this state already exists for the target user
+        if (targetUser.licenses.some(license => license.state === state)) {
+            showNotification(`License for ${state} already exists for ${targetUser.name}`, 'error');
+            return;
+        }
+
+        // Add license to the target user
+        targetUser.licenses.push(newLicense);
+        
+        // Update localStorage for data persistence
+        agents[targetUserIndex] = targetUser;
+        localStorage.setItem('agentsData', JSON.stringify(agents));
+        
+        // If the target user is the current user, update currentUser as well
+        if (targetUserId === currentUser.id) {
+            currentUser = targetUser;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+
+        closeAddLicenseModal();
+        
+        // Show appropriate success message
+        if (currentEditingUserId && currentUser.isAdmin) {
+            showNotification(`License added to ${targetUser.name} successfully!`, 'success');
+            // Reload the edit modal if we're in admin mode
+            openEditUserLicenses(currentEditingUserId);
+        } else {
+            showNotification('License added successfully!', 'success');
+            loadUserLicenses();
+            updateUserStats();
+        }
+    }
+
+    function deleteLicense(licenseIndex) {
+        if (confirm('Are you sure you want to delete this license?')) {
+            currentUser.licenses.splice(licenseIndex, 1);
+            
+            // Update localStorage for data persistence
+            const agentIndex = agents.findIndex(a => a.id === currentUser.id);
+            if (agentIndex !== -1) {
+                agents[agentIndex] = currentUser;
+                localStorage.setItem('agentsData', JSON.stringify(agents));
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            loadUserLicenses();
+            updateUserStats();
+            showNotification('License deleted successfully', 'success');
+        }
+    }
+
+    // Admin License Management Functions
+    function openEditUserLicenses(userId) {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+
+        currentEditingUserId = userId;
+        const user = agents.find(a => a.id === userId);
+        document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
+        
+        const container = document.getElementById('user-licenses-container');
+        container.innerHTML = '';
+        
+        if (user.licenses.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+        } else {
+            user.licenses.forEach((license, index) => {
+                const state = STATES_DATA.find(s => s.abbreviation === license.state);
+                const licenseDiv = document.createElement('div');
+                licenseDiv.className = 'bg-gray-600 p-3 rounded-lg';
+                licenseDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h5 class="font-semibold text-cyan-300">${state ? state.name : license.state}</h5>
+                            <p class="text-sm text-gray-300">${license.carriers.join(', ')}</p>
+                            <p class="text-xs text-gray-400">Expires: ${license.expiration}</p>
+                        </div>
+                        <button onclick="deleteUserLicense(${userId}, ${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(licenseDiv);
+            });
+        }
+        
+        document.getElementById('edit-user-licenses-modal').style.display = 'flex';
+    }
+
+    function closeEditUserLicensesModal() {
+        document.getElementById('edit-user-licenses-modal').style.display = 'none';
+        // DO NOT reset currentEditingUserId here - we need it for the add license modal
+    }
+
+    function openAddLicenseForUserModal() {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+        
+        // currentEditingUserId is already set from openEditUserLicenses
+        document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`;
+        closeEditUserLicensesModal();
+        document.getElementById('add-license-modal').style.display = 'flex';
+    }
+
+    function deleteUserLicense(userId, licenseIndex) {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete this license?')) {
+            const userIndex = agents.findIndex(a => a.id === userId);
+            if (userIndex !== -1) {
+                agents[userIndex].licenses.splice(licenseIndex, 1);
+                localStorage.setItem('agentsData', JSON.stringify(agents));
+                
+                // Reload the edit modal
+                openEditUserLicenses(userId);
+                showNotification('License deleted successfully', 'success');
+            }
+        }
+    }
+
+    function loadAdminPanel() {
+        const totalUsers = agents.length;
+        const adminCount = agents.filter(a => a.isAdmin).length;
+        const agentCount = totalUsers - adminCount;
+
+        document.getElementById('total-users').textContent = totalUsers;
+        document.getElementById('admin-count').textContent = adminCount;
+        document.getElementById('agent-count').textContent = agentCount;
+
+        let usersHTML = '';
+        agents.forEach(user => {
+            const isCurrentUser = user.id === currentUser.id;
+            usersHTML += `
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="text-lg font-semibold ${user.isAdmin ? 'text-red-400' : 'text-cyan-300'}">
+                                ${user.name} ${isCurrentUser ? '(You)' : ''}
+                            </h4>
+                            <p class="text-gray-300">${user.email} | NPN: ${user.npn}</p>
+                            <p class="text-gray-400 text-sm">Extension: ${user.extension}</p>
+                            <p class="text-gray-400 text-sm">Joined: ${user.joinDate}</p>
+                            <p class="text-gray-400 text-sm">Licenses: ${user.licenses.length} states</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="openEditUserLicenses(${user.id})" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm transition">
+                                <i class="fas fa-edit mr-1"></i>Licenses
+                            </button>
+                            ${!isCurrentUser ? `
+                                <button onclick="toggleAdminStatus(${user.id})" class="${user.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'} px-3 py-1 rounded text-sm transition">
+                                    ${user.isAdmin ? 'Demote' : 'Promote'}
+                                </button>
+                                ${!user.isAdmin ? `
+                                    <button onclick="deleteUser(${user.id})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition">
+                                        Delete
+                                    </button>
+                                ` : ''}
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-medium px-2 py-1 rounded-full ${user.isAdmin ? 'bg-red-800 text-red-300' : 'bg-green-800 text-green-300'}">
+                            ${user.isAdmin ? 'Administrator' : 'Agent'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('users-list').innerHTML = usersHTML;
+
+        // Load carriers management section
+        loadCarriersList();
+    }
+
+    // Admin functions
+    function toggleAdminStatus(userId) {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+
+        const userIndex = agents.findIndex(a => a.id === userId);
+        if (userIndex !== -1) {
+            agents[userIndex].isAdmin = !agents[userIndex].isAdmin;
+            localStorage.setItem('agentsData', JSON.stringify(agents));
+            
+            // Reload admin panel
+            loadAdminPanel();
+            showNotification(`User ${agents[userIndex].isAdmin ? 'promoted to admin' : 'demoted to agent'}`, 'success');
+        }
+    }
+
+    function deleteUser(userId) {
+        if (!currentUser.isAdmin) {
+            showNotification('Access denied: Admin privileges required', 'error');
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete this user?')) {
+            agents = agents.filter(a => a.id !== userId);
+            localStorage.setItem('agentsData', JSON.stringify(agents));
+            loadAdminPanel();
+            showNotification('User deleted successfully', 'success');
+        }
+    }
+
+    function showNotification(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
+            type === 'success' ? 'bg-green-600' :
+            type === 'error' ? 'bg-red-600' :
+            'bg-blue-600'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Make functions globally available
+    window.toggleAdminStatus = toggleAdminStatus;
+    window.deleteUser = deleteUser;
+    window.openAddLicenseModal = openAddLicenseModal;
+    window.closeAddLicenseModal = closeAddLicenseModal;
+    window.deleteLicense = deleteLicense;
+    window.openEditUserLicenses = openEditUserLicenses;
+    window.closeEditUserLicensesModal = closeEditUserLicensesModal;
+    window.openAddLicenseForUserModal = openAddLicenseForUserModal;
+    window.deleteUserLicense = deleteUserLicense;
+    window.openResetPasswordModal = openResetPasswordModal;
+    window.closeResetPasswordModal = closeResetPasswordModal;
+    window.addNewCarrier = addNewCarrier;
+    window.removeCarrier = removeCarrier;
+</script>
 </body>
 </html>
