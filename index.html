@@ -344,56 +344,23 @@
     <script>
         // State data with full names and abbreviations
         const STATES_DATA = [
-            { name: "Alabama", abbreviation: "AL" },
-            { name: "Alaska", abbreviation: "AK" },
-            { name: "Arizona", abbreviation: "AZ" },
-            { name: "Arkansas", abbreviation: "AR" },
-            { name: "California", abbreviation: "CA" },
-            { name: "Colorado", abbreviation: "CO" },
-            { name: "Connecticut", abbreviation: "CT" },
-            { name: "Delaware", abbreviation: "DE" },
-            { name: "Florida", abbreviation: "FL" },
-            { name: "Georgia", abbreviation: "GA" },
-            { name: "Hawaii", abbreviation: "HI" },
-            { name: "Idaho", abbreviation: "ID" },
-            { name: "Illinois", abbreviation: "IL" },
-            { name: "Indiana", abbreviation: "IN" },
-            { name: "Iowa", abbreviation: "IA" },
-            { name: "Kansas", abbreviation: "KS" },
-            { name: "Kentucky", abbreviation: "KY" },
-            { name: "Louisiana", abbreviation: "LA" },
-            { name: "Maine", abbreviation: "ME" },
-            { name: "Maryland", abbreviation: "MD" },
-            { name: "Massachusetts", abbreviation: "MA" },
-            { name: "Michigan", abbreviation: "MI" },
-            { name: "Minnesota", abbreviation: "MN" },
-            { name: "Mississippi", abbreviation: "MS" },
-            { name: "Missouri", abbreviation: "MO" },
-            { name: "Montana", abbreviation: "MT" },
-            { name: "Nebraska", abbreviation: "NE" },
-            { name: "Nevada", abbreviation: "NV" },
-            { name: "New Hampshire", abbreviation: "NH" },
-            { name: "New Jersey", abbreviation: "NJ" },
-            { name: "New Mexico", abbreviation: "NM" },
-            { name: "New York", abbreviation: "NY" },
-            { name: "North Carolina", abbreviation: "NC" },
-            { name: "North Dakota", abbreviation: "ND" },
-            { name: "Ohio", abbreviation: "OH" },
-            { name: "Oklahoma", abbreviation: "OK" },
-            { name: "Oregon", abbreviation: "OR" },
-            { name: "Pennsylvania", abbreviation: "PA" },
-            { name: "Rhode Island", abbreviation: "RI" },
-            { name: "South Carolina", abbreviation: "SC" },
-            { name: "South Dakota", abbreviation: "SD" },
-            { name: "Tennessee", abbreviation: "TN" },
-            { name: "Texas", abbreviation: "TX" },
-            { name: "Utah", abbreviation: "UT" },
-            { name: "Vermont", abbreviation: "VT" },
-            { name: "Virginia", abbreviation: "VA" },
-            { name: "Washington", abbreviation: "WA" },
-            { name: "West Virginia", abbreviation: "WV" },
-            { name: "Wisconsin", abbreviation: "WI" },
-            { name: "Wyoming", abbreviation: "WY" }
+            { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
+            { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
+            { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" }, { name: "Florida", abbreviation: "FL" },
+            { name: "Georgia", abbreviation: "GA" }, { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
+            { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" }, { name: "Iowa", abbreviation: "IA" },
+            { name: "Kansas", abbreviation: "KS" }, { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
+            { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" }, { name: "Massachusetts", abbreviation: "MA" },
+            { name: "Michigan", abbreviation: "MI" }, { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
+            { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" }, { name: "Nebraska", abbreviation: "NE" },
+            { name: "Nevada", abbreviation: "NV" }, { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
+            { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" }, { name: "North Carolina", abbreviation: "NC" },
+            { name: "North Dakota", abbreviation: "ND" }, { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
+            { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" }, { name: "Rhode Island", abbreviation: "RI" },
+            { name: "South Carolina", abbreviation: "SC" }, { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
+            { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" }, { name: "Vermont", abbreviation: "VT" },
+            { name: "Virginia", abbreviation: "VA" }, { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
+            { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
         ];
 
         const CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
@@ -411,8 +378,7 @@
             isAdmin: true,
             licenses: [
                 { state: "CA", carriers: ["State Farm", "Allstate", "Geico"], expiration: "2025-12-31" },
-                { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2025-11-30" },
-                { state: "NY", carriers: ["Nationwide", "Travelers"], expiration: "2025-10-31" }
+                { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2025-11-30" }
             ],
             joinDate: "2024-01-01"
         };
@@ -430,8 +396,7 @@
                 password: "password123",
                 isAdmin: false,
                 licenses: [
-                    { state: "CA", carriers: ["State Farm", "Allstate"], expiration: "2024-12-31" },
-                    { state: "TX", carriers: ["Liberty Mutual", "Progressive"], expiration: "2024-11-30" }
+                    { state: "CA", carriers: ["State Farm", "Allstate"], expiration: "2024-12-31" }
                 ],
                 joinDate: "2024-02-15"
             },
@@ -446,8 +411,7 @@
                 password: "password123",
                 isAdmin: false,
                 licenses: [
-                    { state: "FL", carriers: ["Geico", "Nationwide"], expiration: "2024-10-31" },
-                    { state: "NY", carriers: ["Farmers", "Travelers"], expiration: "2024-09-30" }
+                    { state: "FL", carriers: ["Geico", "Nationwide"], expiration: "2024-10-31" }
                 ],
                 joinDate: "2024-03-10"
             }
@@ -456,8 +420,7 @@
         // App State
         let currentUser = null;
         let agents = [DEFAULT_ADMIN, ...SAMPLE_AGENTS];
-        let editingUserId = null;
-        let isAddingForUser = false;
+        let currentEditingUserId = null; // Track which user we're editing
 
         // DOM Elements
         const loadingScreen = document.getElementById('loading-screen');
@@ -502,6 +465,7 @@
 
         function populateStateDropdown() {
             const stateSelect = document.getElementById('license-state');
+            stateSelect.innerHTML = '<option value="">Select a state</option>';
             STATES_DATA.forEach(state => {
                 const option = document.createElement('option');
                 option.value = state.abbreviation;
@@ -512,6 +476,7 @@
 
         function populateCarriersCheckboxes() {
             const carriersContainer = document.getElementById('carriers-container');
+            carriersContainer.innerHTML = '';
             CARRIERS.forEach(carrier => {
                 const label = document.createElement('label');
                 label.className = 'flex items-center space-x-2 cursor-pointer';
@@ -807,7 +772,8 @@
 
         // License Management Functions
         function openAddLicenseModal() {
-            isAddingForUser = false;
+            // Regular user adding license to themselves
+            currentEditingUserId = null;
             document.getElementById('add-license-title').textContent = 'Add New License';
             document.getElementById('add-license-modal').style.display = 'flex';
         }
@@ -819,7 +785,7 @@
             document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
                 checkbox.checked = false;
             });
-            isAddingForUser = false;
+            currentEditingUserId = null;
         }
 
         function handleAddLicense(e) {
@@ -853,47 +819,53 @@
                 expiration: expiration
             };
 
-            if (isAddingForUser && editingUserId) {
-                // ADMIN ADDING LICENSE FOR ANOTHER USER
-                const userIndex = agents.findIndex(a => a.id === editingUserId);
+            // DETERMINE TARGET USER
+            let targetUser = currentUser;
+            let targetUserId = currentUser.id;
+            
+            // If we're in admin mode and editing a specific user
+            if (currentEditingUserId && currentUser.isAdmin) {
+                const userIndex = agents.findIndex(a => a.id === currentEditingUserId);
                 if (userIndex !== -1) {
-                    // Check if license for this state already exists for the target user
-                    if (agents[userIndex].licenses.some(license => license.state === state)) {
-                        showNotification('License for this state already exists for this user', 'error');
-                        return;
-                    }
-                    
-                    // Add license to the TARGET USER, not the admin
-                    agents[userIndex].licenses.push(newLicense);
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
-                    
-                    closeAddLicenseModal();
-                    // Reopen the edit modal to show updated licenses
-                    openEditUserLicenses(editingUserId);
-                    showNotification(`License added to ${agents[userIndex].name} successfully!`, 'success');
+                    targetUser = agents[userIndex];
+                    targetUserId = currentEditingUserId;
                 }
-            } else {
-                // USER ADDING LICENSE FOR THEMSELVES
-                // Check if license for this state already exists
-                if (currentUser.licenses.some(license => license.state === state)) {
-                    showNotification('License for this state already exists', 'error');
-                    return;
-                }
+            }
+
+            // Check if license for this state already exists for the target user
+            if (targetUser.licenses.some(license => license.state === state)) {
+                showNotification(`License for ${state} already exists for ${targetUser.name}`, 'error');
+                return;
+            }
+
+            // Add license to the target user
+            targetUser.licenses.push(newLicense);
+            
+            // Update localStorage - find the agent and update them
+            const agentIndex = agents.findIndex(a => a.id === targetUserId);
+            if (agentIndex !== -1) {
+                agents[agentIndex] = targetUser;
+                localStorage.setItem('agentsData', JSON.stringify(agents));
                 
-                currentUser.licenses.push(newLicense);
-                
-                // Update localStorage
-                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
-                if (agentIndex !== -1) {
-                    agents[agentIndex] = currentUser;
-                    localStorage.setItem('agentsData', JSON.stringify(agents));
+                // If the target user is the current user, update currentUser as well
+                if (targetUserId === currentUser.id) {
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 }
-                
-                closeAddLicenseModal();
+            }
+
+            closeAddLicenseModal();
+            
+            // Show appropriate success message
+            if (currentEditingUserId && currentUser.isAdmin) {
+                showNotification(`License added to ${targetUser.name} successfully!`, 'success');
+                // Reload the edit modal if we're in admin mode
+                if (currentEditingUserId) {
+                    openEditUserLicenses(currentEditingUserId);
+                }
+            } else {
+                showNotification('License added successfully!', 'success');
                 loadUserLicenses();
                 updateUserStats();
-                showNotification('License added successfully!', 'success');
             }
         }
 
@@ -917,7 +889,12 @@
 
         // Admin License Management Functions
         function openEditUserLicenses(userId) {
-            editingUserId = userId;
+            if (!currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+
+            currentEditingUserId = userId;
             const user = agents.find(a => a.id === userId);
             document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
             
@@ -952,17 +929,26 @@
 
         function closeEditUserLicensesModal() {
             document.getElementById('edit-user-licenses-modal').style.display = 'none';
-            editingUserId = null;
+            currentEditingUserId = null;
         }
 
         function openAddLicenseForUserModal() {
-            isAddingForUser = true;
-            document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === editingUserId).name}`;
+            if (!currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+            
+            document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === currentEditingUserId).name}`;
             closeEditUserLicensesModal();
             document.getElementById('add-license-modal').style.display = 'flex';
         }
 
         function deleteUserLicense(userId, licenseIndex) {
+            if (!currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+
             if (confirm('Are you sure you want to delete this license?')) {
                 const userIndex = agents.findIndex(a => a.id === userId);
                 if (userIndex !== -1) {
