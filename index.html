@@ -141,10 +141,11 @@
                                        placeholder="123456789" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium mb-2">Phone</label>
-                                <input type="tel" id="register-phone" 
+                                <label class="block text-sm font-medium mb-2">Extension</label>
+                                <input type="text" id="register-extension" 
                                        class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 focus:border-cyan-400 focus:outline-none transition"
-                                       placeholder="(555) 123-4567" required>
+                                       placeholder="1234" maxlength="4" pattern="[0-9]{4}" required
+                                       title="Please enter a 4-digit extension">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-2">Password</label>
@@ -230,7 +231,7 @@
                                     <p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
                                     <p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
                                     <p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
-                                    <p><strong class="text-gray-300">Phone:</strong> <span id="profile-phone" class="text-white"></span></p>
+                                    <p><strong class="text-gray-300">Extension:</strong> <span id="profile-extension" class="text-white"></span></p>
                                     <p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
                                 </div>
                             </div>
@@ -283,7 +284,7 @@
     <div id="add-license-modal" class="modal">
         <div class="modal-content p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-cyan-400">Add New License</h3>
+                <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
                 <button onclick="closeAddLicenseModal()" class="text-gray-400 hover:text-white">
                     <i class="fas fa-times"></i>
                 </button>
@@ -405,7 +406,7 @@
             name: "System Administrator",
             email: "admin@licenseexplorer.com",
             npn: "ADMIN001",
-            phone: "(555) 000-0001",
+            extension: "0001",
             password: "admin123",
             isAdmin: true,
             licenses: [
@@ -425,7 +426,7 @@
                 name: "John Smith",
                 email: "john@insurance.com",
                 npn: "123456789",
-                phone: "(555) 123-4567",
+                extension: "1234",
                 password: "password123",
                 isAdmin: false,
                 licenses: [
@@ -441,7 +442,7 @@
                 name: "Sarah Johnson",
                 email: "sarah@insurance.com",
                 npn: "987654321",
-                phone: "(555) 987-6543",
+                extension: "5678",
                 password: "password123",
                 isAdmin: false,
                 licenses: [
@@ -456,6 +457,7 @@
         let currentUser = null;
         let agents = [DEFAULT_ADMIN, ...SAMPLE_AGENTS];
         let editingUserId = null;
+        let isAddingForUser = false;
 
         // DOM Elements
         const loadingScreen = document.getElementById('loading-screen');
@@ -561,7 +563,7 @@
             document.getElementById('profile-name').textContent = currentUser.name;
             document.getElementById('profile-email').textContent = currentUser.email;
             document.getElementById('profile-npn').textContent = currentUser.npn;
-            document.getElementById('profile-phone').textContent = currentUser.phone;
+            document.getElementById('profile-extension').textContent = currentUser.extension;
             document.getElementById('member-since').textContent = currentUser.joinDate || '2024';
             
             // Show admin features if user is admin
@@ -605,8 +607,14 @@
             const lastname = document.getElementById('register-lastname').value;
             const email = document.getElementById('register-email').value;
             const npn = document.getElementById('register-npn').value;
-            const phone = document.getElementById('register-phone').value;
+            const extension = document.getElementById('register-extension').value;
             const password = document.getElementById('register-password').value;
+
+            // Validate extension is 4 digits
+            if (!/^\d{4}$/.test(extension)) {
+                showNotification('Extension must be a 4-digit number', 'error');
+                return;
+            }
 
             // Check if email already exists
             if (agents.find(agent => agent.email === email)) {
@@ -628,7 +636,7 @@
                 name: `${firstname} ${lastname}`,
                 email,
                 npn,
-                phone,
+                extension,
                 password,
                 isAdmin: false,
                 licenses: [],
@@ -740,7 +748,7 @@
                             ${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
                         </div>
                         <p class="text-gray-300 mb-2">Email: ${agent.email} | NPN: ${agent.npn}</p>
-                        <p class="text-gray-300 mb-2">Phone: ${agent.phone}</p>
+                        <p class="text-gray-300 mb-2">Extension: ${agent.extension}</p>
                         <div class="mt-3">
                             <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
                             <p class="text-gray-400">${licenseInfo || 'No licenses'}</p>
@@ -799,6 +807,8 @@
 
         // License Management Functions
         function openAddLicenseModal() {
+            isAddingForUser = false;
+            document.getElementById('add-license-title').textContent = 'Add New License';
             document.getElementById('add-license-modal').style.display = 'flex';
         }
 
@@ -809,6 +819,7 @@
             document.querySelectorAll('.carrier-checkbox').forEach(checkbox => {
                 checkbox.checked = false;
             });
+            isAddingForUser = false;
         }
 
         function handleAddLicense(e) {
@@ -836,32 +847,53 @@
                 return;
             }
 
-            // Check if license for this state already exists
-            if (currentUser.licenses.some(license => license.state === state)) {
-                showNotification('License for this state already exists', 'error');
-                return;
-            }
-
             const newLicense = {
                 state: state,
                 carriers: selectedCarriers,
                 expiration: expiration
             };
-            
-            currentUser.licenses.push(newLicense);
-            
-            // Update localStorage
-            const agentIndex = agents.findIndex(a => a.id === currentUser.id);
-            if (agentIndex !== -1) {
-                agents[agentIndex] = currentUser;
-                localStorage.setItem('agentsData', JSON.stringify(agents));
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            if (isAddingForUser && editingUserId) {
+                // Admin adding license for another user
+                const userIndex = agents.findIndex(a => a.id === editingUserId);
+                if (userIndex !== -1) {
+                    // Check if license for this state already exists for the target user
+                    if (agents[userIndex].licenses.some(license => license.state === state)) {
+                        showNotification('License for this state already exists for this user', 'error');
+                        return;
+                    }
+                    
+                    agents[userIndex].licenses.push(newLicense);
+                    localStorage.setItem('agentsData', JSON.stringify(agents));
+                    
+                    closeAddLicenseModal();
+                    // Reopen the edit modal to show updated licenses
+                    openEditUserLicenses(editingUserId);
+                    showNotification('License added to user successfully!', 'success');
+                }
+            } else {
+                // User adding license for themselves
+                // Check if license for this state already exists
+                if (currentUser.licenses.some(license => license.state === state)) {
+                    showNotification('License for this state already exists', 'error');
+                    return;
+                }
+                
+                currentUser.licenses.push(newLicense);
+                
+                // Update localStorage
+                const agentIndex = agents.findIndex(a => a.id === currentUser.id);
+                if (agentIndex !== -1) {
+                    agents[agentIndex] = currentUser;
+                    localStorage.setItem('agentsData', JSON.stringify(agents));
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                closeAddLicenseModal();
+                loadUserLicenses();
+                updateUserStats();
+                showNotification('License added successfully!', 'success');
             }
-            
-            closeAddLicenseModal();
-            loadUserLicenses();
-            updateUserStats();
-            showNotification('License added successfully!', 'success');
         }
 
         function deleteLicense(licenseIndex) {
@@ -923,10 +955,10 @@
         }
 
         function openAddLicenseForUserModal() {
+            isAddingForUser = true;
+            document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a => a.id === editingUserId).name}`;
             closeEditUserLicensesModal();
-            openAddLicenseModal();
-            // Set a flag to indicate this is for another user
-            document.getElementById('add-license-form').dataset.forUser = editingUserId;
+            document.getElementById('add-license-modal').style.display = 'flex';
         }
 
         function deleteUserLicense(userId, licenseIndex) {
@@ -963,6 +995,7 @@
                                     ${user.name} ${isCurrentUser ? '(You)' : ''}
                                 </h4>
                                 <p class="text-gray-300">${user.email} | NPN: ${user.npn}</p>
+                                <p class="text-gray-400 text-sm">Extension: ${user.extension}</p>
                                 <p class="text-gray-400 text-sm">Joined: ${user.joinDate}</p>
                                 <p class="text-gray-400 text-sm">Licenses: ${user.licenses.length} states</p>
                             </div>
@@ -1051,7 +1084,6 @@
 
         // Make functions globally available
         window.toggleAdminStatus = toggleAdminStatus;
-        window.editUser = editUser;
         window.deleteUser = deleteUser;
         window.openAddLicenseModal = openAddLicenseModal;
         window.closeAddLicenseModal = closeAddLicenseModal;
