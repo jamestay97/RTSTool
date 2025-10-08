@@ -7,286 +7,119 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Theme C: Deep Navy/Charcoal background, Electric Blue/Violet Accents */
         :root {
             --bg-dark: #1f2937;
             --bg-lighter: #374151;
             --accent-primary: #22d3ee;
             --text-light: #f3f4f6;
-            --shadow-glow: 0 0 10px rgba(34, 211, 238, 0.5);
-            --error-color: #f87171;
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-light);
-            overflow-x: hidden;
         }
         .card {
             background-color: var(--bg-lighter);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .search-input:focus, .form-input:focus, .form-select:focus, .form-textarea:focus {
-            border-color: var(--accent-primary);
-            box-shadow: var(--shadow-glow);
-        }
-        .form-input, .form-select, .form-textarea {
-            background-color: #1f2937;
-            border: 1px solid #475569;
-            color: var(--text-light);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            transition: all 0.2s;
-        }
-        .accent-button {
-            background-color: var(--accent-primary);
-            color: var(--bg-dark);
-            transition: all 0.2s;
-        }
-        .accent-button:hover {
-            opacity: 0.9;
-            box-shadow: var(--shadow-glow);
-        }
-        .secondary-button {
-            background-color: #4b5563;
-            color: var(--text-light);
-            transition: all 0.2s;
-        }
-        .secondary-button:hover {
-            background-color: #6b7280;
-        }
-        .tab-button {
-            background-color: transparent;
-            color: #94a3b8;
-            border-bottom: 2px solid transparent;
-            padding-bottom: 0.5rem;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .tab-button.active {
-            color: var(--text-light);
-            border-bottom: 2px solid var(--accent-primary);
-            font-weight: 600;
-        }
-        .carrier-chip {
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem; 
-            font-weight: 500; 
-            border-radius: 9999px;
-            cursor: pointer; 
-            transition: all 0.2s; 
-            border: 1px solid #475569;
-            background-color: #374151;
-            color: #d1d5db;
-            user-select: none;
-        }
-        .selected-carrier {
-            background-color: var(--accent-primary) !important;
-            color: var(--bg-dark) !important;
-            border-color: var(--accent-primary);
-            box-shadow: var(--shadow-glow);
-            font-weight: 700;
-        }
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-        .modal-content {
-            background-color: var(--bg-dark);
-            width: 100%;
-            max-width: 800px;
-            border-radius: 1rem;
-            border: 1px solid #475569;
-            box-shadow: var(--shadow-glow);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .reset-modal-content {
-            max-width: 400px;
-        }
-        
-        /* Responsive grid improvements */
-        @media (max-width: 768px) {
-            .responsive-grid {
-                grid-template-columns: 1fr !important;
-            }
-            .responsive-tabs {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .responsive-tabs .tab-button {
-                margin-bottom: 0.5rem;
-                font-size: 0.875rem;
-            }
-            .responsive-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .responsive-header .flex {
-                flex-direction: column;
-                width: 100%;
-            }
-            .responsive-header .border-l {
-                border-left: none !important;
-                border-top: 1px solid #475569;
-                padding-left: 0;
-                padding-top: 1rem;
-                margin-top: 1rem;
-                width: 100%;
-            }
-            .responsive-search {
-                flex-direction: column;
-            }
-            .responsive-search button {
-                margin-left: 0;
-                margin-top: 0.5rem;
-            }
-            .carrier-buttons-container {
-                min-height: auto !important;
-            }
-        }
-        
-        /* Loading animation fix */
         .loading-spinner {
             animation: spin 1s linear infinite;
+            border: 4px solid rgba(34, 211, 238, 0.3);
+            border-top: 4px solid #22d3ee;
+            border-radius: 50%;
         }
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-
-    <!-- Main Container -->
     <div class="min-h-screen p-4 md:p-8 flex flex-col items-center">
-        <!-- Header -->
-        <header class="w-full max-w-5xl text-center mb-6 md:mb-10">
-            <h1 class="text-2xl md:text-5xl font-extrabold text-slate-100 mt-4 tracking-tighter">
+        <header class="w-full max-w-5xl text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-100 mt-4">
                 License <span class="text-cyan-400">Data Explorer</span>
             </h1>
-            <p class="text-slate-400 mt-2 text-sm md:text-base">Firebase-authenticated data tool for agents.</p>
+            <p class="text-slate-400 mt-2">Firebase-authenticated data tool for agents.</p>
         </header>
         
-        <!-- Initial Loading View -->
-        <div id="loading-view" class="w-full max-w-5xl h-96 flex flex-col items-center justify-center card rounded-xl p-8 border border-slate-700/50">
-            <div class="loading-spinner rounded-full h-12 w-12 border-4 border-t-4 border-cyan-400 border-opacity-75 mb-4"></div>
-            <p class="text-lg md:text-xl text-slate-300 font-medium">Checking authentication status...</p>
+        <!-- Loading Screen -->
+        <div id="loading-view" class="w-full max-w-5xl h-96 flex flex-col items-center justify-center card rounded-xl p-8">
+            <div class="loading-spinner h-12 w-12 mb-4"></div>
+            <p class="text-xl text-slate-300 font-medium">Checking authentication status...</p>
             <p id="debug-info" class="text-sm text-slate-500 mt-2"></p>
         </div>
 
         <!-- Login/Registration Panel -->
-        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-4 md:p-8 border border-slate-700/50 mb-6 md:mb-10" style="display: none;">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                <!-- Login Form (Left Side) -->
-                <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-6 md:pb-0 lg:pr-6 md:lg:pr-8">
-                    <h2 class="text-xl md:text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="log-in" class="w-5 h-5 md:w-6 md:h-6 mr-3"></i>
+        <section id="auth-panel" class="w-full max-w-5xl card rounded-xl p-6 md:p-8 mb-8" style="display: none;">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Login Form -->
+                <div class="border-b lg:border-r lg:border-b-0 border-slate-700 pb-8 lg:pb-0 lg:pr-8">
+                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
+                        <i data-lucide="log-in" class="w-6 h-6 mr-3"></i>
                         Agent Login
                     </h2>
-                    <p class="text-slate-400 mb-4 md:mb-6 text-sm md:text-base">Log in with your registered email and password.</p>
-                    <form id="login-form" onsubmit="event.preventDefault(); loginAgent()">
+                    <form id="login-form">
                         <div class="space-y-4">
                             <div>
                                 <label for="login-email" class="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
-                                <input type="email" id="login-email" class="form-input w-full" required placeholder="name@corp.com" value="">
+                                <input type="email" id="login-email" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="name@corp.com">
                             </div>
                             <div>
                                 <label for="login-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                                <input type="password" id="login-password" class="form-input w-full" required placeholder="Enter your password" value="">
+                                <input type="password" id="login-password" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Enter your password">
                             </div>
                         </div>
-                        
-                        <!-- FORGOT PASSWORD LINK -->
-                        <div class="mt-2 text-right">
-                             <a href="#" onclick="event.preventDefault(); openResetModal()" class="text-sm text-cyan-400 hover:text-cyan-300 transition duration-150">
-                                Forgot Password?
-                            </a>
-                        </div>
-                        
-                        <button type="submit" id="login-button" class="accent-button w-full mt-4 md:mt-6 px-4 py-2 rounded-lg flex items-center justify-center">
-                            <i data-lucide="key-round" class="w-4 h-4 mr-2"></i>
+                        <button type="button" onclick="handleLogin()" class="w-full mt-6 bg-cyan-400 text-slate-900 py-3 rounded-lg font-semibold hover:bg-cyan-300 transition">
                             Log In
                         </button>
                     </form>
                 </div>
 
-                <!-- Registration Form (Right Side - STEP 1) -->
-                <div class="lg:pl-6 md:lg:pl-8">
-                    <h2 class="text-xl md:text-2xl font-bold text-cyan-400 mb-4 flex items-center">
-                        <i data-lucide="user-plus" class="w-5 h-5 md:w-6 md:h-6 mr-3"></i>
-                        New Agent Registration (Step 1 of 2)
+                <!-- Registration Form -->
+                <div class="lg:pl-8">
+                    <h2 class="text-2xl font-bold text-cyan-400 mb-4 flex items-center">
+                        <i data-lucide="user-plus" class="w-6 h-6 mr-3"></i>
+                        New Agent Registration
                     </h2>
-                    <p class="text-slate-400 mb-4 md:mb-6 text-sm md:text-base">Create a new agent account with basic details.</p>
-                    <form id="new-agent-form" onsubmit="event.preventDefault(); submitNewAgent()">
-                        <div class="grid grid-cols-1 gap-4 mb-4 md:mb-6">
+                    <form id="new-agent-form">
+                        <div class="space-y-4">
                             <div>
                                 <label for="reg-name" class="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
-                                <input type="text" id="reg-name" class="form-input w-full" required placeholder="Jane Doe">
+                                <input type="text" id="reg-name" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Jane Doe">
                             </div>
                             <div>
-                                <label for="reg-npn" class="block text-sm font-medium text-slate-300 mb-1">NPN Number</label>
-                                <input type="text" id="reg-npn" class="form-input w-full" required placeholder="12345678">
-                            </div>
-                            <div>
-                                <label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1">Email (Login ID)</label>
-                                <input type="email" id="reg-email" class="form-input w-full" required placeholder="jane@example.com">
+                                <label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1">Email</label>
+                                <input type="email" id="reg-email" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="jane@example.com">
                             </div>
                             <div>
                                 <label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-                                <input type="password" id="reg-password" class="form-input w-full" required placeholder="Set your password">
-                            </div>
-                            <div>
-                                <label for="reg-extension" class="block text-sm font-medium text-slate-300 mb-1">Extension</label>
-                                <input type="text" id="reg-extension" class="form-input w-full" required placeholder="555-1234">
+                                <input type="password" id="reg-password" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Set your password">
                             </div>
                         </div>
-
-                        <button type="submit" id="register-button" class="accent-button w-full px-4 py-2 rounded-lg flex items-center justify-center">
-                            <i data-lucide="arrow-right" class="w-4 h-4 mr-2"></i>
-                            Proceed to License Setup
+                        <button type="button" onclick="handleRegister()" class="w-full mt-6 bg-cyan-400 text-slate-900 py-3 rounded-lg font-semibold hover:bg-cyan-300 transition">
+                            Register
                         </button>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- Main Application Content (HIDDEN until setup is complete) -->
-        <div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;">
-            <!-- App content will be loaded here -->
+        <!-- Main App Content -->
+        <div id="main-app-content" class="w-full max-w-5xl" style="display: none;">
+            <div class="card rounded-xl p-6">
+                <h2 class="text-2xl font-bold text-cyan-400 mb-4">Welcome to the Dashboard</h2>
+                <p class="text-slate-300">You are successfully logged in!</p>
+                <button onclick="handleLogout()" class="mt-4 bg-slate-600 text-white py-2 px-4 rounded-lg hover:bg-slate-500 transition">
+                    Logout
+                </button>
+            </div>
         </div>
-
-        <!-- Dynamic Message Box -->
-        <div id="message-box" class="fixed bottom-4 right-4 p-4 rounded-lg text-sm transition-opacity duration-300 opacity-0 pointer-events-none max-w-xs md:max-w-md"></div>
     </div>
 
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            sendPasswordResetEmail, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
 
         // Debug function
         function debug(message) {
@@ -297,314 +130,123 @@
             }
         }
 
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
-            authDomain: "rts-project-d9d5d.firebaseapp.com",
-            projectId: "rts-project-d9d5d",
-            storageBucket: "rts-project-d9d5d.firebasestorage.app",
-            messagingSenderId: "318420505147",
-            appId: "1:318420505147:web:76895831ea9e77a9b1821e",
-            measurementId: "G-C8MRE2QC2E"
-        };
+        // Simulate authentication (replace with real Firebase later)
+        let currentUser = null;
+        let authChecked = false;
 
-        // Initialize Firebase
-        let app, auth, analytics;
-        try {
-            debug("Initializing Firebase...");
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            analytics = getAnalytics(app);
-            debug("Firebase initialized successfully");
-        } catch (error) {
-            debug(`Firebase init error: ${error.message}`);
-            console.error("Firebase initialization error:", error);
+        // Check if user is logged in (simulated)
+        function checkAuthStatus() {
+            debug("Checking authentication...");
+            
+            // Simulate network delay
+            setTimeout(() => {
+                // Check localStorage for existing session
+                const savedUser = localStorage.getItem('currentUser');
+                
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    debug(`User found: ${currentUser.name}`);
+                    showMainApp();
+                } else {
+                    debug("No user found, showing login");
+                    showAuthPanel();
+                }
+                
+                authChecked = true;
+            }, 1500);
         }
 
-        // Global state
-        let currentUserData = null;
-        let isAuthReady = false;
-
-        // Sample data (in a real app, this would come from Firestore)
-        const AGENTS = {
-            "admin_placeholder_uid": {
-                name: "Admin Master",
-                npn: "00000000",
-                email: "admin@corp.com", 
-                extension: "0000",
-                isAdmin: true,
-                licenses: [],
-                isSetupComplete: true 
-            }
-        };
-
-        // Utility functions
         function hideLoading() {
-            const loadingView = document.getElementById('loading-view');
-            if (loadingView) {
-                loadingView.style.display = 'none';
-                debug("Loading screen hidden");
-            }
+            document.getElementById('loading-view').style.display = 'none';
+            debug("Loading screen hidden");
         }
 
         function showAuthPanel() {
-            debug("Showing auth panel");
-            const mainApp = document.getElementById('main-app-content');
-            const authPanel = document.getElementById('auth-panel');
-            
-            if (mainApp) mainApp.style.display = 'none';
-            if (authPanel) authPanel.style.display = 'block';
-        }
-
-        function showMessage(message, type = 'info') {
-            const box = document.getElementById('message-box');
-            if (!box) return;
-            
-            let color = 'bg-blue-600';
-            if (type === 'error') color = 'bg-red-600';
-            if (type === 'success') color = 'bg-green-600';
-
-            box.className = `fixed bottom-4 right-4 p-4 rounded-lg text-sm text-white transition-opacity duration-300 ${color} opacity-100 max-w-xs md:max-w-md`;
-            box.textContent = message;
-
-            clearTimeout(box.timer);
-            box.timer = setTimeout(() => {
-                box.classList.remove('opacity-100');
-                box.classList.add('opacity-0');
-            }, 3000);
-            
-            console.log(`[MESSAGE] ${type}: ${message}`);
-        }
-
-        // Initialize Lucide icons
-        window.onload = () => {
-            debug("Window loaded, initializing icons");
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-                debug("Lucide icons initialized");
-            } else {
-                debug("Lucide not available");
-            }
-        };
-
-        // Auth state listener
-        debug("Setting up auth state listener");
-        onAuthStateChanged(auth, (user) => {
-            debug(`Auth state changed: ${user ? 'User logged in' : 'No user'}`);
-            isAuthReady = true;
-            
-            // Always hide loading after auth check
             hideLoading();
+            document.getElementById('auth-panel').style.display = 'block';
+            debug("Auth panel shown");
+        }
 
-            if (user) {
-                // User is signed in
-                currentUserData = AGENTS[user.uid];
-                
-                if (!currentUserData) {
-                    debug("User data not found in local storage");
-                    showMessage('User data record not found. Please register or contact support.', 'error');
-                    signOut(auth);
-                    return;
-                }
-                
-                debug(`User authenticated: ${currentUserData.name}`);
-                // In a real app, you would show the main app content here
-                showMessage(`Welcome back, ${currentUserData.name}!`, 'success');
-                
-            } else {
-                // User is signed out
-                debug("No user signed in, showing auth panel");
-                currentUserData = null;
-                showAuthPanel();
-            }
-        });
+        function showMainApp() {
+            hideLoading();
+            document.getElementById('main-app-content').style.display = 'block';
+            debug("Main app shown");
+        }
 
-        // Set a timeout to handle cases where auth never responds
-        setTimeout(() => {
-            if (!isAuthReady) {
-                debug("Auth timeout - forcing auth panel display");
-                hideLoading();
-                showAuthPanel();
-                showMessage('Authentication check timed out. Please try logging in manually.', 'error');
-            }
-        }, 10000); // 10 second timeout
-
-        // Login function
-        async function loginAgent() {
-            const email = document.getElementById('login-email').value.trim();
+        // Auth handlers
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
             if (!email || !password) {
-                showMessage('Please enter both email and password', 'error');
+                alert('Please enter both email and password');
                 return;
             }
-
-            debug(`Attempting login for: ${email}`);
             
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                debug(`Login successful for: ${user.email}`);
-                
-                // The auth state listener will handle the rest
-            } catch (error) {
-                debug(`Login error: ${error.code} - ${error.message}`);
-                let errorMessage = "Login failed. Please check your credentials.";
-                
-                if (error.code === 'auth/invalid-credential') {
-                    errorMessage = 'Invalid email or password.';
-                } else if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many failed attempts. Please try again later.';
-                }
-                
-                showMessage(errorMessage, 'error');
-            }
-        }
-
-        // Registration function
-        async function submitNewAgent() {
-            const agentName = document.getElementById('reg-name').value.trim();
-            const agentNpn = document.getElementById('reg-npn').value.trim();
-            const agentEmail = document.getElementById('reg-email').value.trim();
-            const agentPassword = document.getElementById('reg-password').value;
-            const agentExtension = document.getElementById('reg-extension').value.trim();
-
-            if (!agentName || !agentNpn || !agentEmail || !agentPassword || !agentExtension) {
-                showMessage('All fields are required for registration.', 'error');
-                return;
-            }
-
-            if (agentPassword.length < 6) {
-                showMessage('Password must be at least 6 characters long.', 'error');
-                return;
-            }
-
-            debug(`Attempting registration for: ${agentEmail}`);
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, agentEmail, agentPassword);
-                const user = userCredential.user;
-                
-                // In a real app, you would save this to Firestore
-                AGENTS[user.uid] = {
-                    name: agentName,
-                    npn: agentNpn,
-                    email: agentEmail,
-                    extension: agentExtension,
-                    isAdmin: false,
-                    licenses: [],
-                    isSetupComplete: false 
-                };
-
-                debug(`Registration successful for: ${agentEmail}`);
-                showMessage(`Registration successful! Please complete your license setup.`, 'success');
-                
-                document.getElementById('new-agent-form').reset();
-                
-            } catch (error) {
-                debug(`Registration error: ${error.code} - ${error.message}`);
-                let errorMessage = "Registration failed. Please try again.";
-                
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'This email address is already registered.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'The password is too weak.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'The email address is invalid.';
-                }
-                
-                showMessage(errorMessage, 'error');
-            }
-        }
-
-        // Logout function
-        function logout() {
-            signOut(auth).then(() => {
-                debug("User logged out");
-                showMessage('Successfully logged out.', 'info');
-            }).catch(error => {
-                debug(`Logout error: ${error.message}`);
-                showMessage('Logout failed.', 'error');
-            });
-        }
-
-        // Password reset functions
-        function openResetModal() {
-            document.getElementById('reset-modal').style.display = 'flex';
-            document.getElementById('reset-email').value = document.getElementById('login-email').value;
-            document.getElementById('reset-message-container').innerHTML = '';
-        }
-
-        function closeResetModal() {
-            document.getElementById('reset-modal').style.display = 'none';
-        }
-
-        async function handlePasswordReset() {
-            const email = document.getElementById('reset-email').value.trim();
-            const messageContainer = document.getElementById('reset-message-container');
+            debug(`Logging in: ${email}`);
             
-            if (!email) {
-                messageContainer.innerHTML = '<span class="text-red-400">Please enter an email address.</span>';
-                return;
-            }
-
-            debug(`Attempting password reset for: ${email}`);
-
-            try {
-                await sendPasswordResetEmail(auth, email);
-                messageContainer.innerHTML = `<span class="text-green-400">If that email is registered, a reset link has been sent.</span>`;
-                debug("Password reset email sent");
-                
-                setTimeout(closeResetModal, 3000);
-            } catch (error) {
-                debug(`Password reset error: ${error.code} - ${error.message}`);
-                let errorMessage = 'An error occurred during reset.';
-                
-                if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many requests. Try again later.';
-                }
-                
-                messageContainer.innerHTML = `<span class="text-red-400">${errorMessage}</span>`;
-            }
+            // Simulate login process
+            currentUser = {
+                name: email.split('@')[0],
+                email: email,
+                isAdmin: false
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            showMainApp();
         }
 
-        // Make functions globally available
-        window.loginAgent = loginAgent;
-        window.submitNewAgent = submitNewAgent;
-        window.logout = logout;
-        window.openResetModal = openResetModal;
-        window.closeResetModal = closeResetModal;
-        window.handlePasswordReset = handlePasswordReset;
+        function handleRegister() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            
+            if (!name || !email || !password) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+            
+            debug(`Registering: ${name} (${email})`);
+            
+            // Simulate registration
+            currentUser = {
+                name: name,
+                email: email,
+                isAdmin: false
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            showMainApp();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            document.getElementById('main-app-content').style.display = 'none';
+            document.getElementById('auth-panel').style.display = 'block';
+            debug("User logged out");
+        }
+
+        // Timeout fallback
+        setTimeout(() => {
+            if (!authChecked) {
+                debug("Auth check timeout - showing login");
+                hideLoading();
+                showAuthPanel();
+            }
+        }, 5000);
+
+        // Start auth check
+        checkAuthStatus();
     </script>
-
-    <!-- Modal for Password Reset -->
-    <div id="reset-modal" class="modal" onclick="if(event.target.id === 'reset-modal') closeResetModal()">
-        <div class="modal-content reset-modal-content p-4 md:p-8">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4 md:mb-6">
-                <h3 class="text-xl md:text-2xl font-bold text-cyan-400 flex items-center">
-                    <i data-lucide="rotate-ccw" class="w-5 h-5 md:w-6 md:h-6 mr-3"></i>
-                    Password Reset
-                </h3>
-                <button onclick="closeResetModal()" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5 md:w-6 md:h-6"></i>
-                </button>
-            </div>
-            <form id="reset-form" onsubmit="event.preventDefault(); handlePasswordReset()">
-                <div>
-                    <label for="reset-email" class="block text-sm font-medium text-slate-300 mb-1">Registered Email</label>
-                    <input type="email" id="reset-email" class="form-input w-full" required placeholder="Enter email to reset password">
-                </div>
-                <div id="reset-message-container" class="mt-4 text-sm min-h-[20px]"></div>
-                <button type="submit" id="reset-send-button" class="accent-button w-full mt-4 md:mt-6 px-4 py-2 rounded-lg flex items-center justify-center">
-                    <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
-                    Send Reset Link
-                </button>
-            </form>
-        </div>
-    </div>
 </body>
 </html>
