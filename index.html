@@ -32,6 +32,50 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .carrier-chip {
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem; 
+            font-weight: 500; 
+            border-radius: 9999px;
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border: 1px solid #475569;
+            background-color: #374151;
+            color: #d1d5db;
+        }
+        .selected-carrier {
+            background-color: #22d3ee !important;
+            color: #1f2937 !important;
+            border-color: #22d3ee;
+        }
+        .tab-button {
+            background-color: transparent;
+            color: #94a3b8;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 0.5rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-button.active {
+            color: #f3f4f6;
+            border-bottom: 2px solid #22d3ee;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .responsive-tabs {
+                flex-wrap: wrap;
+            }
+            .responsive-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .responsive-search {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -47,7 +91,6 @@
         <div id="loading-view" class="w-full max-w-5xl h-96 flex flex-col items-center justify-center card rounded-xl p-8">
             <div class="loading-spinner h-12 w-12 mb-4"></div>
             <p class="text-xl text-slate-300 font-medium">Checking authentication status...</p>
-            <p id="debug-info" class="text-sm text-slate-500 mt-2"></p>
         </div>
 
         <!-- Login/Registration Panel -->
@@ -89,12 +132,20 @@
                                 <input type="text" id="reg-name" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Jane Doe">
                             </div>
                             <div>
+                                <label for="reg-npn" class="block text-sm font-medium text-slate-300 mb-1">NPN Number</label>
+                                <input type="text" id="reg-npn" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="12345678">
+                            </div>
+                            <div>
                                 <label for="reg-email" class="block text-sm font-medium text-slate-300 mb-1">Email</label>
                                 <input type="email" id="reg-email" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="jane@example.com">
                             </div>
                             <div>
                                 <label for="reg-password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
                                 <input type="password" id="reg-password" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="Set your password">
+                            </div>
+                            <div>
+                                <label for="reg-extension" class="block text-sm font-medium text-slate-300 mb-1">Extension</label>
+                                <input type="text" id="reg-extension" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-600 text-white" placeholder="555-1234">
                             </div>
                         </div>
                         <button type="button" onclick="handleRegister()" class="w-full mt-6 bg-cyan-400 text-slate-900 py-3 rounded-lg font-semibold hover:bg-cyan-300 transition">
@@ -106,13 +157,79 @@
         </section>
 
         <!-- Main App Content -->
-        <div id="main-app-content" class="w-full max-w-5xl" style="display: none;">
-            <div class="card rounded-xl p-6">
-                <h2 class="text-2xl font-bold text-cyan-400 mb-4">Welcome to the Dashboard</h2>
-                <p class="text-slate-300">You are successfully logged in!</p>
-                <button onclick="handleLogout()" class="mt-4 bg-slate-600 text-white py-2 px-4 rounded-lg hover:bg-slate-500 transition">
+        <div id="main-app-content" class="w-full flex flex-col items-center" style="display: none;">
+            <!-- App Header/Tabs/Logout -->
+            <div id="app-header-tabs" class="w-full max-w-5xl card p-4 rounded-xl mb-6 responsive-header flex justify-between items-center">
+                <div class="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                    <p class="text-sm text-slate-400">
+                        Logged in as: <strong id="current-user-name" class="text-cyan-400"></strong> 
+                        <span id="admin-badge" class="bg-red-800/50 text-red-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2 hidden">ADMIN</span>
+                    </p>
+                    <div class="flex space-x-2 border-l-0 md:border-l border-slate-700 pl-0 md:pl-4 responsive-tabs">
+                        <button id="search-tab-button" onclick="changeView('search')" class="tab-button active flex items-center">
+                            <i data-lucide="search" class="w-4 h-4 mr-1"></i> Search Tool
+                        </button>
+                        <button id="profile-tab-button" onclick="changeView('profile')" class="tab-button flex items-center">
+                            <i data-lucide="award" class="w-4 h-4 mr-1"></i> My Licenses
+                        </button>
+                        <button id="admin-tab-button" onclick="changeView('admin')" class="tab-button hidden flex items-center">
+                            <i data-lucide="shield" class="w-4 h-4 mr-1"></i> Admin Panel
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="handleLogout()" class="bg-slate-600 text-white px-3 py-1 rounded-lg text-sm flex items-center mt-4 md:mt-0">
+                    <i data-lucide="log-out" class="w-4 h-4 mr-1"></i>
                     Logout
                 </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="w-full max-w-5xl">
+                <!-- License Setup View -->
+                <div id="licenses-setup-view" class="w-full hidden">
+                    <!-- Content will be loaded here -->
+                </div>
+
+                <!-- Search View -->
+                <div id="search-view" class="w-full">
+                    <div class="w-full max-w-3xl mx-auto mb-8">
+                        <div class="flex flex-col sm:flex-row card p-2 rounded-xl responsive-search">
+                            <input
+                                id="search-input"
+                                type="text"
+                                placeholder="Search by State (CA), Agent Name, or Carrier Name..."
+                                class="w-full p-4 bg-transparent outline-none placeholder-slate-500 rounded-lg"
+                            />
+                            <button
+                                onclick="searchData()"
+                                class="bg-cyan-400 text-slate-900 px-6 py-3 mt-2 sm:mt-0 sm:ml-2 rounded-xl font-semibold flex items-center justify-center"
+                            >
+                                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <main id="results-panel" class="w-full min-h-[300px] card rounded-xl p-8 border border-slate-700/50 flex flex-col items-center justify-center text-center">
+                        <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
+                        <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
+                    </main>
+                </div>
+                
+                <!-- Profile View -->
+                <div id="profile-view" class="w-full hidden">
+                    <main id="profile-panel" class="w-full min-h-[300px] card rounded-xl p-8">
+                        <!-- Content will be loaded here -->
+                    </main>
+                </div>
+
+                <!-- Admin View -->
+                <div id="admin-view" class="w-full hidden">
+                    <main id="admin-panel" class="w-full min-h-[300px] card rounded-xl p-8">
+                        <!-- Content will be loaded here -->
+                    </main>
+                </div>
             </div>
         </div>
     </div>
@@ -121,56 +238,89 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Debug function
-        function debug(message) {
-            console.log(`[DEBUG] ${message}`);
-            const debugElement = document.getElementById('debug-info');
-            if (debugElement) {
-                debugElement.textContent = message;
-            }
-        }
+        // Sample data
+        const STATES = [
+            { name: "California", acronym: "CA" },
+            { name: "Texas", acronym: "TX" },
+            { name: "Florida", acronym: "FL" },
+            { name: "New York", acronym: "NY" },
+            { name: "Illinois", acronym: "IL" },
+        ];
 
-        // Simulate authentication (replace with real Firebase later)
+        const CARRIERS = [
+            "UnitedHealthcare",
+            "Humana",
+            "Aetna",
+            "Blue Cross Blue Shield",
+            "Cigna",
+            "Mutual of Omaha",
+            "State Farm"
+        ];
+
+        // Global state
         let currentUser = null;
-        let authChecked = false;
+        let AGENTS = {};
+        let activeView = 'search';
 
-        // Check if user is logged in (simulated)
+        // Check authentication status
         function checkAuthStatus() {
-            debug("Checking authentication...");
-            
-            // Simulate network delay
             setTimeout(() => {
-                // Check localStorage for existing session
                 const savedUser = localStorage.getItem('currentUser');
+                const savedAgents = localStorage.getItem('agentsData');
+                
+                if (savedAgents) {
+                    AGENTS = JSON.parse(savedAgents);
+                }
                 
                 if (savedUser) {
                     currentUser = JSON.parse(savedUser);
-                    debug(`User found: ${currentUser.name}`);
+                    
+                    // Add to AGENTS if not exists
+                    if (!AGENTS[currentUser.email]) {
+                        AGENTS[currentUser.email] = currentUser;
+                        localStorage.setItem('agentsData', JSON.stringify(AGENTS));
+                    }
+                    
                     showMainApp();
                 } else {
-                    debug("No user found, showing login");
                     showAuthPanel();
                 }
-                
-                authChecked = true;
-            }, 1500);
+            }, 1000);
         }
 
         function hideLoading() {
             document.getElementById('loading-view').style.display = 'none';
-            debug("Loading screen hidden");
         }
 
         function showAuthPanel() {
             hideLoading();
             document.getElementById('auth-panel').style.display = 'block';
-            debug("Auth panel shown");
         }
 
         function showMainApp() {
             hideLoading();
-            document.getElementById('main-app-content').style.display = 'block';
-            debug("Main app shown");
+            document.getElementById('auth-panel').style.display = 'none';
+            document.getElementById('main-app-content').style.display = 'flex';
+            
+            // Update UI with user data
+            document.getElementById('current-user-name').textContent = currentUser.name;
+            
+            // Show admin tab if user is admin
+            if (currentUser.isAdmin) {
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('admin-tab-button').classList.remove('hidden');
+            }
+            
+            // Check if setup is complete
+            if (!currentUser.isSetupComplete) {
+                changeView('setup');
+                renderLicensesSetupPanel();
+            } else {
+                changeView('search');
+            }
+            
+            // Refresh icons
+            lucide.createIcons();
         }
 
         // Auth handlers
@@ -183,27 +333,24 @@
                 return;
             }
             
-            debug(`Logging in: ${email}`);
-            
-            // Simulate login process
-            currentUser = {
-                name: email.split('@')[0],
-                email: email,
-                isAdmin: false
-            };
-            
-            // Save to localStorage
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            showMainApp();
+            // Check if user exists
+            if (AGENTS[email]) {
+                currentUser = AGENTS[email];
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showMainApp();
+            } else {
+                alert('No account found with this email. Please register.');
+            }
         }
 
         function handleRegister() {
             const name = document.getElementById('reg-name').value;
+            const npn = document.getElementById('reg-npn').value;
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
+            const extension = document.getElementById('reg-extension').value;
             
-            if (!name || !email || !password) {
+            if (!name || !npn || !email || !password || !extension) {
                 alert('Please fill all fields');
                 return;
             }
@@ -213,16 +360,20 @@
                 return;
             }
             
-            debug(`Registering: ${name} (${email})`);
-            
-            // Simulate registration
+            // Create new user
             currentUser = {
                 name: name,
+                npn: npn,
                 email: email,
-                isAdmin: false
+                extension: extension,
+                isAdmin: false,
+                licenses: [],
+                isSetupComplete: false
             };
             
-            // Save to localStorage
+            // Save to agents data
+            AGENTS[email] = currentUser;
+            localStorage.setItem('agentsData', JSON.stringify(AGENTS));
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             
             showMainApp();
@@ -233,20 +384,307 @@
             currentUser = null;
             document.getElementById('main-app-content').style.display = 'none';
             document.getElementById('auth-panel').style.display = 'block';
-            debug("User logged out");
+            
+            // Reset forms
+            document.getElementById('login-form').reset();
+            document.getElementById('new-agent-form').reset();
         }
 
-        // Timeout fallback
-        setTimeout(() => {
-            if (!authChecked) {
-                debug("Auth check timeout - showing login");
-                hideLoading();
-                showAuthPanel();
+        // View management
+        function changeView(view) {
+            activeView = view;
+            
+            // Hide all views
+            document.getElementById('licenses-setup-view').classList.add('hidden');
+            document.getElementById('search-view').classList.add('hidden');
+            document.getElementById('profile-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.add('hidden');
+            
+            // Reset tab styles
+            document.getElementById('search-tab-button').classList.remove('active');
+            document.getElementById('profile-tab-button').classList.remove('active');
+            document.getElementById('admin-tab-button').classList.remove('active');
+            
+            // Show selected view and update tab
+            if (view === 'setup') {
+                document.getElementById('licenses-setup-view').classList.remove('hidden');
+                document.getElementById('app-header-tabs').classList.add('hidden');
+            } else {
+                document.getElementById('app-header-tabs').classList.remove('hidden');
+                
+                if (view === 'search') {
+                    document.getElementById('search-view').classList.remove('hidden');
+                    document.getElementById('search-tab-button').classList.add('active');
+                } else if (view === 'profile') {
+                    document.getElementById('profile-view').classList.remove('hidden');
+                    document.getElementById('profile-tab-button').classList.add('active');
+                    renderProfilePanel();
+                } else if (view === 'admin' && currentUser.isAdmin) {
+                    document.getElementById('admin-view').classList.remove('hidden');
+                    document.getElementById('admin-tab-button').classList.add('active');
+                    renderAdminPanel();
+                }
             }
-        }, 5000);
+            
+            lucide.createIcons();
+        }
 
-        // Start auth check
-        checkAuthStatus();
+        // License setup functions
+        function renderLicensesSetupPanel() {
+            const panel = document.getElementById('licenses-setup-view');
+            
+            panel.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto card rounded-xl p-8">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center">
+                        <i data-lucide="list-checks" class="w-7 h-7 mr-3 text-cyan-400"></i>
+                        Complete License Setup
+                    </h2>
+                    <p class="text-slate-400 mb-6">
+                        Welcome, <strong class="text-cyan-400">${currentUser.name}</strong>! Please add your licensed states and carriers.
+                    </p>
+
+                    <div id="setup-license-container" class="space-y-4 mb-6">
+                        <!-- License rows will be added here -->
+                    </div>
+
+                    <div class="flex gap-4 justify-between items-center">
+                        <button onclick="addLicenseSection('setup-license-container')" class="bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Add State License
+                        </button>
+                        <button onclick="completeSetup()" class="bg-cyan-400 text-slate-900 px-6 py-3 rounded-lg flex items-center font-semibold">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            Complete Setup
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add initial license section
+            addLicenseSection('setup-license-container');
+            lucide.createIcons();
+        }
+
+        function addLicenseSection(containerId, initialData = { state: '', carriers: [] }) {
+            const container = document.getElementById(containerId);
+            const id = Date.now(); // Simple unique ID
+            
+            const stateOptions = STATES.map(s => 
+                `<option value="${s.acronym}">${s.name} (${s.acronym})</option>`
+            ).join('');
+
+            const carrierButtons = CARRIERS.map(c => {
+                return `<button type="button" class="carrier-chip" data-carrier="${c}">${c}</button>`;
+            }).join('');
+
+            const licenseHtml = `
+                <div class="card p-4 border border-slate-600 rounded-lg grid md:grid-cols-3 gap-4 relative">
+                    <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-1">State</label>
+                        <select class="w-full p-2 rounded-lg bg-slate-800 border border-slate-600 text-white">
+                            <option value="">-- Select State --</option>
+                            ${stateOptions}
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-400 mb-1">Carriers</label>
+                        <div class="carrier-buttons-container flex flex-wrap gap-2 p-3 border border-slate-700 rounded-lg min-h-[100px]">
+                            ${carrierButtons}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', licenseHtml);
+            
+            // Add click handlers for carrier chips
+            const newChips = container.lastElementChild.querySelectorAll('.carrier-chip');
+            newChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    this.classList.toggle('selected-carrier');
+                });
+            });
+            
+            lucide.createIcons();
+        }
+
+        function completeSetup() {
+            const licenseRows = document.querySelectorAll('#setup-license-container > div');
+            const licenses = [];
+            
+            for (const row of licenseRows) {
+                const stateSelect = row.querySelector('select');
+                const carrierChips = row.querySelectorAll('.carrier-chip.selected-carrier');
+                
+                const state = stateSelect.value;
+                const carriers = Array.from(carrierChips).map(chip => chip.getAttribute('data-carrier'));
+                
+                if (state && carriers.length > 0) {
+                    licenses.push({ state, carriers });
+                }
+            }
+            
+            if (licenses.length === 0) {
+                alert('Please add at least one state license with carriers');
+                return;
+            }
+            
+            // Update user data
+            currentUser.licenses = licenses;
+            currentUser.isSetupComplete = true;
+            AGENTS[currentUser.email] = currentUser;
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            localStorage.setItem('agentsData', JSON.stringify(AGENTS));
+            
+            changeView('profile');
+        }
+
+        // Profile panel
+        function renderProfilePanel() {
+            const panel = document.getElementById('profile-panel');
+            
+            const licenseHtml = currentUser.licenses.map(license => {
+                const state = STATES.find(s => s.acronym === license.state);
+                const carriers = license.carriers.map(c => 
+                    `<span class="bg-slate-700 text-sm px-3 py-1 rounded-full">${c}</span>`
+                ).join('');
+                
+                return `
+                    <div class="card p-4 rounded-xl border border-slate-600 mb-4">
+                        <h4 class="font-semibold text-lg text-slate-100 mb-2">
+                            ${state ? state.name : license.state}
+                        </h4>
+                        <div class="flex flex-wrap gap-2">${carriers}</div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-slate-400">No licenses registered.</p>';
+
+            panel.innerHTML = `
+                <div class="w-full">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center">
+                        <i data-lucide="award" class="w-7 h-7 mr-3 text-cyan-400"></i>
+                        Your Profile & Licenses
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 card rounded-lg border border-slate-700">
+                        <p class="text-slate-300"><strong class="text-cyan-400">Name:</strong> ${currentUser.name}</p>
+                        <p class="text-slate-300"><strong class="text-cyan-400">NPN:</strong> ${currentUser.npn}</p>
+                        <p class="text-slate-300"><strong class="text-cyan-400">Email:</strong> ${currentUser.email}</p>
+                        <p class="text-slate-300"><strong class="text-cyan-400">Extension:</strong> ${currentUser.extension}</p>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-slate-300 mb-4">License Details</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        ${licenseHtml}
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+
+        // Admin panel
+        function renderAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            const agents = Object.values(AGENTS);
+            
+            const agentsHtml = agents.map(agent => `
+                <div class="card p-4 rounded-xl mb-3 border border-slate-600">
+                    <h4 class="font-semibold text-lg text-slate-100 mb-1">
+                        ${agent.name} ${agent.email === currentUser.email ? '(You)' : ''}
+                    </h4>
+                    <p class="text-sm text-slate-400">NPN: ${agent.npn} | Email: ${agent.email}</p>
+                    <div class="flex items-center space-x-2 mt-2">
+                        <span class="text-xs font-medium px-2 py-0.5 rounded-full ${agent.isAdmin ? 'bg-red-800 text-red-300' : 'bg-slate-700 text-slate-300'}">
+                            ${agent.isAdmin ? 'Administrator' : 'Agent'}
+                        </span>
+                        <span class="text-xs font-medium px-2 py-0.5 rounded-full ${agent.isSetupComplete ? 'bg-green-800 text-green-300' : 'bg-yellow-800 text-yellow-300'}">
+                            ${agent.isSetupComplete ? 'Setup Complete' : 'Setup Pending'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            panel.innerHTML = `
+                <div class="w-full">
+                    <h2 class="text-3xl font-bold text-slate-100 mb-6 flex items-center">
+                        <i data-lucide="users-round" class="w-7 h-7 mr-3 text-red-400"></i>
+                        System User Management
+                    </h2>
+                    <p class="text-slate-400 mb-6">Total Accounts: <strong>${agents.length}</strong></p>
+                    <div class="space-y-3">
+                        ${agentsHtml}
+                    </div>
+                </div>
+            `;
+            
+            lucide.createIcons();
+        }
+
+        // Search function
+        function searchData() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const resultsPanel = document.getElementById('results-panel');
+            
+            if (!query) {
+                resultsPanel.innerHTML = `
+                    <i data-lucide="compass" class="w-12 h-12 text-cyan-400 mb-4 opacity-70"></i>
+                    <p class="text-xl text-slate-400">Use the search bar above to find licensed data.</p>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            // Simple search implementation
+            const agents = Object.values(AGENTS);
+            const matchingAgents = agents.filter(agent => 
+                agent.name.toLowerCase().includes(query) ||
+                agent.email.toLowerCase().includes(query) ||
+                agent.licenses.some(license => 
+                    license.state.toLowerCase().includes(query) ||
+                    license.carriers.some(carrier => 
+                        carrier.toLowerCase().includes(query)
+                    )
+                )
+            );
+            
+            if (matchingAgents.length > 0) {
+                const resultsHtml = matchingAgents.map(agent => `
+                    <div class="card p-4 rounded-xl border border-slate-600 mb-4">
+                        <h4 class="font-semibold text-lg text-cyan-400 mb-2">${agent.name}</h4>
+                        <p class="text-slate-300">Email: ${agent.email} | NPN: ${agent.npn}</p>
+                        <p class="text-slate-400 mt-2">Licensed in: ${agent.licenses.map(l => l.state).join(', ')}</p>
+                    </div>
+                `).join('');
+                
+                resultsPanel.innerHTML = `
+                    <div class="w-full text-left">
+                        <h3 class="text-2xl font-bold text-cyan-400 mb-4">Search Results (${matchingAgents.length})</h3>
+                        ${resultsHtml}
+                    </div>
+                `;
+            } else {
+                resultsPanel.innerHTML = `
+                    <i data-lucide="alert-triangle" class="w-12 h-12 text-amber-400 mb-4 opacity-70"></i>
+                    <h2 class="text-2xl font-bold text-slate-100 mb-2">No Matches Found</h2>
+                    <p class="text-lg text-slate-400">No agents found matching "${query}".</p>
+                `;
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Initialize the app
+        setTimeout(() => {
+            checkAuthStatus();
+        }, 500);
     </script>
 </body>
 </html>
