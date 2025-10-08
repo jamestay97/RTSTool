@@ -745,4 +745,326 @@
             loadingScreen.classList.add('hidden');
             authScreen.classList.add('hidden');
             dashboard.classList.remove('hidden');
-            navButtons.classList.remove('hidden
+            navButtons.classList.remove('hidden');
+            
+            if (currentUser) {
+                document.getElementById('user-name').textContent = currentUser.firstname;
+                document.getElementById('profile-name').textContent = currentUser.name;
+                document.getElementById('profile-email').textContent = currentUser.email;
+                document.getElementById('profile-npn').textContent = currentUser.npn;
+                document.getElementById('profile-extension').textContent = currentUser.extension;
+                document.getElementById('member-since').textContent = currentUser.joinDate || '2024';
+                
+                // Show admin features if user is admin
+                if (currentUser.isAdmin) {
+                    adminTabBtn.classList.remove('hidden');
+                    adminBadge.classList.remove('hidden');
+                    document.getElementById('user-badge').classList.add('hidden');
+                } else {
+                    adminTabBtn.classList.add('hidden');
+                    adminBadge.classList.add('hidden');
+                    document.getElementById('user-badge').classList.remove('hidden');
+                }
+                
+                updateUserStats();
+                loadUserLicenses();
+            }
+        }
+
+        // =============================================
+        // LICENSE MANAGEMENT (UPDATED FOR FIRESTORE)
+        // =============================================
+        async function handleAddLicense(e) {
+            e.preventDefault();
+            
+            const state = document.getElementById('license-state').value;
+            const expiration = document.getElementById('license-expiration').value;
+            
+            // Get selected carriers
+            const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (!state) {
+                showNotification('Please select a state', 'error');
+                return;
+            }
+            
+            if (selectedCarriers.length === 0) {
+                showNotification('Please select at least one carrier', 'error');
+                return;
+            }
+            
+            if (!expiration) {
+                showNotification('Please select an expiration date', 'error');
+                return;
+            }
+
+            const newLicense = {
+                state: state,
+                carriers: selectedCarriers,
+                expiration: expiration
+            };
+
+            try {
+                const { firestore } = window.firebase;
+                
+                // Update user profile in Firestore
+                const updatedLicenses = [...currentUser.licenses, newLicense];
+                await firestore.updateDoc(firestore.doc(firestore.db, 'users', currentUser.uid), {
+                    licenses: updatedLicenses
+                });
+
+                // Update local state
+                currentUser.licenses = updatedLicenses;
+                
+                closeAddLicenseModal();
+                showNotification('License added successfully!', 'success');
+                loadUserLicenses();
+                updateUserStats();
+            } catch (error) {
+                console.error('Error adding license:', error);
+                showNotification('Error adding license', 'error');
+            }
+        }
+
+        async function deleteLicense(licenseIndex) {
+            if (confirm('Are you sure you want to delete this license?')) {
+                try {
+                    const { firestore } = window.firebase;
+                    const updatedLicenses = currentUser.licenses.filter((_, index) => index !== licenseIndex);
+                    await firestore.updateDoc(firestore.doc(firestore.db, 'users', currentUser.uid), {
+                        licenses: updatedLicenses
+                    });
+
+                    currentUser.licenses = updatedLicenses;
+                    loadUserLicenses();
+                    updateUserStats();
+                    showNotification('License deleted successfully', 'success');
+                } catch (error) {
+                    console.error('Error deleting license:', error);
+                    showNotification('Error deleting license', 'error');
+                }
+            }
+        }
+
+        // =============================================
+        // CARRIER MANAGEMENT (UPDATED FOR FIRESTORE)
+        // =============================================
+        async function addNewCarrier() {
+            if (!currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+            
+            const newCarrierInput = document.getElementById('new-carrier-input');
+            const carrierName = newCarrierInput.value.trim();
+            
+            if (!carrierName) {
+                showNotification('Please enter a carrier name', 'error');
+                return;
+            }
+            
+            if (CARRIERS.includes(carrierName)) {
+                showNotification('Carrier already exists', 'error');
+                return;
+            }
+            
+            CARRIERS.push(carrierName);
+            
+            // Save to Firestore
+            await saveCarriersToFirestore();
+            newCarrierInput.value = '';
+            
+            // Update UI
+            populateCarriersCheckboxes();
+            loadCarriersList();
+            
+            showNotification(`Carrier "${carrierName}" added successfully`, 'success');
+        }
+
+        async function removeCarrier(index) {
+            if (!currentUser.isAdmin) {
+                showNotification('Access denied: Admin privileges required', 'error');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to remove "${CARRIERS[index]}"? This will affect all licenses using this carrier.`)) {
+                const removedCarrier = CARRIERS.splice(index, 1)[0];
+                
+                // Save to Firestore
+                await saveCarriersToFirestore();
+                
+                // Update carriers checkboxes
+                populateCarriersCheckboxes();
+                
+                // Reload carriers list
+                loadCarriersList();
+                
+                showNotification(`Carrier "${removedCarrier}" removed successfully`, 'info');
+            }
+        }
+
+        // =============================================
+        // HELPER FUNCTIONS
+        // =============================================
+        function populateStateDropdown() {
+            const stateSelect = document.getElementById('license-state');
+            stateSelect.innerHTML = '<option value="">Select a state</option>';
+            STATES_DATA.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.abbreviation;
+                option.textContent = `${state.name} (${state.abbreviation})`;
+                stateSelect.appendChild(option);
+            });
+        }
+
+        function populateCarriersCheckboxes() {
+            const carriersContainer = document.getElementById('carriers-container');
+            carriersContainer.innerHTML = '';
+            CARRIERS.forEach(carrier => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" value="${carrier}" class="carrier-checkbox rounded text-cyan-600">
+                    <span>${carrier}</span>
+                `;
+                carriersContainer.appendChild(label);
+            });
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            
+            // Register form
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            
+            // Logout button
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            // Tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            
+            // Search button
+            document.getElementById('search-btn').addEventListener('click', performSearch);
+            
+            // Add license form
+            document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
+
+            // Password reset form
+            document.getElementById('reset-password-form').addEventListener('submit', handlePasswordReset);
+
+            // Carrier management
+            document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
+            document.getElementById('new-carrier-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addNewCarrier();
+                }
+            });
+        }
+
+        function switchTab(tabName) {
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-cyan-600');
+                btn.classList.add('bg-gray-700');
+            });
+            
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active', 'bg-cyan-600');
+            activeBtn.classList.remove('bg-gray-700');
+            
+            // Show active tab content
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+            // Load admin panel if needed
+            if (tabName === 'admin' && currentUser.isAdmin) {
+                loadAdminPanel();
+            }
+        }
+
+        function updateUserStats() {
+            const statesCount = currentUser.licenses.length;
+            const carriersCount = currentUser.licenses.reduce((total, license) => total + license.carriers.length, 0);
+            
+            document.getElementById('states-count').textContent = statesCount;
+            document.getElementById('carriers-count').textContent = carriersCount;
+        }
+
+        function loadUserLicenses() {
+            const container = document.getElementById('licenses-container');
+            
+            if (currentUser.licenses.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <i class="fas fa-id-card text-4xl mb-4"></i>
+                        <p class="text-xl">No licenses added yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let licensesHTML = '';
+            currentUser.licenses.forEach((license, index) => {
+                const state = STATES_DATA.find(s => s.abbreviation === license.state);
+                licensesHTML += `
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-lg font-semibold text-cyan-300">${state ? state.name : license.state} License</h4>
+                            <div class="flex space-x-2">
+                                <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+                                <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${license.carriers.join(', ')}</p>
+                        <p class="text-gray-400 text-sm">Expires: ${license.expiration}</p>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = licensesHTML;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' :
+                'bg-blue-600'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initApp, 1000);
+        });
+
+        // Make functions globally available
+        window.openResetPasswordModal = openResetPasswordModal;
+        window.closeResetPasswordModal = closeResetPasswordModal;
+        window.openAddLicenseModal = openAddLicenseModal;
+        window.closeAddLicenseModal = closeAddLicenseModal;
+        window.deleteLicense = deleteLicense;
+        // ... include other global functions as needed
+    </script>
+</body>
+</html>
