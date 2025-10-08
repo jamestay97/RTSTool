@@ -7,7 +7,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Keep your existing styles (spinner, fade-in, modal styles) */
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .fade-in { animation: fadeIn 0.4s ease-in; }
@@ -18,7 +17,6 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
 
-<!-- ======= NAV + MAIN LAYOUT (kept largely the same) ======= -->
 <nav class="bg-gray-800 p-4">
   <div class="container mx-auto flex justify-between items-center">
     <h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>License Explorer</h1>
@@ -72,7 +70,7 @@
           </div>
         </div>
 
-        <!-- REGISTER w/ multi-select states & carriers -->
+        <!-- REGISTER - Simplified without license/carrier selection -->
         <div class="bg-gray-700 p-6 rounded-lg">
           <h3 class="text-2xl font-semibold mb-4 text-blue-400"><i class="fas fa-user-plus mr-2"></i>Register</h3>
           <form id="register-form" class="space-y-4">
@@ -105,31 +103,11 @@
 
             <div>
               <label class="block text-sm font-medium mb-2">Password</label>
-              <input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password" required>
+              <input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password (min. 6 characters)" required>
             </div>
 
-            <!-- Multi-select carriers -->
-            <div>
-              <label class="block text-sm font-medium mb-2">Select Carriers (choose zero or more)</label>
-              <div id="register-carriers" class="bg-gray-700 p-3 rounded-lg max-h-36 overflow-y-auto">
-                <!-- carriers inserted by JS as checkboxes -->
-                <p class="text-gray-400 text-sm">Loading carriers...</p>
-              </div>
-            </div>
-
-            <!-- Multi-select states -->
-            <div>
-              <label class="block text-sm font-medium mb-2">Select States (choose zero or more)</label>
-              <div id="register-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
-                <!-- states inserted by JS -->
-                <p class="text-gray-400 text-sm">Loading states...</p>
-              </div>
-            </div>
-
-            <!-- Default expiration for those initial licenses -->
-            <div>
-              <label class="block text-sm font-medium mb-2">Default License Expiration (applies to selected states)</label>
-              <input id="register-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500">
+            <div class="bg-gray-800 p-3 rounded-lg text-sm text-cyan-300">
+              <p><i class="fas fa-info-circle mr-2"></i>You can add licenses and carriers after creating your account in the dashboard.</p>
             </div>
 
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
@@ -141,7 +119,7 @@
     </div>
   </div>
 
-  <!-- DASHBOARD (unchanged layout, logic wired to Firebase) -->
+  <!-- DASHBOARD -->
   <div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
     <div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
       <div class="flex flex-col md:flex-row justify-between items-center">
@@ -288,7 +266,7 @@
   </div>
 </div>
 
-<!-- PASSWORD RESET MODAL (uses Firebase sendPasswordResetEmail) -->
+<!-- PASSWORD RESET MODAL -->
 <div id="reset-password-modal" class="modal">
   <div class="modal-content p-6">
     <div class="flex justify-between items-center mb-4">
@@ -308,30 +286,20 @@
   </div>
 </div>
 
-<!-- Firebase SDKs (compat) -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-/* =========================
-   Configuration & Setup
-   =========================
-   Replace firebaseConfig below with your Firebase project's configuration.
-   IMPORTANT (production):
-     - Set Firestore security rules to restrict writes/reads appropriately.
-     - Configure Cloud Functions/Admin SDK to perform sensitive admin tasks:
-         * Deleting Auth users
-         * Setting custom claims for admin role
-   ========================= */
-
 const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
+  apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
+  authDomain: "rts-project-d9d5d.firebaseapp.com",
+  projectId: "rts-project-d9d5d",
+  storageBucket: "rts-project-d9d5d.firebasestorage.app",
+  messagingSenderId: "318420505147",
+  appId: "1:318420505147:web:76895831ea9e77a9b1821e",
+  measurementId: "G-C8MRE2QC2E"
 };
 
 // Initialize Firebase
@@ -360,14 +328,14 @@ const STATES_DATA = [
   { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
 ];
 
-// Default carriers (used only if no carriers present in Firestore)
+// Default carriers
 const DEFAULT_CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
 
-// App state (in-memory)
-let currentUser = null;      // object from users collection with uid, isAdmin, licenses, etc.
-let agents = [];             // cached array of users from Firestore
-let CARRIERS = [];           // loaded carriers from 'app/settings'
-let currentEditingUserId = null; // used when admin edits another user's licenses
+// App state
+let currentUser = null;
+let agents = [];
+let CARRIERS = [];
+let currentEditingUserId = null;
 
 // DOM references
 const loadingScreen = document.getElementById('loading-screen');
@@ -383,28 +351,22 @@ const adminBadge = document.getElementById('admin-badge');
    ========================= */
 
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(initApp, 600); // small delay so user sees loading state
+  setTimeout(initApp, 600);
 });
 
 async function initApp() {
   try {
-    // Wire UI event listeners
     setupEventListeners();
-
-    // Initialize app settings and carriers
     await ensureSettingsAndCarriersExist();
 
-    // Listen to Auth state changes
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Load the user's Firestore doc
         const userDoc = await db.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
           currentUser = { uid: user.uid, ...userDoc.data() };
-          await refreshAgentsCache(); // keep agents list up-to-date for search/admin
+          await refreshAgentsCache();
           showDashboard();
         } else {
-          // If Auth user exists but no Firestore doc, create a baseline doc
           const baseline = {
             firstname: user.displayName ? user.displayName.split(' ')[0] : '',
             lastname: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
@@ -423,19 +385,15 @@ async function initApp() {
           showDashboard();
         }
       } else {
-        // Not logged in
         currentUser = null;
         showAuthScreen();
-        await createDefaultAdminIfNeeded(); // create demo admin only when no one is signed in
+        await createDefaultAdminIfNeeded();
       }
     });
 
-    // initial data load (carriers + agents)
     await refreshAgentsCache();
     populateStateCheckboxes();
-    populateRegisterStates();
-    populateCarriersCheckboxes(); // for add-license
-    populateRegisterCarriers();
+    populateCarriersCheckboxes();
   } catch (err) {
     console.error('Init error:', err);
     showNotification('Error initializing app — check console for details', 'error');
@@ -444,11 +402,10 @@ async function initApp() {
 }
 
 /* =========================
-   SETTINGS & CARRIERS (Firestore)
+   SETTINGS & CARRIERS
    ========================= */
 
 async function ensureSettingsAndCarriersExist() {
-  // settings stored at collection 'app' doc 'settings' -> { carriers: [] }
   const settingsRef = db.collection('app').doc('settings');
   const snap = await settingsRef.get();
   if (!snap.exists) {
@@ -466,28 +423,19 @@ async function updateCarriersInFirestore(newCarriersArray) {
 }
 
 /* =========================
-   DEFAULT ADMIN CREATION (DEMO ONLY)
-   =========================
-   - Creates a default admin user if no admin exists.
-   - This uses client-side auth/createUserWithEmailAndPassword and is convenient for demos.
-   - In production, create admins via a secure backend (Admin SDK / Cloud Function).
+   DEFAULT ADMIN CREATION
    ========================= */
 
 async function createDefaultAdminIfNeeded() {
   try {
     const adminsSnap = await db.collection('users').where('isAdmin', '==', true).limit(1).get();
-    if (!adminsSnap.empty) return; // admin exists
+    if (!adminsSnap.empty) return;
 
-    // Create a demo admin account (only when there are no admins).
-    // NOTE: This signs in the new admin immediately. It is intended for demo or dev only.
     const demoEmail = 'admin@licenseexplorer.com';
     const demoPassword = 'admin123';
 
-    // Check if an Auth user for this email exists by trying sign-in; if fail, create
     try {
-      // Attempt to sign in (will fail if does not exist)
       await auth.signInWithEmailAndPassword(demoEmail, demoPassword);
-      // Successful sign-in means Auth user exists; ensure user doc exists
       if (auth.currentUser) {
         const u = auth.currentUser;
         const doc = await db.collection('users').doc(u.uid).get();
@@ -508,18 +456,14 @@ async function createDefaultAdminIfNeeded() {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
-        // Sign out demo after creation to restore initial state
         await auth.signOut();
         return;
       }
-    } catch (signInErr) {
-      // user does not exist or wrong password -> we will create
-    }
+    } catch (signInErr) {}
 
-    // Create the auth user
     const uc = await auth.createUserWithEmailAndPassword(demoEmail, demoPassword);
     const uid = uc.user.uid;
-    // Create Firestore user doc
+    
     await db.collection('users').doc(uid).set({
       firstname: 'System',
       lastname: 'Administrator',
@@ -536,7 +480,6 @@ async function createDefaultAdminIfNeeded() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // Sign out the created account (so the next visitor isn't automatically logged in)
     await auth.signOut();
     showNotification('Default admin created (demo). Change password ASAP for production.', 'info');
   } catch (err) {
@@ -545,13 +488,12 @@ async function createDefaultAdminIfNeeded() {
 }
 
 /* =========================
-   AGENTS CACHE (pull from Firestore)
+   AGENTS CACHE
    ========================= */
 
 async function refreshAgentsCache() {
   const usersSnap = await db.collection('users').orderBy('name').get();
   agents = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
-  // Keep currentUser object in sync if currently logged
   if (currentUser && currentUser.uid) {
     const fresh = agents.find(a => a.uid === currentUser.uid);
     if (fresh) currentUser = fresh;
@@ -561,18 +503,6 @@ async function refreshAgentsCache() {
 /* =========================
    UI Population helpers
    ========================= */
-
-function populateStateDropdown() {
-  const stateSelect = document.getElementById('license-state');
-  if (!stateSelect) return;
-  stateSelect.innerHTML = '<option value="">Select a state</option>';
-  STATES_DATA.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.abbreviation;
-    opt.textContent = `${s.name} (${s.abbreviation})`;
-    stateSelect.appendChild(opt);
-  });
-}
 
 function populateStateCheckboxes(containerId = 'add-license-states') {
   const container = document.getElementById(containerId);
@@ -586,20 +516,7 @@ function populateStateCheckboxes(containerId = 'add-license-states') {
   });
 }
 
-function populateRegisterStates() {
-  const container = document.getElementById('register-states');
-  if (!container) return;
-  container.innerHTML = '';
-  STATES_DATA.forEach(s => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${s.abbreviation}" class="register-state-checkbox"> <span>${s.name} (${s.abbreviation})</span>`;
-    container.appendChild(label);
-  });
-}
-
 function populateCarriersCheckboxes() {
-  // For add-license modal
   const container = document.getElementById('carriers-container');
   if (!container) return;
   container.innerHTML = '';
@@ -615,24 +532,8 @@ function populateCarriersCheckboxes() {
   });
 }
 
-function populateRegisterCarriers() {
-  const container = document.getElementById('register-carriers');
-  if (!container) return;
-  container.innerHTML = '';
-  if (!CARRIERS || CARRIERS.length === 0) {
-    container.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
-    return;
-  }
-  CARRIERS.forEach(c => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${c}" class="register-carrier-checkbox"> <span>${c}</span>`;
-    container.appendChild(label);
-  });
-}
-
 /* =========================
-   EVENT LISTENERS & UI FLOW
+   EVENT LISTENERS
    ========================= */
 
 function setupEventListeners() {
@@ -646,7 +547,6 @@ function setupEventListeners() {
   document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
   document.getElementById('new-carrier-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') addNewCarrier(); });
 
-  // Simple keyboard: pressing Enter in search input triggers search
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
 }
@@ -664,7 +564,6 @@ async function handleLogin(e) {
   }
   try {
     await auth.signInWithEmailAndPassword(email, password);
-    // auth.onAuthStateChanged will handle UI update
     showNotification('Login successful!', 'success');
   } catch (err) {
     console.error('Login error:', err);
@@ -688,16 +587,12 @@ async function handleRegister(e) {
   if (!/^\d{4}$/.test(extension)) {
     showNotification('Extension must be a 4-digit number', 'error'); return;
   }
-
-  // Gather selected carriers and states
-  const selectedCarrierEls = Array.from(document.querySelectorAll('.register-carrier-checkbox:checked'));
-  const selectedStateEls = Array.from(document.querySelectorAll('.register-state-checkbox:checked'));
-  const selectedCarriers = selectedCarrierEls.map(i => i.value);
-  const selectedStates = selectedStateEls.map(i => i.value);
-  const expiration = document.getElementById('register-expiration').value || '';
+  if (password.length < 6) {
+    showNotification('Password must be at least 6 characters', 'error'); return;
+  }
 
   try {
-    // Make sure NPN/email are unique in Firestore users collection
+    // Check for unique email and NPN
     const emailSnap = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!emailSnap.empty) { showNotification('Email already registered', 'error'); return; }
     const npnSnap = await db.collection('users').where('npn', '==', npn).limit(1).get();
@@ -707,12 +602,6 @@ async function handleRegister(e) {
     const uc = await auth.createUserWithEmailAndPassword(email, password);
     const uid = uc.user.uid;
 
-    // Build licenses based on selections
-    const licenses = [];
-    selectedStates.forEach(st => {
-      licenses.push({ state: st, carriers: selectedCarriers.slice(), expiration: expiration || '' });
-    });
-
     const userDoc = {
       firstname,
       lastname,
@@ -721,22 +610,16 @@ async function handleRegister(e) {
       npn,
       extension,
       isAdmin: false,
-      licenses,
+      licenses: [], // Empty licenses array - user can add after registration
       joinDate: new Date().toISOString().split('T')[0],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     await db.collection('users').doc(uid).set(userDoc);
-
-    // Update in-memory cache
     await refreshAgentsCache();
 
-    // Sign-in is automatic after createUserWithEmailAndPassword, so auth.onAuthStateChanged will fire
     showNotification('Registration successful! You are now logged in.', 'success');
-
-    // Update UI elements
     populateCarriersCheckboxes();
-    populateRegisterCarriers();
 
   } catch (err) {
     console.error('Register error:', err);
@@ -757,7 +640,7 @@ async function handleLogout() {
 }
 
 /* =========================
-   PASSWORD RESET (email link)
+   PASSWORD RESET
    ========================= */
 
 function openResetPasswordModal() {
@@ -778,7 +661,6 @@ async function handlePasswordReset(e) {
     showNotification('Password reset email sent (check your inbox)', 'success');
   } catch (err) {
     console.error('Password reset error:', err);
-    // Don't reveal if user exists or not for security, but show friendly message
     showNotification('If that email exists, a reset link has been sent', 'info');
   }
 }
@@ -793,6 +675,7 @@ function showAuthScreen() {
   dashboard.classList.add('hidden');
   navButtons.classList.add('hidden');
 }
+
 function showDashboard() {
   loadingScreen.classList.add('hidden');
   authScreen.classList.add('hidden');
@@ -825,7 +708,6 @@ function normalize(s) {
   return (s || '').toString().trim().toLowerCase();
 }
 
-// Perform exact-only search across fields: name (full/first/last), email, NPN, carrier, state (full name or abbreviation)
 function performSearch() {
   const queryRaw = document.getElementById('search-input').value.trim();
   const resultsContainer = document.getElementById('search-results');
@@ -854,18 +736,14 @@ function performSearch() {
     // License-level exact matches
     if (!Array.isArray(agent.licenses)) return false;
     return agent.licenses.some(license => {
-      // license.state expected to be abbreviation (e.g. "CA")
       if (matchedState) {
-        // require license.state exactly equals the matched state's abbreviation
         if (normalize(license.state) === normalize(matchedState.abbreviation)) return true;
       }
-      // exact carrier match
       if (Array.isArray(license.carriers)) {
         for (const c of license.carriers) {
           if (normalize(c) === query) return true;
         }
       }
-      // exact state string match in license (if someone stored names instead of abbr)
       if (normalize(license.state) === query) return true;
       return false;
     });
@@ -876,7 +754,6 @@ function performSearch() {
     return;
   }
 
-  // Render results
   let html = '<div class="space-y-4">';
   for (const agent of results) {
     const licenseInfo = (agent.licenses || []).map(lic => {
@@ -909,6 +786,7 @@ function openAddLicenseModal() {
   document.getElementById('add-license-form').reset();
   document.getElementById('add-license-modal').style.display = 'flex';
 }
+
 function closeAddLicenseModal() {
   document.getElementById('add-license-modal').style.display = 'none';
   document.getElementById('add-license-form').reset();
@@ -928,14 +806,12 @@ async function handleAddLicense(e) {
   const states = selectedStateEls.map(i => i.value);
   const carriers = selectedCarrierEls.map(i => i.value);
 
-  // Build license objects per selected state
   const newLicenses = states.map(s => ({ state: s, carriers: carriers.slice(), expiration }));
 
   try {
-    if (currentEditingUserId && currentUser && currentCurrentUserIsAdmin()) {
+    if (currentEditingUserId && currentUser && currentUser.isAdmin) {
       // ADMIN adding licenses for another user
       const userDocRef = db.collection('users').doc(currentEditingUserId);
-      // Avoid duplicates — fetch user first
       const snap = await userDocRef.get();
       if (!snap.exists) { showNotification('Target user not found', 'error'); return; }
       const existing = snap.data().licenses || [];
@@ -965,7 +841,6 @@ async function handleAddLicense(e) {
         await userDocRef.update({ licenses: firebase.firestore.FieldValue.arrayUnion(nl) });
       }
       await refreshAgentsCache();
-      // Update currentUser
       currentUser = agents.find(a => a.uid === currentUser.uid);
       loadUserLicenses();
       updateUserStats();
@@ -978,10 +853,6 @@ async function handleAddLicense(e) {
   }
 }
 
-function currentCurrentUserIsAdmin() {
-  return currentUser && currentUser.isAdmin;
-}
-
 async function deleteLicense(licenseIndex) {
   if (!currentUser || !currentUser.uid) return;
   if (!confirm('Are you sure you want to delete this license?')) return;
@@ -990,7 +861,7 @@ async function deleteLicense(licenseIndex) {
     const snap = await userRef.get();
     if (!snap.exists) return;
     const licenses = snap.data().licenses || [];
-    const removed = licenses.splice(licenseIndex, 1);
+    licenses.splice(licenseIndex, 1);
     await userRef.update({ licenses });
     await refreshAgentsCache();
     currentUser = agents.find(a => a.uid === currentUser.uid);
@@ -1035,10 +906,11 @@ function openEditUserLicenses(userId) {
   }
   document.getElementById('edit-user-licenses-modal').style.display = 'flex';
 }
+
 function closeEditUserLicensesModal() {
   document.getElementById('edit-user-licenses-modal').style.display = 'none';
-  // keep currentEditingUserId so add-license-for-user can use it
 }
+
 function openAddLicenseForUserModal() {
   if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
   if (!currentEditingUserId) { showNotification('No user selected', 'error'); return; }
@@ -1069,7 +941,7 @@ async function deleteUserLicense(userId, licenseIndex) {
 }
 
 /* =========================
-   ADMIN PANEL: list users + promote/demote + delete
+   ADMIN PANEL
    ========================= */
 
 async function loadAdminPanel() {
@@ -1109,8 +981,6 @@ async function loadAdminPanel() {
     </div>`;
   }
   usersList.innerHTML = html || '<p class="text-gray-400 text-center">No users found</p>';
-
-  // Show carriers management
   loadCarriersList();
 }
 
@@ -1126,7 +996,6 @@ async function toggleAdminStatus(userId) {
     await refreshAgentsCache();
     loadAdminPanel();
     showNotification(`User ${newStatus ? 'promoted to admin' : 'demoted to agent'}`, 'success');
-    // Note: For full security, set custom claims via Admin SDK (server-side).
   } catch (err) {
     console.error('toggleAdminStatus error:', err);
     showNotification('Failed to change admin status', 'error');
@@ -1137,12 +1006,10 @@ async function deleteUser(userId) {
   if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
   if (!confirm('Are you sure you want to delete this user? This removes their data from Firestore. Deleting Auth account requires server-side Admin SDK.')) return;
   try {
-    // Delete Firestore user document
     await db.collection('users').doc(userId).delete();
     await refreshAgentsCache();
     loadAdminPanel();
     showNotification('User document removed from Firestore. To remove the Auth account, run the server-side admin script (see README).', 'info');
-    // Optionally: call a secure Cloud Function endpoint to delete Auth user if you set one up.
   } catch (err) {
     console.error('deleteUser error:', err);
     showNotification('Failed to delete user doc', 'error');
@@ -1174,12 +1041,15 @@ async function addNewCarrier() {
   const input = document.getElementById('new-carrier-input');
   const name = input.value.trim();
   if (!name) { showNotification('Please enter a carrier name', 'error'); return; }
-  if (CARRIERS.includes(name)) { showNotification('Carrier already exists', 'error'); return; }
+  
+  // Case-insensitive duplicate check
+  const exists = CARRIERS.some(c => c.toLowerCase() === name.toLowerCase());
+  if (exists) { showNotification('Carrier already exists', 'error'); return; }
+  
   const newArray = CARRIERS.concat([name]);
   try {
     await updateCarriersInFirestore(newArray);
     populateCarriersCheckboxes();
-    populateRegisterCarriers();
     loadCarriersList();
     input.value = '';
     showNotification(`Carrier "${name}" added`, 'success');
@@ -1198,10 +1068,9 @@ async function removeCarrier(index) {
   newArray.splice(index, 1);
 
   try {
-    // Update carriers setting
     await updateCarriersInFirestore(newArray);
 
-    // Remove the carrier from all user docs (batch updates)
+    // Remove the carrier from all user docs
     const usersSnapshot = await db.collection('users').get();
     const batch = db.batch();
     usersSnapshot.forEach(doc => {
@@ -1220,7 +1089,6 @@ async function removeCarrier(index) {
     await batch.commit();
     await refreshAgentsCache();
     populateCarriersCheckboxes();
-    populateRegisterCarriers();
     loadCarriersList();
     showNotification(`Carrier "${carrier}" removed and users updated`, 'info');
   } catch (err) {
@@ -1244,7 +1112,7 @@ function updateUserStats() {
 function loadUserLicenses() {
   const container = document.getElementById('licenses-container');
   if (!currentUser || !currentUser.licenses || currentUser.licenses.length === 0) {
-    container.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-id-card text-4xl mb-4"></i><p class="text-xl">No licenses added yet</p></div>`;
+    container.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-id-card text-4xl mb-4"></i><p class="text-xl">No licenses added yet</p><p class="text-sm mt-2">Click "Add License" to get started</p></div>`;
     return;
   }
   let html = '';
@@ -1293,8 +1161,7 @@ function escapeHtml(unsafe) {
 }
 
 /* =========================
-   Expose a few functions globally so inline onclicks work
-   (these are used by UI buttons)
+   Expose functions globally
    ========================= */
 window.openAddLicenseModal = openAddLicenseModal;
 window.closeAddLicenseModal = closeAddLicenseModal;
@@ -1309,16 +1176,6 @@ window.addNewCarrier = addNewCarrier;
 window.removeCarrier = removeCarrier;
 window.toggleAdminStatus = toggleAdminStatus;
 window.deleteUser = deleteUser;
-
-/* =========================
-   Final UI setup after app load
-   ========================= */
-
-(async function postInitUI() {
-  // populate selects that need static data
-  populateStateDropdown();
-  populateStateCheckboxes();
-})();
 
 </script>
 </body>
