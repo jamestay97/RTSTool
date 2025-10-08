@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RTS License Explorer</title>
+  <title>Insurance License Data Explorer (Firebase)</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <style>
+    /* Keep your existing styles (spinner, fade-in, modal styles) */
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .fade-in { animation: fadeIn 0.4s ease-in; }
@@ -17,9 +18,10 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
 
+<!-- ======= NAV + MAIN LAYOUT (kept largely the same) ======= -->
 <nav class="bg-gray-800 p-4">
   <div class="container mx-auto flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>RTS License Explorer</h1>
+    <h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>License Explorer</h1>
     <div id="nav-buttons" class="hidden">
       <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
         <i class="fas fa-sign-out-alt mr-2"></i>Logout
@@ -31,262 +33,1293 @@
 <div class="container mx-auto p-4">
   <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh] fade-in">
     <div class="loading-spinner mb-4"></div>
-    <p class="text-xl">Loading...</p>
+    <p class="text-xl">Loading Application...</p>
   </div>
 
-  <!-- AUTH SCREEN -->
+  <!-- AUTH SCREEN (Login + Register) -->
   <div id="auth-screen" class="hidden max-w-4xl mx-auto fade-in">
     <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
       <h2 class="text-3xl font-bold text-center mb-8 text-cyan-400"><i class="fas fa-shield-alt mr-3"></i>Agent Portal</h2>
       <div class="grid md:grid-cols-2 gap-8">
-
         <!-- LOGIN -->
         <div class="bg-gray-700 p-6 rounded-lg">
           <h3 class="text-2xl font-semibold mb-4 text-green-400"><i class="fas fa-sign-in-alt mr-2"></i>Login</h3>
           <form id="login-form" class="space-y-4">
             <div>
-              <label>Email</label>
-              <input id="login-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required>
+              <label class="block text-sm font-medium mb-2">Email</label>
+              <input id="login-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="admin@licenseexplorer.com" required>
             </div>
             <div>
-              <label>Password</label>
-              <input id="login-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required>
+              <label class="block text-sm font-medium mb-2">Password</label>
+              <input id="login-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter password" required>
             </div>
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">Login</button>
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
+              <i class="fas fa-unlock mr-2"></i>Login to Dashboard
+            </button>
           </form>
 
-          <div class="mt-4 text-sm text-gray-400">
-            <p>Demo Admin: admin@licenseexplorer.com / admin123</p>
+          <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
+            <p class="text-cyan-300 font-semibold">Demo Accounts:</p>
+            <p class="text-gray-400">Admin: admin@licenseexplorer.com / admin123 (auto-created first-run)</p>
+            <p class="text-gray-400">Agent: will be created via registration</p>
           </div>
 
-          <div class="mt-4">
+          <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
+            <p class="text-cyan-300 font-semibold mb-2">Forgot Password?</p>
             <button onclick="openResetPasswordModal()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold">
-              Forgot Password?
+              <i class="fas fa-key mr-2"></i>Reset Password (email)
             </button>
           </div>
         </div>
 
-        <!-- REGISTER -->
+        <!-- REGISTER w/ multi-select states & carriers -->
         <div class="bg-gray-700 p-6 rounded-lg">
           <h3 class="text-2xl font-semibold mb-4 text-blue-400"><i class="fas fa-user-plus mr-2"></i>Register</h3>
           <form id="register-form" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
-              <div><label>First Name</label><input id="register-firstname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required></div>
-              <div><label>Last Name</label><input id="register-lastname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required></div>
+              <div>
+                <label class="block text-sm font-medium mb-2">First Name</label>
+                <input id="register-firstname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="John" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Last Name</label>
+                <input id="register-lastname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Smith" required>
+              </div>
             </div>
-            <div><label>Email</label><input id="register-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required></div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Email</label>
+              <input id="register-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="john@company.com" required>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
-              <div><label>NPN</label><input id="register-npn" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required></div>
-              <div><label>Extension</label><input id="register-extension" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" maxlength="4" required></div>
+              <div>
+                <label class="block text-sm font-medium mb-2">NPN Number</label>
+                <input id="register-npn" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="123456789" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Extension</label>
+                <input id="register-extension" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="1234" maxlength="4" required>
+              </div>
             </div>
-            <div><label>Password</label><input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required></div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">Create Account</button>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Password</label>
+              <input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password" required>
+            </div>
+
+            <!-- Multi-select carriers -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Select Carriers (choose zero or more)</label>
+              <div id="register-carriers" class="bg-gray-700 p-3 rounded-lg max-h-36 overflow-y-auto">
+                <!-- carriers inserted by JS as checkboxes -->
+                <p class="text-gray-400 text-sm">Loading carriers...</p>
+              </div>
+            </div>
+
+            <!-- Multi-select states -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Select States (choose zero or more)</label>
+              <div id="register-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
+                <!-- states inserted by JS -->
+                <p class="text-gray-400 text-sm">Loading states...</p>
+              </div>
+            </div>
+
+            <!-- Default expiration for those initial licenses -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Default License Expiration (applies to selected states)</label>
+              <input id="register-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
+              <i class="fas fa-user-check mr-2"></i>Create Account
+            </button>
           </form>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden fade-in">
-    <div class="bg-gray-800 rounded-xl p-6 shadow-2xl mb-6">
-      <h2 class="text-2xl font-bold mb-2 text-cyan-400">Welcome, <span id="user-name"></span></h2>
-      <p class="text-gray-400 mb-4">Use the tools below to manage your licenses.</p>
-      <button onclick="openAddLicenseModal()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
+  <!-- DASHBOARD (unchanged layout, logic wired to Firebase) -->
+  <div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
+    <div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h2 class="text-3xl font-bold mb-2">Welcome back, <span id="user-name" class="text-cyan-300"></span>!</h2>
+          <p class="text-gray-300">License Data Explorer Dashboard</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-2">
+          <span id="user-badge" class="bg-green-600 px-3 py-1 rounded-full text-sm font-semibold">Licensed Agent</span>
+          <span id="admin-badge" class="bg-red-600 px-3 py-1 rounded-full text-sm font-semibold hidden"><i class="fas fa-crown mr-1"></i>Administrator</span>
+        </div>
+      </div>
     </div>
 
-    <div id="licenses-container" class="space-y-4"></div>
+    <div class="bg-gray-800 rounded-xl p-6 shadow-2xl">
+      <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+        <button class="tab-btn active bg-cyan-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="search"><i class="fas fa-search mr-2"></i>Search Licenses</button>
+        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="profile"><i class="fas fa-user mr-2"></i>My Profile</button>
+        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="licenses"><i class="fas fa-id-card mr-2"></i>My Licenses</button>
+        <button id="admin-tab-btn" class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition hidden" data-tab="admin"><i class="fas fa-users-cog mr-2"></i>Admin Panel</button>
+      </div>
+
+      <div id="tab-content">
+        <!-- SEARCH -->
+        <div id="search-tab" class="tab-panel active">
+          <div class="mb-6">
+            <div class="flex flex-col sm:flex-row gap-4">
+              <input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by exact state (California or CA), agent name, email, NPN, or carrier...">
+              <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap"><i class="fas fa-search mr-2"></i>Search</button>
+            </div>
+          </div>
+          <div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-compass text-4xl mb-4"></i>
+              <p class="text-xl">Enter a search term to find license data</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="profile-tab" class="tab-panel hidden">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-700 p-6 rounded-lg">
+              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Agent Information</h3>
+              <div class="space-y-3">
+                <p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
+                <p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Extension:</strong> <span id="profile-extension" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
+              </div>
+            </div>
+            <div class="bg-gray-700 p-6 rounded-lg">
+              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Quick Stats</h3>
+              <div class="space-y-3">
+                <p><strong class="text-gray-300">Licensed States:</strong> <span id="states-count" class="text-white">0</span></p>
+                <p><strong class="text-gray-300">Carriers:</strong> <span id="carriers-count" class="text-white">0</span></p>
+                <p><strong class="text-gray-300">Member Since:</strong> <span class="text-white" id="member-since">2024</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY LICENSES -->
+        <div id="licenses-tab" class="tab-panel hidden">
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
+            <div id="licenses-container" class="space-y-4"></div>
+            <button onclick="openAddLicenseModal()" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
+          </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="admin-tab" class="tab-panel hidden">
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-red-400"><i class="fas fa-users-cog mr-2"></i>User Management</h3>
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+              <p class="text-gray-300">Total Users: <span id="total-users" class="text-white font-semibold">0</span></p>
+              <p class="text-gray-300">Admins: <span id="admin-count" class="text-white font-semibold">0</span></p>
+              <p class="text-gray-300">Agents: <span id="agent-count" class="text-white font-semibold">0</span></p>
+            </div>
+            <div id="users-list" class="space-y-4"></div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-purple-400"><i class="fas fa-list-alt mr-2"></i>Carrier Management</h3>
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+              <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input id="new-carrier-input" type="text" class="flex-1 p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter new carrier name">
+                <button id="add-carrier-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Add Carrier</button>
+              </div>
+              <div id="carriers-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- ADD LICENSE MODAL -->
 <div id="add-license-modal" class="modal">
   <div class="modal-content p-6">
-    <div class="flex justify-between mb-4">
-      <h3 class="text-xl font-semibold text-cyan-400">Add New License</h3>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
       <button onclick="closeAddLicenseModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
     </div>
     <form id="add-license-form" class="space-y-4">
       <div>
-        <label>State</label>
-        <select id="license-state" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500"></select>
+        <label class="block text-sm font-medium mb-2">Select States (you may choose multiple)</label>
+        <div id="add-license-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
+          <!-- states added by JS -->
+        </div>
       </div>
       <div>
-        <label>Carriers (comma-separated)</label>
-        <input id="license-carriers" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="e.g. State Farm, Allstate">
+        <label class="block text-sm font-medium mb-2">Carriers (choose one or more)</label>
+        <div id="carriers-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg">
+          <!-- carriers checkboxes inserted by JS -->
+        </div>
       </div>
       <div>
-        <label>Expiration</label>
-        <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500">
+        <label class="block text-sm font-medium mb-2">Expiration Date</label>
+        <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
       </div>
-      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-3 rounded-lg font-semibold">Add License</button>
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" onclick="closeAddLicenseModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
+        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
+      </div>
     </form>
   </div>
 </div>
 
-<!-- RESET PASSWORD MODAL -->
+<!-- EDIT USER LICENSES MODAL (for admins) -->
+<div id="edit-user-licenses-modal" class="modal">
+  <div class="modal-content p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
+      <button onclick="closeEditUserLicensesModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto"></div>
+    <button onclick="openAddLicenseForUserModal()" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
+    <div class="flex justify-end"><button onclick="closeEditUserLicensesModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
+  </div>
+</div>
+
+<!-- PASSWORD RESET MODAL (uses Firebase sendPasswordResetEmail) -->
 <div id="reset-password-modal" class="modal">
   <div class="modal-content p-6">
-    <div class="flex justify-between mb-4">
-      <h3 class="text-xl font-semibold text-yellow-400">Reset Password</h3>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-yellow-400"><i class="fas fa-key mr-2"></i>Reset Password</h3>
       <button onclick="closeResetPasswordModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
     </div>
     <form id="reset-password-form" class="space-y-4">
-      <label>Email</label>
-      <input id="reset-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" required>
-      <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 py-3 rounded-lg font-semibold">Send Reset Email</button>
+      <div>
+        <label class="block text-sm font-medium mb-2">Email</label>
+        <input id="reset-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter your email" required>
+      </div>
+      <div>
+        <p class="text-sm text-gray-300">An email will be sent with a password reset link if this email is registered.</p>
+      </div>
+      <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 py-3 rounded-lg font-semibold"><i class="fas fa-sync-alt mr-2"></i>Send Reset Email</button>
     </form>
   </div>
 </div>
 
-<!-- FIREBASE SDK -->
+<!-- Firebase SDKs (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
+/* =========================
+   Configuration & Setup
+   =========================
+   Replace firebaseConfig below with your Firebase project's configuration.
+   IMPORTANT (production):
+     - Set Firestore security rules to restrict writes/reads appropriately.
+     - Configure Cloud Functions/Admin SDK to perform sensitive admin tasks:
+         * Deleting Auth users
+         * Setting custom claims for admin role
+   ========================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
-  authDomain: "rts-project-d9d5d.firebaseapp.com",
-  projectId: "rts-project-d9d5d",
-  storageBucket: "rts-project-d9d5d.appspot.com",
-  messagingSenderId: "318420505147",
-  appId: "1:318420505147:web:76895831ea9e77a9b1821e",
-  measurementId: "G-C8MRE2QC2E"
+  apiKey: "REPLACE_ME",
+  authDomain: "REPLACE_ME",
+  projectId: "REPLACE_ME",
+  storageBucket: "REPLACE_ME",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const STATES = [
-  {name:"Alabama",abbreviation:"AL"}, {name:"Alaska",abbreviation:"AK"}, {name:"Arizona",abbreviation:"AZ"},
-  {name:"Arkansas",abbreviation:"AR"}, {name:"California",abbreviation:"CA"}, {name:"Colorado",abbreviation:"CO"},
-  {name:"Connecticut",abbreviation:"CT"}, {name:"Delaware",abbreviation:"DE"}, {name:"Florida",abbreviation:"FL"},
-  {name:"Georgia",abbreviation:"GA"}, {name:"Hawaii",abbreviation:"HI"}, {name:"Idaho",abbreviation:"ID"},
-  {name:"Illinois",abbreviation:"IL"}, {name:"Indiana",abbreviation:"IN"}, {name:"Iowa",abbreviation:"IA"},
-  {name:"Kansas",abbreviation:"KS"}, {name:"Kentucky",abbreviation:"KY"}, {name:"Louisiana",abbreviation:"LA"},
-  {name:"Maine",abbreviation:"ME"}, {name:"Maryland",abbreviation:"MD"}, {name:"Massachusetts",abbreviation:"MA"},
-  {name:"Michigan",abbreviation:"MI"}, {name:"Minnesota",abbreviation:"MN"}, {name:"Mississippi",abbreviation:"MS"},
-  {name:"Missouri",abbreviation:"MO"}, {name:"Montana",abbreviation:"MT"}, {name:"Nebraska",abbreviation:"NE"},
-  {name:"Nevada",abbreviation:"NV"}, {name:"New Hampshire",abbreviation:"NH"}, {name:"New Jersey",abbreviation:"NJ"},
-  {name:"New Mexico",abbreviation:"NM"}, {name:"New York",abbreviation:"NY"}, {name:"North Carolina",abbreviation:"NC"},
-  {name:"North Dakota",abbreviation:"ND"}, {name:"Ohio",abbreviation:"OH"}, {name:"Oklahoma",abbreviation:"OK"},
-  {name:"Oregon",abbreviation:"OR"}, {name:"Pennsylvania",abbreviation:"PA"}, {name:"Rhode Island",abbreviation:"RI"},
-  {name:"South Carolina",abbreviation:"SC"}, {name:"South Dakota",abbreviation:"SD"}, {name:"Tennessee",abbreviation:"TN"},
-  {name:"Texas",abbreviation:"TX"}, {name:"Utah",abbreviation:"UT"}, {name:"Vermont",abbreviation:"VT"},
-  {name:"Virginia",abbreviation:"VA"}, {name:"Washington",abbreviation:"WA"}, {name:"West Virginia",abbreviation:"WV"},
-  {name:"Wisconsin",abbreviation:"WI"}, {name:"Wyoming",abbreviation:"WY"}
+// States data (all 50 states)
+const STATES_DATA = [
+  { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
+  { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
+  { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" }, { name: "Florida", abbreviation: "FL" },
+  { name: "Georgia", abbreviation: "GA" }, { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
+  { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" }, { name: "Iowa", abbreviation: "IA" },
+  { name: "Kansas", abbreviation: "KS" }, { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
+  { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" }, { name: "Massachusetts", abbreviation: "MA" },
+  { name: "Michigan", abbreviation: "MI" }, { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
+  { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" }, { name: "Nebraska", abbreviation: "NE" },
+  { name: "Nevada", abbreviation: "NV" }, { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
+  { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" }, { name: "North Carolina", abbreviation: "NC" },
+  { name: "North Dakota", abbreviation: "ND" }, { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
+  { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" }, { name: "Rhode Island", abbreviation: "RI" },
+  { name: "South Carolina", abbreviation: "SC" }, { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
+  { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" }, { name: "Vermont", abbreviation: "VT" },
+  { name: "Virginia", abbreviation: "VA" }, { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
+  { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
 ];
 
-const loadingScreen = document.getElementById("loading-screen");
-const authScreen = document.getElementById("auth-screen");
-const dashboard = document.getElementById("dashboard");
-const logoutBtn = document.getElementById("logout-btn");
-const licensesContainer = document.getElementById("licenses-container");
-const stateSelect = document.getElementById("license-state");
+// Default carriers (used only if no carriers present in Firestore)
+const DEFAULT_CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
 
-STATES.forEach(s => {
-  const opt = document.createElement("option");
-  opt.value = s.abbreviation;
-  opt.textContent = `${s.name} (${s.abbreviation})`;
-  stateSelect.appendChild(opt);
+// App state (in-memory)
+let currentUser = null;      // object from users collection with uid, isAdmin, licenses, etc.
+let agents = [];             // cached array of users from Firestore
+let CARRIERS = [];           // loaded carriers from 'app/settings'
+let currentEditingUserId = null; // used when admin edits another user's licenses
+
+// DOM references
+const loadingScreen = document.getElementById('loading-screen');
+const authScreen = document.getElementById('auth-screen');
+const dashboard = document.getElementById('dashboard');
+const navButtons = document.getElementById('nav-buttons');
+const logoutBtn = document.getElementById('logout-btn');
+const adminTabBtn = document.getElementById('admin-tab-btn');
+const adminBadge = document.getElementById('admin-badge');
+
+/* =========================
+   INITIALIZATION
+   ========================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initApp, 600); // small delay so user sees loading state
 });
 
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    const doc = await db.collection("users").doc(user.uid).get();
-    if (doc.exists) {
-      showDashboard(doc.data());
-    } else {
-      const data = {
-        firstname: user.displayName ? user.displayName.split(" ")[0] : "",
-        lastname: user.displayName ? user.displayName.split(" ").slice(1).join(" ") : "",
-        name: user.displayName || user.email,
-        email: user.email,
-        npn: "",
-        extension: "",
-        isAdmin: false,
-        licenses: []
-      };
-      await db.collection("users").doc(user.uid).set(data);
-      showDashboard(data);
-    }
-  } else {
-    loadingScreen.classList.add("hidden");
-    authScreen.classList.remove("hidden");
-    dashboard.classList.add("hidden");
-  }
-});
+async function initApp() {
+  try {
+    // Wire UI event listeners
+    setupEventListeners();
 
-document.getElementById("login-form").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const email=document.getElementById("login-email").value.trim();
-  const pass=document.getElementById("login-password").value;
-  try{
-    await auth.signInWithEmailAndPassword(email,pass);
-    alert("Login successful");
-  }catch(err){alert("Login failed: "+err.message);}
-});
+    // Initialize app settings and carriers
+    await ensureSettingsAndCarriersExist();
 
-document.getElementById("register-form").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const f=document.getElementById("register-firstname").value.trim();
-  const l=document.getElementById("register-lastname").value.trim();
-  const eMail=document.getElementById("register-email").value.trim().toLowerCase();
-  const npn=document.getElementById("register-npn").value.trim();
-  const ext=document.getElementById("register-extension").value.trim();
-  const pass=document.getElementById("register-password").value;
-  try{
-    const cred=await auth.createUserWithEmailAndPassword(eMail,pass);
-    await db.collection("users").doc(cred.user.uid).set({
-      firstname:f,lastname:l,name:f+" "+l,email:eMail,npn,extension:ext,isAdmin:false,licenses:[]
+    // Listen to Auth state changes
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Load the user's Firestore doc
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          currentUser = { uid: user.uid, ...userDoc.data() };
+          await refreshAgentsCache(); // keep agents list up-to-date for search/admin
+          showDashboard();
+        } else {
+          // If Auth user exists but no Firestore doc, create a baseline doc
+          const baseline = {
+            firstname: user.displayName ? user.displayName.split(' ')[0] : '',
+            lastname: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
+            name: user.displayName || user.email.split('@')[0],
+            email: user.email,
+            npn: '',
+            extension: '',
+            isAdmin: false,
+            licenses: [],
+            joinDate: new Date().toISOString().split('T')[0],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await db.collection('users').doc(user.uid).set(baseline);
+          currentUser = { uid: user.uid, ...baseline };
+          await refreshAgentsCache();
+          showDashboard();
+        }
+      } else {
+        // Not logged in
+        currentUser = null;
+        showAuthScreen();
+        await createDefaultAdminIfNeeded(); // create demo admin only when no one is signed in
+      }
     });
-    alert("Registration successful");
-  }catch(err){alert("Registration failed: "+err.message);}
-});
 
-logoutBtn.onclick=()=>auth.signOut();
-
-function showDashboard(data){
-  document.getElementById("user-name").textContent=data.name;
-  licensesContainer.innerHTML=data.licenses.length?data.licenses.map(l=>`<div class="bg-gray-700 p-4 rounded-lg">
-    <p><strong>${l.state}</strong> - ${l.carriers.join(", ")}</p>
-    <p class="text-sm text-gray-400">Expires: ${l.expiration}</p>
-  </div>`).join(""):`<div class="text-center text-gray-400 py-8"><p class="text-xl">No licenses yet.</p></div>`;
-  loadingScreen.classList.add("hidden");
-  authScreen.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  document.getElementById("nav-buttons").classList.remove("hidden");
+    // initial data load (carriers + agents)
+    await refreshAgentsCache();
+    populateStateCheckboxes();
+    populateRegisterStates();
+    populateCarriersCheckboxes(); // for add-license
+    populateRegisterCarriers();
+  } catch (err) {
+    console.error('Init error:', err);
+    showNotification('Error initializing app — check console for details', 'error');
+    showAuthScreen();
+  }
 }
 
-document.getElementById("add-license-form").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const user=auth.currentUser;
-  if(!user) return;
-  const s=document.getElementById("license-state").value;
-  const c=document.getElementById("license-carriers").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const exp=document.getElementById("license-expiration").value;
-  const doc=await db.collection("users").doc(user.uid).get();
-  const arr=doc.data().licenses||[];
-  arr.push({state:s,carriers:c,expiration:exp});
-  await db.collection("users").doc(user.uid).update({licenses:arr});
-  closeAddLicenseModal();
-  showDashboard({...doc.data(),licenses:arr});
-});
+/* =========================
+   SETTINGS & CARRIERS (Firestore)
+   ========================= */
 
-function openAddLicenseModal(){document.getElementById("add-license-modal").style.display="flex";}
-function closeAddLicenseModal(){document.getElementById("add-license-modal").style.display="none";}
-function openResetPasswordModal(){document.getElementById("reset-password-modal").style.display="flex";}
-function closeResetPasswordModal(){document.getElementById("reset-password-modal").style.display="none";}
+async function ensureSettingsAndCarriersExist() {
+  // settings stored at collection 'app' doc 'settings' -> { carriers: [] }
+  const settingsRef = db.collection('app').doc('settings');
+  const snap = await settingsRef.get();
+  if (!snap.exists) {
+    await settingsRef.set({ carriers: DEFAULT_CARRIERS });
+    CARRIERS = DEFAULT_CARRIERS.slice();
+  } else {
+    const data = snap.data();
+    CARRIERS = Array.isArray(data.carriers) ? data.carriers.slice() : DEFAULT_CARRIERS.slice();
+  }
+}
 
-document.getElementById("reset-password-form").addEventListener("submit",async e=>{
+async function updateCarriersInFirestore(newCarriersArray) {
+  await db.collection('app').doc('settings').set({ carriers: newCarriersArray }, { merge: true });
+  CARRIERS = newCarriersArray.slice();
+}
+
+/* =========================
+   DEFAULT ADMIN CREATION (DEMO ONLY)
+   =========================
+   - Creates a default admin user if no admin exists.
+   - This uses client-side auth/createUserWithEmailAndPassword and is convenient for demos.
+   - In production, create admins via a secure backend (Admin SDK / Cloud Function).
+   ========================= */
+
+async function createDefaultAdminIfNeeded() {
+  try {
+    const adminsSnap = await db.collection('users').where('isAdmin', '==', true).limit(1).get();
+    if (!adminsSnap.empty) return; // admin exists
+
+    // Create a demo admin account (only when there are no admins).
+    // NOTE: This signs in the new admin immediately. It is intended for demo or dev only.
+    const demoEmail = 'admin@licenseexplorer.com';
+    const demoPassword = 'admin123';
+
+    // Check if an Auth user for this email exists by trying sign-in; if fail, create
+    try {
+      // Attempt to sign in (will fail if does not exist)
+      await auth.signInWithEmailAndPassword(demoEmail, demoPassword);
+      // Successful sign-in means Auth user exists; ensure user doc exists
+      if (auth.currentUser) {
+        const u = auth.currentUser;
+        const doc = await db.collection('users').doc(u.uid).get();
+        if (!doc.exists) {
+          await db.collection('users').doc(u.uid).set({
+            firstname: 'System',
+            lastname: 'Administrator',
+            name: 'System Administrator',
+            email: demoEmail,
+            npn: 'ADMIN001',
+            extension: '0001',
+            isAdmin: true,
+            licenses: [
+              { state: 'CA', carriers: ['State Farm','Allstate','Geico'], expiration: '2025-12-31' },
+              { state: 'TX', carriers: ['Liberty Mutual','Progressive'], expiration: '2025-11-30' }
+            ],
+            joinDate: new Date().toISOString().split('T')[0],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        // Sign out demo after creation to restore initial state
+        await auth.signOut();
+        return;
+      }
+    } catch (signInErr) {
+      // user does not exist or wrong password -> we will create
+    }
+
+    // Create the auth user
+    const uc = await auth.createUserWithEmailAndPassword(demoEmail, demoPassword);
+    const uid = uc.user.uid;
+    // Create Firestore user doc
+    await db.collection('users').doc(uid).set({
+      firstname: 'System',
+      lastname: 'Administrator',
+      name: 'System Administrator',
+      email: demoEmail,
+      npn: 'ADMIN001',
+      extension: '0001',
+      isAdmin: true,
+      licenses: [
+        { state: 'CA', carriers: ['State Farm','Allstate','Geico'], expiration: '2025-12-31' },
+        { state: 'TX', carriers: ['Liberty Mutual','Progressive'], expiration: '2025-11-30' }
+      ],
+      joinDate: new Date().toISOString().split('T')[0],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Sign out the created account (so the next visitor isn't automatically logged in)
+    await auth.signOut();
+    showNotification('Default admin created (demo). Change password ASAP for production.', 'info');
+  } catch (err) {
+    console.error('createDefaultAdminIfNeeded error:', err);
+  }
+}
+
+/* =========================
+   AGENTS CACHE (pull from Firestore)
+   ========================= */
+
+async function refreshAgentsCache() {
+  const usersSnap = await db.collection('users').orderBy('name').get();
+  agents = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  // Keep currentUser object in sync if currently logged
+  if (currentUser && currentUser.uid) {
+    const fresh = agents.find(a => a.uid === currentUser.uid);
+    if (fresh) currentUser = fresh;
+  }
+}
+
+/* =========================
+   UI Population helpers
+   ========================= */
+
+function populateStateDropdown() {
+  const stateSelect = document.getElementById('license-state');
+  if (!stateSelect) return;
+  stateSelect.innerHTML = '<option value="">Select a state</option>';
+  STATES_DATA.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.abbreviation;
+    opt.textContent = `${s.name} (${s.abbreviation})`;
+    stateSelect.appendChild(opt);
+  });
+}
+
+function populateStateCheckboxes(containerId = 'add-license-states') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  STATES_DATA.forEach(s => {
+    const label = document.createElement('label');
+    label.className = 'flex items-center space-x-2 cursor-pointer';
+    label.innerHTML = `<input type="checkbox" value="${s.abbreviation}" class="license-state-checkbox"> <span>${s.name} (${s.abbreviation})</span>`;
+    container.appendChild(label);
+  });
+}
+
+function populateRegisterStates() {
+  const container = document.getElementById('register-states');
+  if (!container) return;
+  container.innerHTML = '';
+  STATES_DATA.forEach(s => {
+    const label = document.createElement('label');
+    label.className = 'flex items-center space-x-2 cursor-pointer';
+    label.innerHTML = `<input type="checkbox" value="${s.abbreviation}" class="register-state-checkbox"> <span>${s.name} (${s.abbreviation})</span>`;
+    container.appendChild(label);
+  });
+}
+
+function populateCarriersCheckboxes() {
+  // For add-license modal
+  const container = document.getElementById('carriers-container');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!CARRIERS || CARRIERS.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+    return;
+  }
+  CARRIERS.forEach(c => {
+    const label = document.createElement('label');
+    label.className = 'flex items-center space-x-2 cursor-pointer';
+    label.innerHTML = `<input type="checkbox" value="${c}" class="carrier-checkbox"> <span>${c}</span>`;
+    container.appendChild(label);
+  });
+}
+
+function populateRegisterCarriers() {
+  const container = document.getElementById('register-carriers');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!CARRIERS || CARRIERS.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+    return;
+  }
+  CARRIERS.forEach(c => {
+    const label = document.createElement('label');
+    label.className = 'flex items-center space-x-2 cursor-pointer';
+    label.innerHTML = `<input type="checkbox" value="${c}" class="register-carrier-checkbox"> <span>${c}</span>`;
+    container.appendChild(label);
+  });
+}
+
+/* =========================
+   EVENT LISTENERS & UI FLOW
+   ========================= */
+
+function setupEventListeners() {
+  document.getElementById('login-form').addEventListener('submit', handleLogin);
+  document.getElementById('register-form').addEventListener('submit', handleRegister);
+  logoutBtn.addEventListener('click', handleLogout);
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  document.getElementById('search-btn').addEventListener('click', performSearch);
+  document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
+  document.getElementById('reset-password-form').addEventListener('submit', handlePasswordReset);
+  document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
+  document.getElementById('new-carrier-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') addNewCarrier(); });
+
+  // Simple keyboard: pressing Enter in search input triggers search
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+}
+
+/* =========================
+   AUTH: LOGIN / REGISTER / LOGOUT
+   ========================= */
+
+async function handleLogin(e) {
   e.preventDefault();
-  const email=document.getElementById("reset-email").value.trim();
-  try{await auth.sendPasswordResetEmail(email);alert("Reset email sent!");closeResetPasswordModal();}
-  catch(err){alert("Error: "+err.message);}
-});
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) {
+    showNotification('Please enter email and password', 'error'); return;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    // auth.onAuthStateChanged will handle UI update
+    showNotification('Login successful!', 'success');
+  } catch (err) {
+    console.error('Login error:', err);
+    showNotification('Invalid email or password', 'error');
+  }
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const firstname = document.getElementById('register-firstname').value.trim();
+  const lastname = document.getElementById('register-lastname').value.trim();
+  const email = document.getElementById('register-email').value.trim().toLowerCase();
+  const npn = document.getElementById('register-npn').value.trim();
+  const extension = document.getElementById('register-extension').value.trim();
+  const password = document.getElementById('register-password').value;
+
+  // Validate basic fields
+  if (!firstname || !lastname || !email || !npn || !extension || !password) {
+    showNotification('Please complete all required fields', 'error'); return;
+  }
+  if (!/^\d{4}$/.test(extension)) {
+    showNotification('Extension must be a 4-digit number', 'error'); return;
+  }
+
+  // Gather selected carriers and states
+  const selectedCarrierEls = Array.from(document.querySelectorAll('.register-carrier-checkbox:checked'));
+  const selectedStateEls = Array.from(document.querySelectorAll('.register-state-checkbox:checked'));
+  const selectedCarriers = selectedCarrierEls.map(i => i.value);
+  const selectedStates = selectedStateEls.map(i => i.value);
+  const expiration = document.getElementById('register-expiration').value || '';
+
+  try {
+    // Make sure NPN/email are unique in Firestore users collection
+    const emailSnap = await db.collection('users').where('email', '==', email).limit(1).get();
+    if (!emailSnap.empty) { showNotification('Email already registered', 'error'); return; }
+    const npnSnap = await db.collection('users').where('npn', '==', npn).limit(1).get();
+    if (!npnSnap.empty) { showNotification('NPN number already registered', 'error'); return; }
+
+    // Create the Firebase Auth user
+    const uc = await auth.createUserWithEmailAndPassword(email, password);
+    const uid = uc.user.uid;
+
+    // Build licenses based on selections
+    const licenses = [];
+    selectedStates.forEach(st => {
+      licenses.push({ state: st, carriers: selectedCarriers.slice(), expiration: expiration || '' });
+    });
+
+    const userDoc = {
+      firstname,
+      lastname,
+      name: `${firstname} ${lastname}`,
+      email,
+      npn,
+      extension,
+      isAdmin: false,
+      licenses,
+      joinDate: new Date().toISOString().split('T')[0],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await db.collection('users').doc(uid).set(userDoc);
+
+    // Update in-memory cache
+    await refreshAgentsCache();
+
+    // Sign-in is automatic after createUserWithEmailAndPassword, so auth.onAuthStateChanged will fire
+    showNotification('Registration successful! You are now logged in.', 'success');
+
+    // Update UI elements
+    populateCarriersCheckboxes();
+    populateRegisterCarriers();
+
+  } catch (err) {
+    console.error('Register error:', err);
+    showNotification('Registration failed — check console for details', 'error');
+  }
+}
+
+async function handleLogout() {
+  try {
+    await auth.signOut();
+    currentUser = null;
+    showAuthScreen();
+    showNotification('Logged out successfully', 'info');
+  } catch (err) {
+    console.error('Logout error:', err);
+    showNotification('Logout failed', 'error');
+  }
+}
+
+/* =========================
+   PASSWORD RESET (email link)
+   ========================= */
+
+function openResetPasswordModal() {
+  document.getElementById('reset-password-modal').style.display = 'flex';
+  document.getElementById('reset-password-form').reset();
+}
+function closeResetPasswordModal() {
+  document.getElementById('reset-password-modal').style.display = 'none';
+}
+
+async function handlePasswordReset(e) {
+  e.preventDefault();
+  const email = document.getElementById('reset-email').value.trim().toLowerCase();
+  if (!email) { showNotification('Enter your email', 'error'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    closeResetPasswordModal();
+    showNotification('Password reset email sent (check your inbox)', 'success');
+  } catch (err) {
+    console.error('Password reset error:', err);
+    // Don't reveal if user exists or not for security, but show friendly message
+    showNotification('If that email exists, a reset link has been sent', 'info');
+  }
+}
+
+/* =========================
+   SEARCH (EXACT MATCH ONLY)
+   ========================= */
+
+function showAuthScreen() {
+  loadingScreen.classList.add('hidden');
+  authScreen.classList.remove('hidden');
+  dashboard.classList.add('hidden');
+  navButtons.classList.add('hidden');
+}
+function showDashboard() {
+  loadingScreen.classList.add('hidden');
+  authScreen.classList.add('hidden');
+  dashboard.classList.remove('hidden');
+  navButtons.classList.remove('hidden');
+
+  document.getElementById('user-name').textContent = currentUser.name;
+  document.getElementById('profile-name').textContent = currentUser.name;
+  document.getElementById('profile-email').textContent = currentUser.email;
+  document.getElementById('profile-npn').textContent = currentUser.npn || '';
+  document.getElementById('profile-extension').textContent = currentUser.extension || '';
+  document.getElementById('member-since').textContent = currentUser.joinDate || new Date().toISOString().split('T')[0];
+
+  if (currentUser.isAdmin) {
+    adminTabBtn.classList.remove('hidden');
+    adminBadge.classList.remove('hidden');
+    document.getElementById('user-badge').classList.add('hidden');
+  } else {
+    adminTabBtn.classList.add('hidden');
+    adminBadge.classList.add('hidden');
+    document.getElementById('user-badge').classList.remove('hidden');
+  }
+
+  updateUserStats();
+  loadUserLicenses();
+  if (currentUser.isAdmin) loadAdminPanel();
+}
+
+function normalize(s) {
+  return (s || '').toString().trim().toLowerCase();
+}
+
+// Perform exact-only search across fields: name (full/first/last), email, NPN, carrier, state (full name or abbreviation)
+function performSearch() {
+  const queryRaw = document.getElementById('search-input').value.trim();
+  const resultsContainer = document.getElementById('search-results');
+  if (!queryRaw) {
+    resultsContainer.innerHTML = `<div class="text-center text-gray-400"><i class="fas fa-compass text-4xl mb-4"></i><p class="text-xl">Enter a search term to find license data</p></div>`;
+    return;
+  }
+  const query = normalize(queryRaw);
+
+  // Determine if query is a state name or abbreviation (exact)
+  let matchedState = null;
+  for (const s of STATES_DATA) {
+    if (normalize(s.name) === query || normalize(s.abbreviation) === query) {
+      matchedState = s; break;
+    }
+  }
+
+  const results = agents.filter(agent => {
+    // Agent-level exact matches
+    if (normalize(agent.name) === query) return true;
+    const nameParts = normalize(agent.name).split(/\s+/);
+    if (nameParts.includes(query)) return true;
+    if (normalize(agent.email) === query) return true;
+    if (normalize(agent.npn) === query) return true;
+
+    // License-level exact matches
+    if (!Array.isArray(agent.licenses)) return false;
+    return agent.licenses.some(license => {
+      // license.state expected to be abbreviation (e.g. "CA")
+      if (matchedState) {
+        // require license.state exactly equals the matched state's abbreviation
+        if (normalize(license.state) === normalize(matchedState.abbreviation)) return true;
+      }
+      // exact carrier match
+      if (Array.isArray(license.carriers)) {
+        for (const c of license.carriers) {
+          if (normalize(c) === query) return true;
+        }
+      }
+      // exact state string match in license (if someone stored names instead of abbr)
+      if (normalize(license.state) === query) return true;
+      return false;
+    });
+  });
+
+  if (results.length === 0) {
+    resultsContainer.innerHTML = `<div class="text-center text-gray-400"><i class="fas fa-search text-4xl mb-4"></i><p class="text-xl">No exact matches found for "${escapeHtml(queryRaw)}"</p><p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, NPN, or carrier name</p></div>`;
+    return;
+  }
+
+  // Render results
+  let html = '<div class="space-y-4">';
+  for (const agent of results) {
+    const licenseInfo = (agent.licenses || []).map(lic => {
+      const stateObj = STATES_DATA.find(s => s.abbreviation === lic.state);
+      return `${stateObj ? stateObj.name : lic.state}: ${Array.isArray(lic.carriers) ? lic.carriers.join(', ') : ''}`;
+    }).join('; ');
+    html += `<div class="bg-gray-600 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-2">
+        <h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(agent.name)}</h4>
+        ${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
+      </div>
+      <p class="text-gray-300 mb-2">Email: ${escapeHtml(agent.email || '')} | NPN: ${escapeHtml(agent.npn || '')}</p>
+      <p class="text-gray-300 mb-2">Extension: ${escapeHtml(agent.extension || '')}</p>
+      <div class="mt-3"><h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5><p class="text-gray-400">${escapeHtml(licenseInfo || 'No licenses')}</p></div>
+    </div>`;
+  }
+  html += '</div>';
+  resultsContainer.innerHTML = html;
+}
+
+/* =========================
+   LICENSE MANAGEMENT
+   ========================= */
+
+function openAddLicenseModal() {
+  currentEditingUserId = null;
+  document.getElementById('add-license-title').textContent = 'Add New License';
+  populateStateCheckboxes('add-license-states');
+  populateCarriersCheckboxes();
+  document.getElementById('add-license-form').reset();
+  document.getElementById('add-license-modal').style.display = 'flex';
+}
+function closeAddLicenseModal() {
+  document.getElementById('add-license-modal').style.display = 'none';
+  document.getElementById('add-license-form').reset();
+  document.querySelectorAll('.carrier-checkbox, .license-state-checkbox').forEach(cb => cb.checked = false);
+  currentEditingUserId = null;
+}
+
+async function handleAddLicense(e) {
+  e.preventDefault();
+  const selectedStateEls = Array.from(document.querySelectorAll('.license-state-checkbox:checked'));
+  const selectedCarrierEls = Array.from(document.querySelectorAll('.carrier-checkbox:checked'));
+  const expiration = document.getElementById('license-expiration').value || '';
+
+  if (selectedStateEls.length === 0) { showNotification('Please select at least one state', 'error'); return; }
+  if (selectedCarrierEls.length === 0) { showNotification('Please select at least one carrier', 'error'); return; }
+
+  const states = selectedStateEls.map(i => i.value);
+  const carriers = selectedCarrierEls.map(i => i.value);
+
+  // Build license objects per selected state
+  const newLicenses = states.map(s => ({ state: s, carriers: carriers.slice(), expiration }));
+
+  try {
+    if (currentEditingUserId && currentUser && currentCurrentUserIsAdmin()) {
+      // ADMIN adding licenses for another user
+      const userDocRef = db.collection('users').doc(currentEditingUserId);
+      // Avoid duplicates — fetch user first
+      const snap = await userDocRef.get();
+      if (!snap.exists) { showNotification('Target user not found', 'error'); return; }
+      const existing = snap.data().licenses || [];
+      const toAdd = [];
+      newLicenses.forEach(nl => {
+        if (!existing.some(ex => normalize(ex.state) === normalize(nl.state))) {
+          toAdd.push(nl);
+        }
+      });
+      for (const nl of toAdd) {
+        await userDocRef.update({ licenses: firebase.firestore.FieldValue.arrayUnion(nl) });
+      }
+      await refreshAgentsCache();
+      openEditUserLicenses(currentEditingUserId);
+      showNotification(`Added ${toAdd.length} license(s) to user`, 'success');
+    } else {
+      // Regular user adding licenses to their own account
+      if (!currentUser || !currentUser.uid) { showNotification('No logged-in user', 'error'); return; }
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      const snap = await userDocRef.get();
+      const existing = (snap.exists && snap.data().licenses) ? snap.data().licenses : [];
+      const toAdd = [];
+      newLicenses.forEach(nl => {
+        if (!existing.some(ex => normalize(ex.state) === normalize(nl.state))) toAdd.push(nl);
+      });
+      for (const nl of toAdd) {
+        await userDocRef.update({ licenses: firebase.firestore.FieldValue.arrayUnion(nl) });
+      }
+      await refreshAgentsCache();
+      // Update currentUser
+      currentUser = agents.find(a => a.uid === currentUser.uid);
+      loadUserLicenses();
+      updateUserStats();
+      showNotification(`Added ${toAdd.length} license(s)`, 'success');
+    }
+    closeAddLicenseModal();
+  } catch (err) {
+    console.error('Add license error:', err);
+    showNotification('Failed to add license — check console', 'error');
+  }
+}
+
+function currentCurrentUserIsAdmin() {
+  return currentUser && currentUser.isAdmin;
+}
+
+async function deleteLicense(licenseIndex) {
+  if (!currentUser || !currentUser.uid) return;
+  if (!confirm('Are you sure you want to delete this license?')) return;
+  try {
+    const userRef = db.collection('users').doc(currentUser.uid);
+    const snap = await userRef.get();
+    if (!snap.exists) return;
+    const licenses = snap.data().licenses || [];
+    const removed = licenses.splice(licenseIndex, 1);
+    await userRef.update({ licenses });
+    await refreshAgentsCache();
+    currentUser = agents.find(a => a.uid === currentUser.uid);
+    loadUserLicenses();
+    updateUserStats();
+    showNotification('License deleted successfully', 'success');
+  } catch (err) {
+    console.error('deleteLicense error:', err);
+    showNotification('Failed to delete license', 'error');
+  }
+}
+
+/* =========================
+   ADMIN: Edit Other Users' Licenses
+   ========================= */
+
+function openEditUserLicenses(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  currentEditingUserId = userId;
+  const user = agents.find(a => a.uid === userId);
+  document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
+  const container = document.getElementById('user-licenses-container');
+  container.innerHTML = '';
+
+  if (!user.licenses || user.licenses.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+  } else {
+    user.licenses.forEach((license, idx) => {
+      const stateObj = STATES_DATA.find(s => s.abbreviation === license.state);
+      const node = document.createElement('div');
+      node.className = 'bg-gray-600 p-3 rounded-lg';
+      node.innerHTML = `<div class="flex justify-between items-center">
+        <div>
+          <h5 class="font-semibold text-cyan-300">${escapeHtml(stateObj ? stateObj.name : license.state)}</h5>
+          <p class="text-sm text-gray-300">${escapeHtml((license.carriers||[]).join(', '))}</p>
+          <p class="text-xs text-gray-400">Expires: ${escapeHtml(license.expiration||'')}</p>
+        </div>
+        <button onclick="deleteUserLicense('${userId}', ${idx})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition"><i class="fas fa-trash"></i></button>
+      </div>`;
+      container.appendChild(node);
+    });
+  }
+  document.getElementById('edit-user-licenses-modal').style.display = 'flex';
+}
+function closeEditUserLicensesModal() {
+  document.getElementById('edit-user-licenses-modal').style.display = 'none';
+  // keep currentEditingUserId so add-license-for-user can use it
+}
+function openAddLicenseForUserModal() {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  if (!currentEditingUserId) { showNotification('No user selected', 'error'); return; }
+  document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a=>a.uid===currentEditingUserId).name}`;
+  closeEditUserLicensesModal();
+  populateStateCheckboxes('add-license-states');
+  populateCarriersCheckboxes();
+  document.getElementById('add-license-modal').style.display = 'flex';
+}
+
+async function deleteUserLicense(userId, licenseIndex) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  if (!confirm('Delete this license?')) return;
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const snap = await userRef.get();
+    if (!snap.exists) { showNotification('User not found', 'error'); return; }
+    const licenses = (snap.data().licenses || []);
+    licenses.splice(licenseIndex, 1);
+    await userRef.update({ licenses });
+    await refreshAgentsCache();
+    openEditUserLicenses(userId);
+    showNotification('License deleted successfully', 'success');
+  } catch (err) {
+    console.error('deleteUserLicense error:', err);
+    showNotification('Failed to delete license', 'error');
+  }
+}
+
+/* =========================
+   ADMIN PANEL: list users + promote/demote + delete
+   ========================= */
+
+async function loadAdminPanel() {
+  const usersList = document.getElementById('users-list');
+  const totalUsers = document.getElementById('total-users');
+  const adminCount = document.getElementById('admin-count');
+  const agentCount = document.getElementById('agent-count');
+
+  await refreshAgentsCache();
+  const admins = agents.filter(a => a.isAdmin);
+  const regular = agents.filter(a => !a.isAdmin);
+
+  totalUsers.textContent = agents.length;
+  adminCount.textContent = admins.length;
+  agentCount.textContent = regular.length;
+
+  let html = '';
+  for (const agent of agents) {
+    const licenseCount = (agent.licenses || []).length;
+    const stateCount = new Set((agent.licenses || []).map(l => l.state)).size;
+    const isCurrent = (agent.uid === (currentUser && currentUser.uid));
+    html += `<div class="bg-gray-700 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-2">
+        <div><h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(agent.name)} ${isCurrent ? '(You)' : ''}</h4>
+        <p class="text-gray-400 text-sm">${escapeHtml(agent.email)} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p></div>
+        <span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">${agent.isAdmin ? 'Admin' : 'Agent'}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-3">
+        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${licenseCount}</p><p class="text-xs text-gray-400">Licenses</p></div>
+        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${stateCount}</p><p class="text-xs text-gray-400">States</p></div>
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="openEditUserLicenses('${agent.uid}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Edit Licenses</button>
+        ${!isCurrent && !agent.isAdmin ? `<button onclick="deleteUser('${agent.uid}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
+        ${!isCurrent ? `<button onclick="toggleAdminStatus('${agent.uid}')" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded">${agent.isAdmin ? 'Demote' : 'Promote'}</button>` : ''}
+      </div>
+    </div>`;
+  }
+  usersList.innerHTML = html || '<p class="text-gray-400 text-center">No users found</p>';
+
+  // Show carriers management
+  loadCarriersList();
+}
+
+async function toggleAdminStatus(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  try {
+    const ref = db.collection('users').doc(userId);
+    const snap = await ref.get();
+    if (!snap.exists) { showNotification('User not found', 'error'); return; }
+    const cur = snap.data();
+    const newStatus = !cur.isAdmin;
+    await ref.update({ isAdmin: newStatus });
+    await refreshAgentsCache();
+    loadAdminPanel();
+    showNotification(`User ${newStatus ? 'promoted to admin' : 'demoted to agent'}`, 'success');
+    // Note: For full security, set custom claims via Admin SDK (server-side).
+  } catch (err) {
+    console.error('toggleAdminStatus error:', err);
+    showNotification('Failed to change admin status', 'error');
+  }
+}
+
+async function deleteUser(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  if (!confirm('Are you sure you want to delete this user? This removes their data from Firestore. Deleting Auth account requires server-side Admin SDK.')) return;
+  try {
+    // Delete Firestore user document
+    await db.collection('users').doc(userId).delete();
+    await refreshAgentsCache();
+    loadAdminPanel();
+    showNotification('User document removed from Firestore. To remove the Auth account, run the server-side admin script (see README).', 'info');
+    // Optionally: call a secure Cloud Function endpoint to delete Auth user if you set one up.
+  } catch (err) {
+    console.error('deleteUser error:', err);
+    showNotification('Failed to delete user doc', 'error');
+  }
+}
+
+/* =========================
+   CARRIER MANAGEMENT
+   ========================= */
+
+async function loadCarriersList() {
+  if (!currentUser || !currentUser.isAdmin) return;
+  const carriersList = document.getElementById('carriers-list');
+  carriersList.innerHTML = '';
+  if (!CARRIERS || CARRIERS.length === 0) {
+    carriersList.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+    return;
+  }
+  CARRIERS.forEach((carrier, index) => {
+    const div = document.createElement('div');
+    div.className = 'flex justify-between items-center bg-gray-600 p-3 rounded-lg';
+    div.innerHTML = `<span class="text-gray-300">${escapeHtml(carrier)}</span><button onclick="removeCarrier(${index})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"><i class="fas fa-trash mr-1"></i>Remove</button>`;
+    carriersList.appendChild(div);
+  });
+}
+
+async function addNewCarrier() {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  const input = document.getElementById('new-carrier-input');
+  const name = input.value.trim();
+  if (!name) { showNotification('Please enter a carrier name', 'error'); return; }
+  if (CARRIERS.includes(name)) { showNotification('Carrier already exists', 'error'); return; }
+  const newArray = CARRIERS.concat([name]);
+  try {
+    await updateCarriersInFirestore(newArray);
+    populateCarriersCheckboxes();
+    populateRegisterCarriers();
+    loadCarriersList();
+    input.value = '';
+    showNotification(`Carrier "${name}" added`, 'success');
+  } catch (err) {
+    console.error('addNewCarrier error:', err);
+    showNotification('Failed to add carrier', 'error');
+  }
+}
+
+async function removeCarrier(index) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  const carrier = CARRIERS[index];
+  if (!confirm(`Are you sure you want to remove "${carrier}"? This will remove it from all user licenses.`)) return;
+
+  const newArray = CARRIERS.slice();
+  newArray.splice(index, 1);
+
+  try {
+    // Update carriers setting
+    await updateCarriersInFirestore(newArray);
+
+    // Remove the carrier from all user docs (batch updates)
+    const usersSnapshot = await db.collection('users').get();
+    const batch = db.batch();
+    usersSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.licenses || !Array.isArray(data.licenses)) return;
+      let changed = false;
+      const newLicenses = data.licenses.map(lic => {
+        const updated = (lic.carriers || []).filter(c => c !== carrier);
+        if (updated.length !== (lic.carriers || []).length) changed = true;
+        return { ...lic, carriers: updated };
+      });
+      if (changed) {
+        batch.update(doc.ref, { licenses: newLicenses });
+      }
+    });
+    await batch.commit();
+    await refreshAgentsCache();
+    populateCarriersCheckboxes();
+    populateRegisterCarriers();
+    loadCarriersList();
+    showNotification(`Carrier "${carrier}" removed and users updated`, 'info');
+  } catch (err) {
+    console.error('removeCarrier error:', err);
+    showNotification('Failed to remove carrier', 'error');
+  }
+}
+
+/* =========================
+   USER UI: Load Current User Licenses + Stats
+   ========================= */
+
+function updateUserStats() {
+  if (!currentUser) return;
+  const statesCount = (currentUser.licenses || []).length;
+  const carriersCount = (currentUser.licenses || []).reduce((sum, l) => sum + ((l.carriers||[]).length || 0), 0);
+  document.getElementById('states-count').textContent = statesCount;
+  document.getElementById('carriers-count').textContent = carriersCount;
+}
+
+function loadUserLicenses() {
+  const container = document.getElementById('licenses-container');
+  if (!currentUser || !currentUser.licenses || currentUser.licenses.length === 0) {
+    container.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-id-card text-4xl mb-4"></i><p class="text-xl">No licenses added yet</p></div>`;
+    return;
+  }
+  let html = '';
+  currentUser.licenses.forEach((license, index) => {
+    const state = STATES_DATA.find(s => s.abbreviation === license.state);
+    html += `<div class="bg-gray-700 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-3">
+        <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
+        <div class="flex space-x-2">
+          <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+          <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers||[]).join(', '))}</p>
+      <p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration||'')}</p>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* =========================
+   UTIL: Notifications + Misc
+   ========================= */
+
+function showNotification(message, type='info') {
+  const notification = document.createElement('div');
+  notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${ type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600' }`;
+  notification.innerHTML = `<div class="flex items-center"><i class="fas fa-${type==='success'?'check':type==='error'?'exclamation-triangle':'info'} mr-2"></i><span>${escapeHtml(message)}</span></div>`;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 3500);
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('active','bg-cyan-600'); btn.classList.add('bg-gray-700'); });
+  const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+  if (activeBtn) { activeBtn.classList.add('active','bg-cyan-600'); activeBtn.classList.remove('bg-gray-700'); }
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  const panel = document.getElementById(`${tabName}-tab`);
+  if (panel) panel.classList.remove('hidden');
+  if (tabName === 'admin' && currentUser && currentUser.isAdmin) loadAdminPanel();
+}
+
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe.toString().replace(/[&<"'>]/g, function (m) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' })[m]; });
+}
+
+/* =========================
+   Expose a few functions globally so inline onclicks work
+   (these are used by UI buttons)
+   ========================= */
+window.openAddLicenseModal = openAddLicenseModal;
+window.closeAddLicenseModal = closeAddLicenseModal;
+window.deleteLicense = deleteLicense;
+window.openEditUserLicenses = openEditUserLicenses;
+window.closeEditUserLicensesModal = closeEditUserLicensesModal;
+window.openAddLicenseForUserModal = openAddLicenseForUserModal;
+window.deleteUserLicense = deleteUserLicense;
+window.openResetPasswordModal = openResetPasswordModal;
+window.closeResetPasswordModal = closeResetPasswordModal;
+window.addNewCarrier = addNewCarrier;
+window.removeCarrier = removeCarrier;
+window.toggleAdminStatus = toggleAdminStatus;
+window.deleteUser = deleteUser;
+
+/* =========================
+   Final UI setup after app load
+   ========================= */
+
+(async function postInitUI() {
+  // populate selects that need static data
+  populateStateDropdown();
+  populateStateCheckboxes();
+})();
+
 </script>
 </body>
 </html>
