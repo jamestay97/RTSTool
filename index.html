@@ -128,7 +128,9 @@
         <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white">&times;</button>
       </div>
       <div id="user-licenses-container" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
-      <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded mb-4">Add License for User</button>
+      <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded mb-4">
+        <i class="fas fa-plus mr-2"></i>Add License for User
+      </button>
       <div class="flex justify-end">
         <button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Close</button>
       </div>
@@ -405,15 +407,15 @@ async function loadAllUsers() {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error(error);
+      console.error('Error loading users:', error);
       allUsers = [];
       return;
     }
     
     allUsers = users || [];
-    console.log('Loaded users:', allUsers); // Debug log
+    console.log('Loaded users:', allUsers.length);
   } catch(err) {
-    console.error(err);
+    console.error('Error in loadAllUsers:', err);
     allUsers = [];
   }
 }
@@ -432,10 +434,19 @@ function openAddLicenseModal() {
 }
 
 function openAddLicenseForUser() {
-  if (!currentEditingUserId) return;
+  if (!currentEditingUserId) {
+    showNotification('No user selected', 'error');
+    return;
+  }
+  
+  const user = allUsers.find(u => u.id === currentEditingUserId);
+  if (!user) {
+    showNotification('User not found', 'error');
+    return;
+  }
+  
   populateStateBubbles();
   populateCarrierBubbles();
-  const user = allUsers.find(u => u.id === currentEditingUserId);
   document.getElementById('add-license-title').textContent = `Add License for ${user.name}`;
   document.getElementById('add-license-modal').style.display = 'flex';
 }
@@ -543,7 +554,10 @@ async function handleAddLicense(e) {
       .update({ licenses: updatedLicenses })
       .eq('id', targetUserId);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating licenses:', error);
+      throw error;
+    }
     
     console.log('✅ Licenses added successfully');
     
@@ -553,7 +567,7 @@ async function handleAddLicense(e) {
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
     
-    // Reload all users data
+    // Reload all users data to get fresh data
     await loadAllUsers();
     
     // Update UI
@@ -649,7 +663,7 @@ function openEditUserLicenses(userId) {
   const userLicenses = user.licenses || [];
   
   if (userLicenses.length === 0) {
-    container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+    container.innerHTML = '<p class="text-gray-400 text-center py-4">No licenses found</p>';
   } else {
     userLicenses.forEach((license, index) => {
       const state = STATES_DATA.find(s => s.abbreviation === license.state);
@@ -660,7 +674,7 @@ function openEditUserLicenses(userId) {
       licenseDiv.innerHTML = `
         <div class="flex justify-between items-start">
           <div>
-            <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(stateName)}</h4>
+            <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(stateName)} (${escapeHtml(license.state)})</h4>
             <p class="text-gray-400 text-sm">Carriers: ${escapeHtml(license.carriers.join(', '))}</p>
             ${license.expiration ? `<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
           </div>
@@ -681,21 +695,37 @@ async function deleteUserLicense(userId, licenseIndex) {
   
   try {
     const user = allUsers.find(u => u.id === userId);
+    if (!user) {
+      showNotification('User not found', 'error');
+      return;
+    }
+    
     const updatedLicenses = user.licenses.filter((_, index) => index !== licenseIndex);
+    
+    console.log('Deleting license for user:', userId, 'Updated licenses:', updatedLicenses);
     
     const { error } = await supabase
       .from('users')
       .update({ licenses: updatedLicenses })
       .eq('id', userId);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting user license:', error);
+      throw error;
+    }
     
+    // Reload all users to get fresh data
     await loadAllUsers();
+    
+    // Refresh the edit modal
     openEditUserLicenses(userId);
-    loadAdminPanel(); // Refresh admin panel
+    
+    // Refresh admin panel
+    loadAdminPanel();
+    
     showNotification('License deleted successfully', 'success');
   } catch(error) {
-    console.error(error);
+    console.error('Error in deleteUserLicense:', error);
     showNotification('Error deleting license: ' + error.message, 'error');
   }
 }
@@ -904,7 +934,6 @@ async function addCarrier() {
   carriers.push(carrierName);
   input.value = '';
   
-  // In a real app, you'd save to database here
   showNotification(`Added carrier: ${carrierName}`, 'success');
   loadAdminPanel();
 }
