@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Insurance License Data Explorer (Firebase)</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Replace CDN with proper Tailwind CSS for production -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
@@ -64,7 +65,7 @@
 
           <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
             <p class="text-cyan-300 font-semibold mb-2">Forgot Password?</p>
-            <button onclick="openResetPasswordModal()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold">
+            <button id="reset-password-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold">
               <i class="fas fa-key mr-2"></i>Reset Password (email)
             </button>
           </div>
@@ -188,7 +189,7 @@
           <div class="mb-6">
             <h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
             <div id="licenses-container" class="space-y-4"></div>
-            <button onclick="openAddLicenseModal()" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
+            <button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
           </div>
         </div>
 
@@ -226,7 +227,7 @@
   <div class="modal-content p-6">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
-      <button onclick="closeAddLicenseModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      <button id="close-add-license-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
     </div>
     <form id="add-license-form" class="space-y-4">
       <div>
@@ -246,7 +247,7 @@
         <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
       </div>
       <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" onclick="closeAddLicenseModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
+        <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
         <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
       </div>
     </form>
@@ -258,11 +259,11 @@
   <div class="modal-content p-6">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
-      <button onclick="closeEditUserLicensesModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
     </div>
     <div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto"></div>
-    <button onclick="openAddLicenseForUserModal()" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
-    <div class="flex justify-end"><button onclick="closeEditUserLicensesModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
+    <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
+    <div class="flex justify-end"><button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
   </div>
 </div>
 
@@ -271,7 +272,7 @@
   <div class="modal-content p-6">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-semibold text-yellow-400"><i class="fas fa-key mr-2"></i>Reset Password</h3>
-      <button onclick="closeResetPasswordModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      <button id="close-reset-password-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
     </div>
     <form id="reset-password-form" class="space-y-4">
       <div>
@@ -292,14 +293,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
+// Firebase Configuration - REPLACE WITH YOUR ACTUAL CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
-  authDomain: "rts-project-d9d5d.firebaseapp.com",
-  projectId: "rts-project-d9d5d",
-  storageBucket: "rts-project-d9d5d.appspot.com",   // ✅ corrected here
-  messagingSenderId: "318420505147",
-  appId: "1:318420505147:web:76895831ea9e77a9b1821e",
-  measurementId: "G-C8MRE2QC2E"
+  authDomain: "rts-tool-8c5e9.firebaseapp.com",
+  projectId: "rts-tool-8c5e9",
+  storageBucket: "rts-tool-8c5e9.firebasestorage.app",
+  messagingSenderId: "1097169922465",
+  appId: "1:1097169922465:web:af6d4b6d2d9d5d4d9e0f5e"
 };
 
 // Initialize Firebase
@@ -365,10 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
   try {
-    setupEventListeners();
+    // Initialize app settings and carriers first
     await ensureSettingsAndCarriersExist();
-
-    // Set up auth state listener FIRST before anything else
+    
+    // Set up auth state listener
     auth.onAuthStateChanged(async (user) => {
       console.log("Auth state changed:", user ? "User logged in" : "No user");
       
@@ -410,9 +411,12 @@ async function initApp() {
       }
     });
 
+    // Setup event listeners AFTER auth state is set up
+    setupEventListeners();
     await refreshAgentsCache();
     populateStateCheckboxes();
     populateCarriersCheckboxes();
+    
   } catch (err) {
     console.error('Init error:', err);
     showNotification('Error initializing app — check console for details', 'error');
@@ -454,7 +458,9 @@ async function createDefaultAdminIfNeeded() {
     const demoPassword = 'admin123';
 
     try {
+      // Try to sign in first (in case user already exists)
       await auth.signInWithEmailAndPassword(demoEmail, demoPassword);
+      // If successful, ensure user doc exists
       if (auth.currentUser) {
         const u = auth.currentUser;
         const doc = await db.collection('users').doc(u.uid).get();
@@ -478,11 +484,16 @@ async function createDefaultAdminIfNeeded() {
         await auth.signOut();
         return;
       }
-    } catch (signInErr) {}
+    } catch (signInErr) {
+      // User doesn't exist or wrong password - we'll create it
+      console.log('Creating new admin account...');
+    }
 
+    // Create the auth user
     const uc = await auth.createUserWithEmailAndPassword(demoEmail, demoPassword);
     const uid = uc.user.uid;
     
+    // Create Firestore user doc
     await db.collection('users').doc(uid).set({
       firstname: 'System',
       lastname: 'Administrator',
@@ -499,6 +510,7 @@ async function createDefaultAdminIfNeeded() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    // Sign out the created account
     await auth.signOut();
     showNotification('Default admin created (demo). Change password ASAP for production.', 'info');
   } catch (err) {
@@ -556,18 +568,43 @@ function populateCarriersCheckboxes() {
    ========================= */
 
 function setupEventListeners() {
+  // Auth forms
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('register-form').addEventListener('submit', handleRegister);
-  logoutBtn.addEventListener('click', handleLogout);
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-  document.getElementById('search-btn').addEventListener('click', performSearch);
-  document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
   document.getElementById('reset-password-form').addEventListener('submit', handlePasswordReset);
+  
+  // Buttons
+  logoutBtn.addEventListener('click', handleLogout);
+  document.getElementById('reset-password-btn').addEventListener('click', openResetPasswordModal);
+  document.getElementById('add-license-btn').addEventListener('click', openAddLicenseModal);
+  document.getElementById('search-btn').addEventListener('click', performSearch);
   document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
-  document.getElementById('new-carrier-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') addNewCarrier(); });
-
+  
+  // Modal buttons
+  document.getElementById('close-add-license-modal').addEventListener('click', closeAddLicenseModal);
+  document.getElementById('cancel-add-license').addEventListener('click', closeAddLicenseModal);
+  document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
+  document.getElementById('close-edit-user-modal').addEventListener('click', closeEditUserLicensesModal);
+  document.getElementById('close-reset-password-modal').addEventListener('click', closeResetPasswordModal);
+  document.getElementById('add-license-for-user-btn').addEventListener('click', openAddLicenseForUserModal);
+  
+  // Forms
+  document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
+  
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  
+  // Enter key in search
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+  
+  // Enter key in carrier input
+  document.getElementById('new-carrier-input').addEventListener('keypress', function(e) { 
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewCarrier(); 
+    }
+  });
 }
 
 /* =========================
@@ -691,6 +728,8 @@ async function handleRegister(e) {
       showNotification('Email already registered', 'error');
     } else if (err.code === 'auth/weak-password') {
       showNotification('Password is too weak', 'error');
+    } else if (err.code === 'auth/missing-permissions') {
+      showNotification('Firestore permissions error. Please check your security rules.', 'error');
     } else {
       showNotification('Registration failed — check console for details', 'error');
     }
@@ -717,6 +756,7 @@ function openResetPasswordModal() {
   document.getElementById('reset-password-modal').style.display = 'flex';
   document.getElementById('reset-password-form').reset();
 }
+
 function closeResetPasswordModal() {
   document.getElementById('reset-password-modal').style.display = 'none';
 }
@@ -781,8 +821,6 @@ function showDashboard() {
   loadUserLicenses();
   if (currentUser.isAdmin) loadAdminPanel();
 }
-
-// ... (rest of the functions remain the same as previous version)
 
 function normalize(s) {
   return (s || '').toString().trim().toLowerCase();
@@ -854,7 +892,364 @@ function performSearch() {
   resultsContainer.innerHTML = html;
 }
 
-// ... (rest of the license management, admin panel, and utility functions remain exactly the same as in the previous version)
+/* =========================
+   LICENSE MANAGEMENT
+   ========================= */
+
+function openAddLicenseModal() {
+  currentEditingUserId = null;
+  document.getElementById('add-license-title').textContent = 'Add New License';
+  populateStateCheckboxes('add-license-states');
+  populateCarriersCheckboxes();
+  document.getElementById('add-license-form').reset();
+  document.getElementById('add-license-modal').style.display = 'flex';
+}
+
+function closeAddLicenseModal() {
+  document.getElementById('add-license-modal').style.display = 'none';
+  document.getElementById('add-license-form').reset();
+  document.querySelectorAll('.carrier-checkbox, .license-state-checkbox').forEach(cb => cb.checked = false);
+  currentEditingUserId = null;
+}
+
+async function handleAddLicense(e) {
+  e.preventDefault();
+  const selectedStateEls = Array.from(document.querySelectorAll('.license-state-checkbox:checked'));
+  const selectedCarrierEls = Array.from(document.querySelectorAll('.carrier-checkbox:checked'));
+  const expiration = document.getElementById('license-expiration').value || '';
+
+  if (selectedStateEls.length === 0) { showNotification('Please select at least one state', 'error'); return; }
+  if (selectedCarrierEls.length === 0) { showNotification('Please select at least one carrier', 'error'); return; }
+
+  const states = selectedStateEls.map(i => i.value);
+  const carriers = selectedCarrierEls.map(i => i.value);
+
+  const newLicenses = states.map(s => ({ state: s, carriers: carriers.slice(), expiration }));
+
+  try {
+    if (currentEditingUserId && currentUser && currentUser.isAdmin) {
+      // ADMIN adding licenses for another user
+      const userDocRef = db.collection('users').doc(currentEditingUserId);
+      const snap = await userDocRef.get();
+      if (!snap.exists) { showNotification('Target user not found', 'error'); return; }
+      const existing = snap.data().licenses || [];
+      const toAdd = [];
+      newLicenses.forEach(nl => {
+        if (!existing.some(ex => normalize(ex.state) === normalize(nl.state))) {
+          toAdd.push(nl);
+        }
+      });
+      for (const nl of toAdd) {
+        await userDocRef.update({ licenses: firebase.firestore.FieldValue.arrayUnion(nl) });
+      }
+      await refreshAgentsCache();
+      openEditUserLicenses(currentEditingUserId);
+      showNotification(`Added ${toAdd.length} license(s) to user`, 'success');
+    } else {
+      // Regular user adding licenses to their own account
+      if (!currentUser || !currentUser.uid) { showNotification('No logged-in user', 'error'); return; }
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      const snap = await userDocRef.get();
+      const existing = (snap.exists && snap.data().licenses) ? snap.data().licenses : [];
+      const toAdd = [];
+      newLicenses.forEach(nl => {
+        if (!existing.some(ex => normalize(ex.state) === normalize(nl.state))) toAdd.push(nl);
+      });
+      for (const nl of toAdd) {
+        await userDocRef.update({ licenses: firebase.firestore.FieldValue.arrayUnion(nl) });
+      }
+      await refreshAgentsCache();
+      currentUser = agents.find(a => a.uid === currentUser.uid);
+      loadUserLicenses();
+      updateUserStats();
+      showNotification(`Added ${toAdd.length} license(s)`, 'success');
+    }
+    closeAddLicenseModal();
+  } catch (err) {
+    console.error('Add license error:', err);
+    showNotification('Failed to add license — check console', 'error');
+  }
+}
+
+async function deleteLicense(licenseIndex) {
+  if (!currentUser || !currentUser.uid) return;
+  if (!confirm('Are you sure you want to delete this license?')) return;
+  try {
+    const userRef = db.collection('users').doc(currentUser.uid);
+    const snap = await userRef.get();
+    if (!snap.exists) return;
+    const licenses = snap.data().licenses || [];
+    licenses.splice(licenseIndex, 1);
+    await userRef.update({ licenses });
+    await refreshAgentsCache();
+    currentUser = agents.find(a => a.uid === currentUser.uid);
+    loadUserLicenses();
+    updateUserStats();
+    showNotification('License deleted successfully', 'success');
+  } catch (err) {
+    console.error('deleteLicense error:', err);
+    showNotification('Failed to delete license', 'error');
+  }
+}
+
+/* =========================
+   ADMIN: Edit Other Users' Licenses
+   ========================= */
+
+function openEditUserLicenses(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  currentEditingUserId = userId;
+  const user = agents.find(a => a.uid === userId);
+  document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
+  const container = document.getElementById('user-licenses-container');
+  container.innerHTML = '';
+
+  if (!user.licenses || user.licenses.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+  } else {
+    user.licenses.forEach((license, idx) => {
+      const stateObj = STATES_DATA.find(s => s.abbreviation === license.state);
+      const node = document.createElement('div');
+      node.className = 'bg-gray-600 p-3 rounded-lg';
+      node.innerHTML = `<div class="flex justify-between items-center">
+        <div>
+          <h5 class="font-semibold text-cyan-300">${escapeHtml(stateObj ? stateObj.name : license.state)}</h5>
+          <p class="text-sm text-gray-300">${escapeHtml((license.carriers||[]).join(', '))}</p>
+          <p class="text-xs text-gray-400">Expires: ${escapeHtml(license.expiration||'')}</p>
+        </div>
+        <button onclick="deleteUserLicense('${userId}', ${idx})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition"><i class="fas fa-trash"></i></button>
+      </div>`;
+      container.appendChild(node);
+    });
+  }
+  document.getElementById('edit-user-licenses-modal').style.display = 'flex';
+}
+
+function closeEditUserLicensesModal() {
+  document.getElementById('edit-user-licenses-modal').style.display = 'none';
+}
+
+function openAddLicenseForUserModal() {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  if (!currentEditingUserId) { showNotification('No user selected', 'error'); return; }
+  document.getElementById('add-license-title').textContent = `Add License for ${agents.find(a=>a.uid===currentEditingUserId).name}`;
+  closeEditUserLicensesModal();
+  populateStateCheckboxes('add-license-states');
+  populateCarriersCheckboxes();
+  document.getElementById('add-license-modal').style.display = 'flex';
+}
+
+async function deleteUserLicense(userId, licenseIndex) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
+  if (!confirm('Delete this license?')) return;
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const snap = await userRef.get();
+    if (!snap.exists) { showNotification('User not found', 'error'); return; }
+    const licenses = (snap.data().licenses || []);
+    licenses.splice(licenseIndex, 1);
+    await userRef.update({ licenses });
+    await refreshAgentsCache();
+    openEditUserLicenses(userId);
+    showNotification('License deleted successfully', 'success');
+  } catch (err) {
+    console.error('deleteUserLicense error:', err);
+    showNotification('Failed to delete license', 'error');
+  }
+}
+
+/* =========================
+   ADMIN PANEL
+   ========================= */
+
+async function loadAdminPanel() {
+  const usersList = document.getElementById('users-list');
+  const totalUsers = document.getElementById('total-users');
+  const adminCount = document.getElementById('admin-count');
+  const agentCount = document.getElementById('agent-count');
+
+  await refreshAgentsCache();
+  const admins = agents.filter(a => a.isAdmin);
+  const regular = agents.filter(a => !a.isAdmin);
+
+  totalUsers.textContent = agents.length;
+  adminCount.textContent = admins.length;
+  agentCount.textContent = regular.length;
+
+  let html = '';
+  for (const agent of agents) {
+    const licenseCount = (agent.licenses || []).length;
+    const stateCount = new Set((agent.licenses || []).map(l => l.state)).size;
+    const isCurrent = (agent.uid === (currentUser && currentUser.uid));
+    html += `<div class="bg-gray-700 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-2">
+        <div><h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(agent.name)} ${isCurrent ? '(You)' : ''}</h4>
+        <p class="text-gray-400 text-sm">${escapeHtml(agent.email)} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p></div>
+        <span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">${agent.isAdmin ? 'Admin' : 'Agent'}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-3">
+        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${licenseCount}</p><p class="text-xs text-gray-400">Licenses</p></div>
+        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${stateCount}</p><p class="text-xs text-gray-400">States</p></div>
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="openEditUserLicenses('${agent.uid}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Edit Licenses</button>
+        ${!isCurrent && !agent.isAdmin ? `<button onclick="deleteUser('${agent.uid}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
+        ${!isCurrent ? `<button onclick="toggleAdminStatus('${agent.uid}')" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded">${agent.isAdmin ? 'Demote' : 'Promote'}</button>` : ''}
+      </div>
+    </div>`;
+  }
+  usersList.innerHTML = html || '<p class="text-gray-400 text-center">No users found</p>';
+  loadCarriersList();
+}
+
+async function toggleAdminStatus(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  try {
+    const ref = db.collection('users').doc(userId);
+    const snap = await ref.get();
+    if (!snap.exists) { showNotification('User not found', 'error'); return; }
+    const cur = snap.data();
+    const newStatus = !cur.isAdmin;
+    await ref.update({ isAdmin: newStatus });
+    await refreshAgentsCache();
+    loadAdminPanel();
+    showNotification(`User ${newStatus ? 'promoted to admin' : 'demoted to agent'}`, 'success');
+  } catch (err) {
+    console.error('toggleAdminStatus error:', err);
+    showNotification('Failed to change admin status', 'error');
+  }
+}
+
+async function deleteUser(userId) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  if (!confirm('Are you sure you want to delete this user? This removes their data from Firestore. Deleting Auth account requires server-side Admin SDK.')) return;
+  try {
+    await db.collection('users').doc(userId).delete();
+    await refreshAgentsCache();
+    loadAdminPanel();
+    showNotification('User document removed from Firestore. To remove the Auth account, run the server-side admin script (see README).', 'info');
+  } catch (err) {
+    console.error('deleteUser error:', err);
+    showNotification('Failed to delete user doc', 'error');
+  }
+}
+
+/* =========================
+   CARRIER MANAGEMENT
+   ========================= */
+
+async function loadCarriersList() {
+  if (!currentUser || !currentUser.isAdmin) return;
+  const carriersList = document.getElementById('carriers-list');
+  carriersList.innerHTML = '';
+  if (!CARRIERS || CARRIERS.length === 0) {
+    carriersList.innerHTML = '<p class="text-gray-400 text-center">No carriers available</p>';
+    return;
+  }
+  CARRIERS.forEach((carrier, index) => {
+    const div = document.createElement('div');
+    div.className = 'flex justify-between items-center bg-gray-600 p-3 rounded-lg';
+    div.innerHTML = `<span class="text-gray-300">${escapeHtml(carrier)}</span><button onclick="removeCarrier(${index})" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"><i class="fas fa-trash mr-1"></i>Remove</button>`;
+    carriersList.appendChild(div);
+  });
+}
+
+async function addNewCarrier() {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  const input = document.getElementById('new-carrier-input');
+  const name = input.value.trim();
+  if (!name) { showNotification('Please enter a carrier name', 'error'); return; }
+  
+  // Case-insensitive duplicate check
+  const exists = CARRIERS.some(c => c.toLowerCase() === name.toLowerCase());
+  if (exists) { showNotification('Carrier already exists', 'error'); return; }
+  
+  const newArray = CARRIERS.concat([name]);
+  try {
+    await updateCarriersInFirestore(newArray);
+    populateCarriersCheckboxes();
+    loadCarriersList();
+    input.value = '';
+    showNotification(`Carrier "${name}" added`, 'success');
+  } catch (err) {
+    console.error('addNewCarrier error:', err);
+    showNotification('Failed to add carrier', 'error');
+  }
+}
+
+async function removeCarrier(index) {
+  if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
+  const carrier = CARRIERS[index];
+  if (!confirm(`Are you sure you want to remove "${carrier}"? This will remove it from all user licenses.`)) return;
+
+  const newArray = CARRIERS.slice();
+  newArray.splice(index, 1);
+
+  try {
+    await updateCarriersInFirestore(newArray);
+
+    // Remove the carrier from all user docs
+    const usersSnapshot = await db.collection('users').get();
+    const batch = db.batch();
+    usersSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.licenses || !Array.isArray(data.licenses)) return;
+      let changed = false;
+      const newLicenses = data.licenses.map(lic => {
+        const updated = (lic.carriers || []).filter(c => c !== carrier);
+        if (updated.length !== (lic.carriers || []).length) changed = true;
+        return { ...lic, carriers: updated };
+      });
+      if (changed) {
+        batch.update(doc.ref, { licenses: newLicenses });
+      }
+    });
+    await batch.commit();
+    await refreshAgentsCache();
+    populateCarriersCheckboxes();
+    loadCarriersList();
+    showNotification(`Carrier "${carrier}" removed and users updated`, 'info');
+  } catch (err) {
+    console.error('removeCarrier error:', err);
+    showNotification('Failed to remove carrier', 'error');
+  }
+}
+
+/* =========================
+   USER UI: Load Current User Licenses + Stats
+   ========================= */
+
+function updateUserStats() {
+  if (!currentUser) return;
+  const statesCount = (currentUser.licenses || []).length;
+  const carriersCount = (currentUser.licenses || []).reduce((sum, l) => sum + ((l.carriers||[]).length || 0), 0);
+  document.getElementById('states-count').textContent = statesCount;
+  document.getElementById('carriers-count').textContent = carriersCount;
+}
+
+function loadUserLicenses() {
+  const container = document.getElementById('licenses-container');
+  if (!currentUser || !currentUser.licenses || currentUser.licenses.length === 0) {
+    container.innerHTML = `<div class="text-center text-gray-400 py-8"><i class="fas fa-id-card text-4xl mb-4"></i><p class="text-xl">No licenses added yet</p><p class="text-sm mt-2">Click "Add License" to get started</p></div>`;
+    return;
+  }
+  let html = '';
+  currentUser.licenses.forEach((license, index) => {
+    const state = STATES_DATA.find(s => s.abbreviation === license.state);
+    html += `<div class="bg-gray-700 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-3">
+        <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
+        <div class="flex space-x-2">
+          <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+          <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers||[]).join(', '))}</p>
+      <p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration||'')}</p>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
 
 /* =========================
    UTIL: Notifications + Misc
