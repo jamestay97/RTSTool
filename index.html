@@ -592,7 +592,10 @@ async function handleAddLicense(e) {
       
       // If admin was editing another user, reopen the edit modal
       if (currentEditingUserId && currentUser.is_admin) {
-        openEditUserLicenses(currentEditingUserId);
+        // Close the add license modal first, then reopen the edit modal
+        setTimeout(() => {
+          openEditUserLicenses(currentEditingUserId);
+        }, 100);
       }
     }
   } catch (error) {
@@ -626,7 +629,7 @@ async function deleteLicense(licenseIndex) {
 }
 
 // =========================
-// ADMIN FUNCTIONALITY - COMPLETED
+// ADMIN FUNCTIONALITY - FIXED MODAL MANAGEMENT
 // =========================
 
 async function loadAdminPanel() {
@@ -846,11 +849,21 @@ function closeEditUserLicensesModal() {
 
 function openAddLicenseForUser() {
   if (!currentEditingUserId) return;
+  
+  // Close the edit modal first
+  closeEditUserLicensesModal();
+  
+  // Then open the add license modal for the user
+  const user = allUsers.find(u => u.id === currentEditingUserId);
+  document.getElementById('add-license-title').textContent = `Add License for ${user.name}`;
   populateStateBubbles();
   populateCarrierBubbles();
-  document.getElementById('add-license-title').textContent = `Add License for ${allUsers.find(u => u.id === currentEditingUserId).name}`;
   document.getElementById('add-license-form').reset();
-  document.getElementById('add-license-modal').style.display = 'flex';
+  
+  // Show the add license modal after a brief delay to ensure the edit modal is closed
+  setTimeout(() => {
+    document.getElementById('add-license-modal').style.display = 'flex';
+  }, 50);
 }
 
 // =========================
