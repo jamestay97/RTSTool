@@ -1,821 +1,206 @@
-<script>
-// ✅ SUPABASE CONFIGURATION
-const SUPABASE_URL = 'https://sdkprilrlnfuqkotwfyd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3ByaWxybG5mdXFrb3R3ZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MDA5MTksImV4cCI6MjA3NTQ3NjkxOX0.2E1jqwtXv03Jtc3nN1sRS3ZTIm4N02ftoX1G5NWef10';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Insurance License Data Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
 
-// States data
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh]">
+    <div class="border-4 border-t-cyan-400 rounded-full w-10 h-10 animate-spin mb-3"></div>
+    <p class="text-lg">Loading...</p>
+  </div>
+
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="hidden text-center mt-10">
+    <h2 class="text-3xl font-bold text-cyan-400 mb-4">Login</h2>
+    <form id="login-form" class="space-y-3 max-w-sm mx-auto">
+      <input id="login-email" type="email" placeholder="Email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
+      <input id="login-password" type="password" placeholder="Password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
+      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Login</button>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Welcome, <span id="user-name" class="text-cyan-300"></span></h1>
+      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Logout</button>
+    </div>
+
+    <!-- User Stats -->
+    <div class="flex space-x-4 mb-6">
+      <div class="text-center bg-gray-800 p-4 rounded">
+        <p class="text-2xl font-bold text-cyan-400" id="states-count">0</p>
+        <p class="text-gray-400 text-sm">States</p>
+      </div>
+      <div class="text-center bg-gray-800 p-4 rounded">
+        <p class="text-2xl font-bold text-cyan-400" id="carriers-count">0</p>
+        <p class="text-gray-400 text-sm">Carriers</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex space-x-2 mb-4" id="nav-buttons">
+      <button class="tab-btn bg-cyan-600 px-4 py-2 rounded" data-tab="search">Search</button>
+      <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="licenses">My Licenses</button>
+      <button class="tab-btn bg-gray-700 px-4 py-2 rounded hidden" data-tab="admin" id="admin-tab-btn">Admin</button>
+    </div>
+
+    <!-- Tab Panels -->
+    <div id="search-tab" class="tab-panel">
+      <div class="flex mb-4">
+        <input id="search-input" type="text" placeholder="Search..." class="flex-1 p-2 rounded bg-gray-800 border border-gray-700"/>
+        <button id="search-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Search</button>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <div id="licenses-tab" class="tab-panel hidden">
+      <button id="add-license-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-4">Add License</button>
+      <div id="licenses-container"></div>
+    </div>
+
+    <div id="admin-tab" class="tab-panel hidden">
+      <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
+      <div id="users-list" class="space-y-4"></div>
+      <div class="mt-4">
+        <input id="new-carrier-input" type="text" placeholder="New carrier name" class="p-2 rounded bg-gray-800 border border-gray-700"/>
+        <button id="add-carrier-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Add Carrier</button>
+        <div id="carriers-list" class="mt-2 space-y-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add License Modal -->
+  <div id="add-license-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded w-96">
+      <h3 class="text-xl font-bold text-cyan-400 mb-4" id="add-license-title">Add License</h3>
+      <form id="add-license-form" class="space-y-3">
+        <div>
+          <label class="block mb-1">Select States:</label>
+          <div id="add-license-states" class="grid grid-cols-3 gap-2"></div>
+        </div>
+        <div>
+          <label class="block mb-1">Select Carriers:</label>
+          <div id="carriers-container" class="grid grid-cols-2 gap-2"></div>
+        </div>
+        <div>
+          <label class="block mb-1">Expiration Date:</label>
+          <input id="license-expiration" type="date" class="w-full p-2 rounded bg-gray-700 border border-gray-600"/>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">Cancel</button>
+          <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add License</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+const SUPABASE_URL = 'https://sdkprilrlnfuqkotwfyd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3ByaWxybG5mdXFrb3R3ZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MDA5MTksImV4cCI6MjA3NTQ3NjkxOX0.2E1jqwtXv03Jtc3nN1sRS3ZTIm4N02ftoX1G5NWef10'; // replace with your anon key
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const STATES_DATA = [
-  { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
-  { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
-  { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" }, { name: "Florida", abbreviation: "FL" },
-  { name: "Georgia", abbreviation: "GA" }, { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
-  { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" }, { name: "Iowa", abbreviation: "IA" },
-  { name: "Kansas", abbreviation: "KS" }, { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
-  { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" }, { name: "Massachusetts", abbreviation: "MA" },
-  { name: "Michigan", abbreviation: "MI" }, { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
-  { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" }, { name: "Nebraska", abbreviation: "NE" },
-  { name: "Nevada", abbreviation: "NV" }, { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
-  { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" }, { name: "North Carolina", abbreviation: "NC" },
-  { name: "North Dakota", abbreviation: "ND" }, { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
-  { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" }, { name: "Rhode Island", abbreviation: "RI" },
-  { name: "South Carolina", abbreviation: "SC" }, { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
-  { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" }, { name: "Vermont", abbreviation: "VT" },
-  { name: "Virginia", abbreviation: "VA" }, { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
-  { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
+  { name: "Alabama", abbreviation: "AL" },
+  { name: "Alaska", abbreviation: "AK" },
+  { name: "Arizona", abbreviation: "AZ" },
+  { name: "Arkansas", abbreviation: "AR" },
+  { name: "California", abbreviation: "CA" },
+  // ... add all states
 ];
 
-// App state
 let currentUser = null;
 let allUsers = [];
 let carriers = [];
 let currentEditingUserId = null;
-let supabase = null;
 
-// Initialize app - FIXED VERSION
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 DOM loaded, initializing Supabase app...');
-  initApp();
-});
+document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
   try {
-    // Wait for Supabase to load
-    if (typeof window.supabase === 'undefined') {
-      console.error('Supabase library not loaded');
-      showNotification('⚠️ Failed to load database connection. Please refresh the page.', 'error');
-      showAuthScreen();
-      return;
-    }
-
-    // Initialize Supabase
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    if (!supabase) {
-      throw new Error('Failed to create Supabase client');
-    }
-
-    console.log('✅ Supabase connected successfully!');
-    
-    // Load carriers
-    await loadCarriers();
-    
-    // Check if user is already logged in (from localStorage)
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      currentUser = JSON.parse(savedUser);
-      await loadAllUsers();
+    hide('loading-screen');
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session?.user) {
+      currentUser = { email: session.user.email, name: session.user.email, is_admin: false, licenses: [] }; 
       showDashboard();
     } else {
-      showAuthScreen();
+      show('auth-screen');
     }
-    
     setupEventListeners();
-    
-  } catch (error) {
-    console.error('Init error:', error);
-    showNotification('Error initializing app: ' + error.message, 'error');
-    showAuthScreen();
+  } catch (err) {
+    console.error(err);
+    show('auth-screen');
   }
 }
 
-// Data management
-async function loadCarriers() {
-  try {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('carriers')
-      .single();
-    
-    if (error) {
-      console.error('Error loading carriers:', error);
-      // Use default carriers if there's an error
-      carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
-      return;
-    }
-    
-    if (data && data.carriers) {
-      carriers = data.carriers;
-      console.log('Loaded carriers:', carriers);
-    } else {
-      carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
-    }
-  } catch (error) {
-    console.error('Error in loadCarriers:', error);
-    carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
-  }
-}
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
-async function loadAllUsers() {
-  try {
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error loading users:', error);
-      showNotification('Error loading users: ' + error.message, 'error');
-      allUsers = [];
-      return;
-    }
-    
-    allUsers = users || [];
-    console.log('Loaded users:', allUsers.length, allUsers);
-  } catch (error) {
-    console.error('Error in loadAllUsers:', error);
-    allUsers = [];
-  }
-}
-
-// Authentication - FIXED
-async function handleLogin(e) {
-  e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-  
-  if (!email || !password) {
-    showNotification('Please enter email and password', 'error');
-    return;
-  }
-  
-  try {
-    console.log('Attempting login for:', email);
-    
-    // Query the users table directly
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .eq('password', password);
-    
-    if (error) {
-      console.error('Login error:', error);
-      showNotification('Login error: ' + error.message, 'error');
-      return;
-    }
-    
-    if (users && users.length > 0) {
-      currentUser = users[0];
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      await loadAllUsers();
-      showDashboard();
-      showNotification('Login successful!', 'success');
-    } else {
-      showNotification('Invalid email or password', 'error');
-    }
-  } catch (error) {
-    console.error('Login failed:', error);
-    showNotification('Login failed: ' + error.message, 'error');
-  }
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  const firstname = document.getElementById('register-firstname').value;
-  const lastname = document.getElementById('register-lastname').value;
-  const email = document.getElementById('register-email').value;
-  const npn = document.getElementById('register-npn').value;
-  const extension = document.getElementById('register-extension').value;
-  const password = document.getElementById('register-password').value;
-  
-  if (!firstname || !lastname || !email || !npn || !extension || !password) {
-    showNotification('Please complete all fields', 'error');
-    return;
-  }
-  
-  if (password.length < 6) {
-    showNotification('Password must be at least 6 characters', 'error');
-    return;
-  }
-  
-  try {
-    // Check if email exists
-    const { data: existingUsers, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email);
-    
-    if (checkError) {
-      console.error('Error checking email:', checkError);
-    }
-    
-    if (existingUsers && existingUsers.length > 0) {
-      showNotification('Email already registered', 'error');
-      return;
-    }
-    
-    const newUser = {
-      email,
-      password,
-      firstname,
-      lastname,
-      name: `${firstname} ${lastname}`,
-      npn,
-      extension,
-      is_admin: false,
-      licenses: [],
-      created_at: new Date().toISOString()
-    };
-    
-    console.log('Creating new user:', newUser);
-    const { data, error } = await supabase
-      .from('users')
-      .insert([newUser])
-      .select();
-    
-    if (error) {
-      console.error('Registration failed:', error);
-      showNotification('Registration failed: ' + error.message, 'error');
-    } else {
-      console.log('User created successfully:', data);
-      showNotification('Registration successful! You can now login.', 'success');
-      document.getElementById('register-form').reset();
-      // Reload users to include the new one
-      await loadAllUsers();
-    }
-  } catch (error) {
-    console.error('Registration failed:', error);
-    showNotification('Registration failed: ' + error.message, 'error');
-  }
-}
-
-function handleLogout() {
-  currentUser = null;
-  localStorage.removeItem('currentUser');
-  showAuthScreen();
-  showNotification('Logged out successfully', 'info');
-}
-
-// License Management - FIXED
-function openAddLicenseModal() {
-  currentEditingUserId = null;
-  document.getElementById('add-license-title').textContent = 'Add New License';
-  populateStateBubbles();
-  populateCarrierBubbles();
-  document.getElementById('add-license-form').reset();
-  document.getElementById('add-license-modal').style.display = 'flex';
-}
-
-function closeAddLicenseModal() {
-  document.getElementById('add-license-modal').style.display = 'none';
-  document.getElementById('add-license-form').reset();
-  document.querySelectorAll('.bubble.selected').forEach(bubble => {
-    bubble.classList.remove('selected');
-  });
-}
-
-function populateStateBubbles() {
-  const container = document.getElementById('add-license-states');
-  container.innerHTML = '';
-  
-  STATES_DATA.forEach(state => {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble bubble-state';
-    bubble.textContent = `${state.name} (${state.abbreviation})`;
-    bubble.dataset.value = state.abbreviation;
-    bubble.addEventListener('click', () => bubble.classList.toggle('selected'));
-    container.appendChild(bubble);
-  });
-}
-
-function populateCarrierBubbles() {
-  const container = document.getElementById('carriers-container');
-  container.innerHTML = '';
-  
-  carriers.forEach(carrier => {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble bubble-carrier';
-    bubble.textContent = carrier;
-    bubble.dataset.value = carrier;
-    bubble.addEventListener('click', () => bubble.classList.toggle('selected'));
-    container.appendChild(bubble);
-  });
-}
-
-async function handleAddLicense(e) {
-  e.preventDefault();
-  const selectedStates = Array.from(document.querySelectorAll('#add-license-states .bubble.selected')).map(bubble => bubble.dataset.value);
-  const selectedCarriers = Array.from(document.querySelectorAll('#carriers-container .bubble.selected')).map(bubble => bubble.dataset.value);
-  const expiration = document.getElementById('license-expiration').value;
-  
-  if (selectedStates.length === 0) {
-    showNotification('Please select at least one state', 'error');
-    return;
-  }
-  
-  if (selectedCarriers.length === 0) {
-    showNotification('Please select at least one carrier', 'error');
-    return;
-  }
-  
-  try {
-    const newLicenses = selectedStates.map(state => ({
-      state,
-      carriers: [...selectedCarriers],
-      expiration: expiration || ''
-    }));
-    
-    let targetUserId = currentUser.id;
-    let targetUser = currentUser;
-    
-    // If admin is editing another user's licenses
-    if (currentEditingUserId && currentUser.is_admin) {
-      targetUserId = currentEditingUserId;
-      targetUser = allUsers.find(u => u.id === currentEditingUserId);
-    }
-    
-    if (!targetUser) {
-      showNotification('User not found', 'error');
-      return;
-    }
-    
-    // Get current licenses
-    const currentLicenses = Array.isArray(targetUser.licenses) ? targetUser.licenses : [];
-    
-    // Avoid duplicates
-    const licensesToAdd = newLicenses.filter(newLicense => 
-      !currentLicenses.some(existing => existing.state === newLicense.state)
-    );
-    
-    if (licensesToAdd.length === 0) {
-      showNotification('Licenses for these states already exist', 'warning');
-      return;
-    }
-    
-    const updatedLicenses = [...currentLicenses, ...licensesToAdd];
-    
-    console.log('Updating licenses for user:', targetUserId, updatedLicenses);
-    
-    // Update in database
-    const { error } = await supabase
-      .from('users')
-      .update({ licenses: updatedLicenses })
-      .eq('id', targetUserId);
-    
-    if (error) {
-      console.error('Error adding licenses:', error);
-      showNotification('Error adding licenses: ' + error.message, 'error');
-    } else {
-      console.log('Licenses added successfully');
-      
-      // Update local state
-      if (targetUserId === currentUser.id) {
-        currentUser.licenses = updatedLicenses;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      }
-      
-      // Reload all users data
-      await loadAllUsers();
-      
-      // Update UI
-      if (targetUserId === currentUser.id) {
-        loadUserLicenses();
-        updateUserStats();
-      }
-      
-      closeAddLicenseModal();
-      showNotification(`Added ${licensesToAdd.length} license(s) successfully!`, 'success');
-      
-      // If admin was editing another user, reopen the edit modal
-      if (currentEditingUserId && currentUser.is_admin) {
-        setTimeout(() => openEditUserLicenses(currentEditingUserId), 100);
-      }
-    }
-  } catch (error) {
-    console.error('Error adding licenses:', error);
-    showNotification('Error adding licenses: ' + error.message, 'error');
-  }
-}
-
-// Admin Functionality - FIXED
-async function loadAdminPanel() {
-  if (!currentUser.is_admin) {
-    showNotification('Admin access required', 'error');
-    return;
-  }
-  
-  await loadAllUsers();
-  
-  const admins = allUsers.filter(u => u.is_admin);
-  const agents = allUsers.filter(u => !u.is_admin);
-  
-  document.getElementById('total-users').textContent = allUsers.length;
-  document.getElementById('admin-count').textContent = admins.length;
-  document.getElementById('agent-count').textContent = agents.length;
-  
-  let html = '';
-  
-  if (allUsers.length === 0) {
-    html = '<p class="text-gray-400 text-center">No users found</p>';
-  } else {
-    allUsers.forEach(user => {
-      const licenses = Array.isArray(user.licenses) ? user.licenses : [];
-      const licenseCount = licenses.length;
-      const stateCount = new Set(licenses.map(l => l.state)).size;
-      const isCurrent = user.id === currentUser.id;
-      
-      html += `<div class="bg-gray-700 p-4 rounded-lg">
-        <div class="flex justify-between items-start mb-2">
-          <div>
-            <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(user.name)} ${isCurrent ? '(You)' : ''}</h4>
-            <p class="text-gray-400 text-sm">${escapeHtml(user.email)} | ${user.is_admin ? 'Administrator' : 'Agent'}</p>
-          </div>
-          <span class="bg-${user.is_admin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">${user.is_admin ? 'Admin' : 'Agent'}</span>
-        </div>
-        <div class="grid grid-cols-2 gap-4 mb-3">
-          <div class="text-center bg-gray-800 p-2 rounded">
-            <p class="text-2xl font-bold text-cyan-400">${licenseCount}</p>
-            <p class="text-xs text-gray-400">Licenses</p>
-          </div>
-          <div class="text-center bg-gray-800 p-2 rounded">
-            <p class="text-2xl font-bold text-cyan-400">${stateCount}</p>
-            <p class="text-xs text-gray-400">States</p>
-          </div>
-        </div>
-        <div class="flex space-x-2">
-          <button onclick="openEditUserLicenses('${user.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded text-sm">
-            <i class="fas fa-edit mr-1"></i>Edit Licenses
-          </button>
-          ${!isCurrent ? `
-          <button onclick="toggleAdminStatus('${user.id}')" class="flex-1 bg-${user.is_admin ? 'green' : 'purple'}-600 hover:bg-${user.is_admin ? 'green' : 'purple'}-700 py-2 rounded text-sm">
-            <i class="fas ${user.is_admin ? 'fa-user' : 'fa-crown'} mr-1"></i>${user.is_admin ? 'Remove Admin' : 'Make Admin'}
-          </button>
-          ` : ''}
-        </div>
-      </div>`;
-    });
-  }
-  
-  document.getElementById('users-list').innerHTML = html;
-  
-  // Load carriers list
-  let carriersHtml = '';
-  carriers.forEach(carrier => {
-    carriersHtml += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2">
-      <span class="text-white">${escapeHtml(carrier)}</span>
-      <button onclick="removeCarrier('${escapeHtml(carrier)}')" class="text-red-400 hover:text-red-300">
-        <i class="fas fa-trash"></i>
-      </button>
-    </div>`;
-  });
-  document.getElementById('carriers-list').innerHTML = carriersHtml || '<p class="text-gray-400 text-center">No carriers found</p>';
-}
-
-async function toggleAdminStatus(userId) {
-  const user = allUsers.find(u => u.id === userId);
-  if (!user) {
-    showNotification('User not found', 'error');
-    return;
-  }
-  
-  const makeAdmin = !user.is_admin;
-  
-  if (!confirm(`Are you sure you want to ${makeAdmin ? 'make this user an administrator' : 'remove administrator privileges from this user'}?`)) {
-    return;
-  }
-  
-  try {
-    console.log(`Setting admin status for user ${userId} to:`, makeAdmin);
-    const { error } = await supabase
-      .from('users')
-      .update({ is_admin: makeAdmin })
-      .eq('id', userId);
-    
-    if (error) {
-      console.error('Error updating admin status:', error);
-      showNotification('Error updating user: ' + error.message, 'error');
-    } else {
-      console.log('Admin status updated successfully');
-      await loadAllUsers();
-      loadAdminPanel();
-      showNotification(`User ${makeAdmin ? 'promoted to admin' : 'demoted to agent'} successfully`, 'success');
-    }
-  } catch (error) {
-    console.error('Error updating user:', error);
-    showNotification('Error updating user: ' + error.message, 'error');
-  }
-}
-
-// Carrier Management - FIXED
-async function addCarrier() {
-  const input = document.getElementById('new-carrier-input');
-  const carrierName = input.value.trim();
-  
-  if (!carrierName) {
-    showNotification('Please enter a carrier name', 'error');
-    return;
-  }
-  
-  if (carriers.includes(carrierName)) {
-    showNotification('Carrier already exists', 'warning');
-    return;
-  }
-  
-  const newCarriers = [...carriers, carrierName];
-  
-  try {
-    const { error } = await supabase
-      .from('app_settings')
-      .update({ carriers: newCarriers })
-      .eq('id', 1);
-    
-    if (error) {
-      console.error('Error adding carrier:', error);
-      showNotification('Error adding carrier: ' + error.message, 'error');
-    } else {
-      carriers = newCarriers;
-      input.value = '';
-      loadAdminPanel();
-      populateCarrierBubbles();
-      showNotification('Carrier added successfully', 'success');
-    }
-  } catch (error) {
-    console.error('Error adding carrier:', error);
-    showNotification('Error adding carrier', 'error');
-  }
-}
-
-async function removeCarrier(carrierName) {
-  if (!confirm(`Are you sure you want to remove "${carrierName}"? This may affect existing licenses.`)) {
-    return;
-  }
-  
-  const newCarriers = carriers.filter(c => c !== carrierName);
-  
-  try {
-    const { error } = await supabase
-      .from('app_settings')
-      .update({ carriers: newCarriers })
-      .eq('id', 1);
-    
-    if (error) {
-      console.error('Error removing carrier:', error);
-      showNotification('Error removing carrier: ' + error.message, 'error');
-    } else {
-      carriers = newCarriers;
-      loadAdminPanel();
-      populateCarrierBubbles();
-      showNotification('Carrier removed successfully', 'success');
-    }
-  } catch (error) {
-    console.error('Error removing carrier:', error);
-    showNotification('Error removing carrier', 'error');
-  }
-}
-
-// Search Functionality - FIXED
-async function performSearch() {
-  const query = document.getElementById('search-input').value.trim();
-  const resultsContainer = document.getElementById('search-results');
-  
-  if (!query) {
-    resultsContainer.innerHTML = '<div class="text-center text-gray-400"><i class="fas fa-compass text-4xl mb-4"></i><p class="text-xl">Enter a search term</p></div>';
-    return;
-  }
-  
-  try {
-    await loadAllUsers();
-    
-    const results = allUsers.filter(user => {
-      if (!user) return false;
-      
-      // Check user fields
-      const exactMatch = 
-        user.name?.toLowerCase() === query.toLowerCase() ||
-        user.email?.toLowerCase() === query.toLowerCase() ||
-        user.npn?.toString() === query ||
-        user.firstname?.toLowerCase() === query.toLowerCase() ||
-        user.lastname?.toLowerCase() === query.toLowerCase();
-      
-      if (exactMatch) return true;
-      
-      // Check state matches
-      const stateMatch = STATES_DATA.some(state => 
-        state.name.toLowerCase() === query.toLowerCase() || 
-        state.abbreviation.toLowerCase() === query.toLowerCase()
-      );
-      
-      if (stateMatch) {
-        const userLicenses = Array.isArray(user.licenses) ? user.licenses : [];
-        return userLicenses.some(license => {
-          const matchedState = STATES_DATA.find(s => 
-            s.name.toLowerCase() === query.toLowerCase() || 
-            s.abbreviation.toLowerCase() === query.toLowerCase()
-          );
-          return matchedState && license.state === matchedState.abbreviation;
-        });
-      }
-      
-      // Check carrier matches
-      const userLicenses = Array.isArray(user.licenses) ? user.licenses : [];
-      return userLicenses.some(license => 
-        Array.isArray(license.carriers) && 
-        license.carriers.some(carrier => carrier?.toLowerCase() === query.toLowerCase())
-      );
-    });
-    
-    displaySearchResults(results, query);
-  } catch (error) {
-    console.error('Search error:', error);
-    resultsContainer.innerHTML = '<div class="text-center text-gray-400"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p class="text-xl">Search failed</p></div>';
-  }
-}
-
-function displaySearchResults(results, query) {
-  const container = document.getElementById('search-results');
-  
-  if (results.length === 0) {
-    container.innerHTML = `
-      <div class="text-center text-gray-400">
-        <i class="fas fa-search text-4xl mb-4"></i>
-        <p class="text-xl">No exact matches found for "${escapeHtml(query)}"</p>
-        <p class="text-sm mt-2">Try searching by exact state name (California), state code (CA), agent full name, exact email, NPN, or carrier name</p>
-      </div>`;
-    return;
-  }
-  
-  let html = '<div class="space-y-4">';
-  results.forEach(user => {
-    const userLicenses = Array.isArray(user.licenses) ? user.licenses : [];
-    
-    const licenseInfo = userLicenses.map(license => {
-      const state = STATES_DATA.find(s => s.abbreviation === license.state);
-      let stateDisplay = state ? state.name : license.state;
-      
-      if (state && (state.name.toLowerCase() === query.toLowerCase() || state.abbreviation.toLowerCase() === query.toLowerCase())) {
-        stateDisplay = `<span class="search-highlight">${stateDisplay}</span>`;
-      }
-      
-      const highlightedCarriers = (license.carriers || []).map(carrier => 
-        carrier.toLowerCase() === query.toLowerCase() ? `<span class="search-highlight">${carrier}</span>` : carrier
-      ).join(', ');
-      
-      return `${stateDisplay}: ${highlightedCarriers}`;
-    }).join('; ');
-    
-    html += `<div class="bg-gray-600 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-2">
-        <h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(user.name)}</h4>
-        ${user.is_admin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
-      </div>
-      <p class="text-gray-300 mb-2">Email: ${escapeHtml(user.email)} | NPN: ${escapeHtml(user.npn)}</p>
-      <p class="text-gray-300 mb-2">Extension: ${escapeHtml(user.extension)}</p>
-      <div class="mt-3">
-        <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
-        <p class="text-gray-400">${licenseInfo || 'No licenses'}</p>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// UI Management functions (keep your existing showAuthScreen, showDashboard, etc.)
-function showAuthScreen() {
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('auth-screen').classList.remove('hidden');
-}
-
-function showDashboard() {
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  
-  document.getElementById('user-name').textContent = currentUser.name;
-  document.getElementById('profile-name').textContent = currentUser.name;
-  document.getElementById('profile-email').textContent = currentUser.email;
-  document.getElementById('profile-npn').textContent = currentUser.npn;
-  document.getElementById('profile-extension').textContent = currentUser.extension;
-  
-  if (currentUser.is_admin) {
-    document.getElementById('admin-badge').classList.remove('hidden');
-    document.getElementById('admin-tab-btn').classList.remove('hidden');
-  } else {
-    document.getElementById('admin-badge').classList.add('hidden');
-    document.getElementById('admin-tab-btn').classList.add('hidden');
-  }
-  
-  document.getElementById('nav-buttons').classList.remove('hidden');
-  
-  updateUserStats();
-  loadUserLicenses();
-  showTab('search');
-}
-
-function updateUserStats() {
-  const licenses = Array.isArray(currentUser.licenses) ? currentUser.licenses : [];
-  const statesCount = new Set(licenses.map(l => l.state)).size;
-  const carriersCount = new Set(licenses.flatMap(l => l.carriers || [])).size;
-  
-  document.getElementById('states-count').textContent = statesCount;
-  document.getElementById('carriers-count').textContent = carriersCount;
-}
-
-function loadUserLicenses() {
-  const container = document.getElementById('licenses-container');
-  const licenses = Array.isArray(currentUser.licenses) ? currentUser.licenses : [];
-  
-  if (licenses.length === 0) {
-    container.innerHTML = `<div class="text-center text-gray-400 py-8">
-      <i class="fas fa-id-card text-4xl mb-4"></i>
-      <p class="text-xl">No licenses added yet</p>
-      <p class="text-sm mt-2">Click "Add License" to get started</p>
-    </div>`;
-    return;
-  }
-  
-  let html = '';
-  licenses.forEach((license, index) => {
-    const state = STATES_DATA.find(s => s.abbreviation === license.state);
-    html += `<div class="bg-gray-700 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-3">
-        <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
-        <div class="flex space-x-2">
-          <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
-          <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-      <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers || []).join(', '))}</p>
-      <p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration || 'Not set')}</p>
-    </div>`;
-  });
-  
-  container.innerHTML = html;
-}
-
-function showTab(tabName) {
-  document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active', 'bg-cyan-600');
-    btn.classList.add('bg-gray-700');
-  });
-  
-  document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-  const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-  activeBtn.classList.add('active', 'bg-cyan-600');
-  activeBtn.classList.remove('bg-gray-700');
-  
-  if (tabName === 'admin' && currentUser.is_admin) {
-    loadAdminPanel();
-  }
-}
-
-// Utility functions
 function setupEventListeners() {
   document.getElementById('login-form').addEventListener('submit', handleLogin);
-  document.getElementById('register-form').addEventListener('submit', handleRegister);
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
-  document.getElementById('search-btn').addEventListener('click', performSearch);
-  document.getElementById('add-license-btn').addEventListener('click', openAddLicenseModal);
-  document.getElementById('add-carrier-btn').addEventListener('click', addCarrier);
-  
-  document.getElementById('close-add-license-modal').addEventListener('click', closeAddLicenseModal);
-  document.getElementById('cancel-add-license').addEventListener('click', closeAddLicenseModal);
-  document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
-  document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
-  document.getElementById('close-edit-user-modal').addEventListener('click', closeEditUserLicensesModal);
-  document.getElementById('add-license-for-user-btn').addEventListener('click', openAddLicenseForUser);
-  
-  document.getElementById('search-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
-  });
-  
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
 }
 
-function showNotification(message, type = 'info') {
-  const notification = document.createElement('div');
-  notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
-    type === 'success' ? 'bg-green-600' : 
-    type === 'error' ? 'bg-red-600' : 
-    type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
-  }`;
-  notification.innerHTML = `<div class="flex items-center">
-    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation' : 'info'} mr-2"></i>
-    <span>${escapeHtml(message)}</span>
-  </div>`;
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3500);
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) return alert(error.message);
+  currentUser = { email: data.user.email, name: data.user.email, licenses: [], is_admin: false };
+  showDashboard();
 }
 
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+function handleLogout() {
+  supabase.auth.signOut();
+  currentUser = null;
+  hide('dashboard');
+  show('auth-screen');
 }
 
-// Make functions global
-window.deleteLicense = deleteLicense;
-window.openEditUserLicenses = openEditUserLicenses;
-window.deleteUserLicense = deleteUserLicense;
-window.toggleAdminStatus = toggleAdminStatus;
-window.removeCarrier = removeCarrier;
-window.addCarrier = addCarrier;
-window.openAddLicenseForUser = openAddLicenseForUser;
+function showDashboard() {
+  hide('auth-screen');
+  show('dashboard');
+  document.getElementById('user-name').textContent = currentUser.name;
+  updateUserStats();
+}
+
+function updateUserStats() {
+  const licenses = currentUser.licenses || [];
+  const statesCount = new Set(licenses.map(l=>l.state)).size;
+  const carriersCount = new Set(licenses.flatMap(l=>l.carriers||[])).size;
+  document.getElementById('states-count').textContent = statesCount;
+  document.getElementById('carriers-count').textContent = carriersCount;
+}
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.classList.remove('bg-cyan-600');
+    btn.classList.add('bg-gray-700');
+  });
+  document.querySelector(`.tab-btn[data-tab="${tabName}"]`)?.classList.add('bg-cyan-600');
+}
 </script>
+
+<style>
+.bubble { padding: 4px 8px; rounded: full; cursor: pointer; display:inline-block; background:#1f2937; color:white; }
+.bubble.selected { background:#06b6d4; }
+.search-highlight { background:yellow; color:black; }
+.fade-in { animation: fadeIn 0.3s ease-in; }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+</style>
+
+</body>
+</html>
