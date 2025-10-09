@@ -847,22 +847,39 @@ function closeEditUserLicensesModal() {
   currentEditingUserId = null;
 }
 
+// FIXED: This function now properly opens the add license modal for admin users
 function openAddLicenseForUser() {
-  if (!currentEditingUserId) return;
+  if (!currentEditingUserId) {
+    console.error('No user selected for adding licenses');
+    return;
+  }
+  
+  const user = allUsers.find(u => u.id === currentEditingUserId);
+  if (!user) {
+    console.error('User not found');
+    return;
+  }
+  
+  console.log('Opening add license modal for user:', user.name);
   
   // Close the edit modal first
   closeEditUserLicensesModal();
   
-  // Then open the add license modal for the user
-  const user = allUsers.find(u => u.id === currentEditingUserId);
+  // Set up the add license modal for the specific user
   document.getElementById('add-license-title').textContent = `Add License for ${user.name}`;
   populateStateBubbles();
   populateCarrierBubbles();
   document.getElementById('add-license-form').reset();
   
-  // Show the add license modal after a brief delay to ensure the edit modal is closed
+  // Clear any previously selected bubbles
+  document.querySelectorAll('.bubble.selected').forEach(bubble => {
+    bubble.classList.remove('selected');
+  });
+  
+  // Show the add license modal after a brief delay
   setTimeout(() => {
     document.getElementById('add-license-modal').style.display = 'flex';
+    console.log('Add license modal should now be visible');
   }, 50);
 }
 
@@ -1137,7 +1154,7 @@ function setupEventListeners() {
   document.getElementById('close-add-license-modal').addEventListener('click', closeAddLicenseModal);
   document.getElementById('cancel-add-license').addEventListener('click', closeAddLicenseModal);
   
-  // Admin functionality
+  // Admin functionality - FIXED: Using the correct function name
   document.getElementById('add-carrier-btn').addEventListener('click', addCarrier);
   document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
   document.getElementById('close-edit-user-modal').addEventListener('click', closeEditUserLicensesModal);
@@ -1158,6 +1175,7 @@ window.deleteUserLicense = deleteUserLicense;
 window.toggleAdminStatus = toggleAdminStatus;
 window.removeCarrier = removeCarrier;
 window.openEditUserLicenses = openEditUserLicenses;
+window.openAddLicenseForUser = openAddLicenseForUser; // Make sure this is available globally
 </script>
 </body>
 </html>
