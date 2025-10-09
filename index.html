@@ -1,205 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Insurance License Data Explorer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Insurance License Data Explorer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
 
-  <!-- Loading Screen -->
-  <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh]">
-    <div class="border-4 border-t-cyan-400 rounded-full w-10 h-10 animate-spin mb-3"></div>
-    <p class="text-lg">Loading...</p>
+<!-- Loading Screen -->
+<div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh]">
+  <div class="border-4 border-t-cyan-400 rounded-full w-10 h-10 animate-spin mb-3"></div>
+  <p class="text-lg">Loading...</p>
+</div>
+
+<!-- Auth Screen -->
+<div id="auth-screen" class="hidden text-center mt-10">
+  <h2 class="text-3xl font-bold text-cyan-400 mb-4">Login</h2>
+  <form id="login-form" class="space-y-3 max-w-sm mx-auto">
+    <input id="login-email" type="email" placeholder="Email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
+    <input id="login-password" type="password" placeholder="Password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
+    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Login</button>
+  </form>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="hidden p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Welcome, <span id="user-name" class="text-cyan-300"></span></h1>
+    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Logout</button>
   </div>
 
-  <!-- Auth Screen -->
-  <div id="auth-screen" class="hidden text-center mt-10">
-    <h2 class="text-3xl font-bold text-cyan-400 mb-4">Login</h2>
-    <form id="login-form" class="space-y-3 max-w-sm mx-auto">
-      <input id="login-email" type="email" placeholder="Email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
-      <input id="login-password" type="password" placeholder="Password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" required />
-      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Login</button>
+  <!-- User Stats -->
+  <div class="flex space-x-4 mb-6">
+    <div class="text-center bg-gray-800 p-4 rounded">
+      <p class="text-2xl font-bold text-cyan-400" id="states-count">0</p>
+      <p class="text-gray-400 text-sm">States</p>
+    </div>
+    <div class="text-center bg-gray-800 p-4 rounded">
+      <p class="text-2xl font-bold text-cyan-400" id="carriers-count">0</p>
+      <p class="text-gray-400 text-sm">Carriers</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex space-x-2 mb-4" id="nav-buttons">
+    <button class="tab-btn bg-cyan-600 px-4 py-2 rounded" data-tab="search">Search</button>
+    <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="licenses">My Licenses</button>
+    <button class="tab-btn bg-gray-700 px-4 py-2 rounded hidden" data-tab="admin" id="admin-tab-btn">Admin</button>
+  </div>
+
+  <!-- Tab Panels -->
+  <div id="search-tab" class="tab-panel">
+    <div class="flex mb-4">
+      <input id="search-input" type="text" placeholder="Search..." class="flex-1 p-2 rounded bg-gray-800 border border-gray-700"/>
+      <button id="search-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Search</button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <div id="licenses-tab" class="tab-panel hidden">
+    <button id="add-license-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-4">Add License</button>
+    <div id="licenses-container"></div>
+  </div>
+
+  <div id="admin-tab" class="tab-panel hidden">
+    <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
+    <div id="users-list" class="space-y-4"></div>
+    <div class="mt-4">
+      <input id="new-carrier-input" type="text" placeholder="New carrier name" class="p-2 rounded bg-gray-800 border border-gray-700"/>
+      <button id="add-carrier-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Add Carrier</button>
+      <div id="carriers-list" class="mt-2 space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add License Modal -->
+<div id="add-license-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
+  <div class="bg-gray-800 p-6 rounded w-96">
+    <h3 class="text-xl font-bold text-cyan-400 mb-4" id="add-license-title">Add License</h3>
+    <form id="add-license-form" class="space-y-3">
+      <div>
+        <label class="block mb-1">Select States:</label>
+        <div id="add-license-states" class="grid grid-cols-3 gap-2"></div>
+      </div>
+      <div>
+        <label class="block mb-1">Select Carriers:</label>
+        <div id="carriers-container" class="grid grid-cols-2 gap-2"></div>
+      </div>
+      <div>
+        <label class="block mb-1">Expiration Date:</label>
+        <input id="license-expiration" type="date" class="w-full p-2 rounded bg-gray-700 border border-gray-600"/>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">Cancel</button>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add License</button>
+      </div>
     </form>
   </div>
-
-  <!-- Dashboard -->
-  <div id="dashboard" class="hidden p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Welcome, <span id="user-name" class="text-cyan-300"></span></h1>
-      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Logout</button>
-    </div>
-
-    <!-- User Stats -->
-    <div class="flex space-x-4 mb-6">
-      <div class="text-center bg-gray-800 p-4 rounded">
-        <p class="text-2xl font-bold text-cyan-400" id="states-count">0</p>
-        <p class="text-gray-400 text-sm">States</p>
-      </div>
-      <div class="text-center bg-gray-800 p-4 rounded">
-        <p class="text-2xl font-bold text-cyan-400" id="carriers-count">0</p>
-        <p class="text-gray-400 text-sm">Carriers</p>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="flex space-x-2 mb-4" id="nav-buttons">
-      <button class="tab-btn bg-cyan-600 px-4 py-2 rounded" data-tab="search">Search</button>
-      <button class="tab-btn bg-gray-700 px-4 py-2 rounded" data-tab="licenses">My Licenses</button>
-      <button class="tab-btn bg-gray-700 px-4 py-2 rounded hidden" data-tab="admin" id="admin-tab-btn">Admin</button>
-    </div>
-
-    <!-- Tab Panels -->
-    <div id="search-tab" class="tab-panel">
-      <div class="flex mb-4">
-        <input id="search-input" type="text" placeholder="Search..." class="flex-1 p-2 rounded bg-gray-800 border border-gray-700"/>
-        <button id="search-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Search</button>
-      </div>
-      <div id="search-results"></div>
-    </div>
-
-    <div id="licenses-tab" class="tab-panel hidden">
-      <button id="add-license-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-4">Add License</button>
-      <div id="licenses-container"></div>
-    </div>
-
-    <div id="admin-tab" class="tab-panel hidden">
-      <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
-      <div id="users-list" class="space-y-4"></div>
-      <div class="mt-4">
-        <input id="new-carrier-input" type="text" placeholder="New carrier name" class="p-2 rounded bg-gray-800 border border-gray-700"/>
-        <button id="add-carrier-btn" class="ml-2 bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Add Carrier</button>
-        <div id="carriers-list" class="mt-2 space-y-2"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add License Modal -->
-  <div id="add-license-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
-    <div class="bg-gray-800 p-6 rounded w-96">
-      <h3 class="text-xl font-bold text-cyan-400 mb-4" id="add-license-title">Add License</h3>
-      <form id="add-license-form" class="space-y-3">
-        <div>
-          <label class="block mb-1">Select States:</label>
-          <div id="add-license-states" class="grid grid-cols-3 gap-2"></div>
-        </div>
-        <div>
-          <label class="block mb-1">Select Carriers:</label>
-          <div id="carriers-container" class="grid grid-cols-2 gap-2"></div>
-        </div>
-        <div>
-          <label class="block mb-1">Expiration Date:</label>
-          <input id="license-expiration" type="date" class="w-full p-2 rounded bg-gray-700 border border-gray-600"/>
-        </div>
-        <div class="flex justify-end space-x-2">
-          <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">Cancel</button>
-          <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add License</button>
-        </div>
-      </form>
-    </div>
-  </div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://sdkprilrlnfuqkotwfyd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3ByaWxybG5mdXFrb3R3ZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MDA5MTksImV4cCI6MjA3NTQ3NjkxOX0.2E1jqwtXv03Jtc3nN1sRS3ZTIm4N02ftoX1G5NWef10'; // replace with your anon key
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // replace with your anon key
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STATES_DATA = [
-  { name: "Alabama", abbreviation: "AL" },
-  { name: "Alaska", abbreviation: "AK" },
-  { name: "Arizona", abbreviation: "AZ" },
-  { name: "Arkansas", abbreviation: "AR" },
-  { name: "California", abbreviation: "CA" },
-  // ... add all states
+  { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" },
+  { name: "Arizona", abbreviation: "AZ" }, { name: "Arkansas", abbreviation: "AR" },
+  { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
+  { name: "Connecticut", abbreviation: "CT" }, { name: "Delaware", abbreviation: "DE" },
+  { name: "Florida", abbreviation: "FL" }, { name: "Georgia", abbreviation: "GA" },
+  { name: "Hawaii", abbreviation: "HI" }, { name: "Idaho", abbreviation: "ID" },
+  { name: "Illinois", abbreviation: "IL" }, { name: "Indiana", abbreviation: "IN" },
+  { name: "Iowa", abbreviation: "IA" }, { name: "Kansas", abbreviation: "KS" },
+  { name: "Kentucky", abbreviation: "KY" }, { name: "Louisiana", abbreviation: "LA" },
+  { name: "Maine", abbreviation: "ME" }, { name: "Maryland", abbreviation: "MD" },
+  { name: "Massachusetts", abbreviation: "MA" }, { name: "Michigan", abbreviation: "MI" },
+  { name: "Minnesota", abbreviation: "MN" }, { name: "Mississippi", abbreviation: "MS" },
+  { name: "Missouri", abbreviation: "MO" }, { name: "Montana", abbreviation: "MT" },
+  { name: "Nebraska", abbreviation: "NE" }, { name: "Nevada", abbreviation: "NV" },
+  { name: "New Hampshire", abbreviation: "NH" }, { name: "New Jersey", abbreviation: "NJ" },
+  { name: "New Mexico", abbreviation: "NM" }, { name: "New York", abbreviation: "NY" },
+  { name: "North Carolina", abbreviation: "NC" }, { name: "North Dakota", abbreviation: "ND" },
+  { name: "Ohio", abbreviation: "OH" }, { name: "Oklahoma", abbreviation: "OK" },
+  { name: "Oregon", abbreviation: "OR" }, { name: "Pennsylvania", abbreviation: "PA" },
+  { name: "Rhode Island", abbreviation: "RI" }, { name: "South Carolina", abbreviation: "SC" },
+  { name: "South Dakota", abbreviation: "SD" }, { name: "Tennessee", abbreviation: "TN" },
+  { name: "Texas", abbreviation: "TX" }, { name: "Utah", abbreviation: "UT" },
+  { name: "Vermont", abbreviation: "VT" }, { name: "Virginia", abbreviation: "VA" },
+  { name: "Washington", abbreviation: "WA" }, { name: "West Virginia", abbreviation: "WV" },
+  { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
 ];
 
 let currentUser = null;
-let allUsers = [];
-let carriers = [];
+let carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
 let currentEditingUserId = null;
 
-document.addEventListener('DOMContentLoaded', initApp);
+// Utility
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+function escapeHtml(text){if(!text)return'';const div=document.createElement('div');div.textContent=text;return div.innerHTML;}
 
-async function initApp() {
-  try {
-    hide('loading-screen');
-    const { data: { session } } = await supabase.auth.getSession();
-    if(session?.user) {
-      currentUser = { email: session.user.email, name: session.user.email, is_admin: false, licenses: [] }; 
-      showDashboard();
-    } else {
-      show('auth-screen');
-    }
-    setupEventListeners();
-  } catch (err) {
-    console.error(err);
-    show('auth-screen');
-  }
-}
+// Init
+document.addEventListener('DOMContentLoaded', async()=>{
+  hide('loading-screen');
+  const { data:{session} } = await supabase.auth.getSession();
+  if(session?.user){
+    currentUser = { email: session.user.email, name: session.user.email, licenses: [], is_admin: false };
+    showDashboard();
+  } else show('auth-screen');
+  setupEventListeners();
+});
 
-function show(id) { document.getElementById(id).classList.remove('hidden'); }
-function hide(id) { document.getElementById(id).classList.add('hidden'); }
-
-function setupEventListeners() {
+function setupEventListeners(){
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => showTab(btn.dataset.tab));
-  });
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
+  document.getElementById('add-license-btn').addEventListener('click',openAddLicenseModal);
+  document.getElementById('cancel-add-license').addEventListener('click',closeAddLicenseModal);
+  document.getElementById('add-license-form').addEventListener('submit',handleAddLicense);
 }
 
-async function handleLogin(e) {
+async function handleLogin(e){
   e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
+  const email=document.getElementById('login-email').value;
+  const password=document.getElementById('login-password').value;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error) return alert(error.message);
-  currentUser = { email: data.user.email, name: data.user.email, licenses: [], is_admin: false };
+  if(error){alert(error.message); return;}
+  currentUser={ email:data.user.email, name:data.user.email, licenses:[], is_admin:false };
   showDashboard();
 }
 
-function handleLogout() {
+function handleLogout(){
   supabase.auth.signOut();
-  currentUser = null;
+  currentUser=null;
   hide('dashboard');
   show('auth-screen');
 }
 
-function showDashboard() {
+function showDashboard(){
   hide('auth-screen');
   show('dashboard');
-  document.getElementById('user-name').textContent = currentUser.name;
+  document.getElementById('user-name').textContent=currentUser.name;
   updateUserStats();
 }
 
-function updateUserStats() {
-  const licenses = currentUser.licenses || [];
-  const statesCount = new Set(licenses.map(l=>l.state)).size;
-  const carriersCount = new Set(licenses.flatMap(l=>l.carriers||[])).size;
-  document.getElementById('states-count').textContent = statesCount;
-  document.getElementById('carriers-count').textContent = carriersCount;
+function updateUserStats(){
+  const licenses=currentUser.licenses||[];
+  const statesCount=new Set(licenses.map(l=>l.state)).size;
+  const carriersCount=new Set(licenses.flatMap(l=>l.carriers||[])).size;
+  document.getElementById('states-count').textContent=statesCount;
+  document.getElementById('carriers-count').textContent=carriersCount;
 }
 
-function showTab(tabName) {
+function showTab(tabName){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.add('hidden'));
   document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.classList.remove('bg-cyan-600');
-    btn.classList.add('bg-gray-700');
-  });
+  document.querySelectorAll('.tab-btn').forEach(btn=>{btn.classList.remove('bg-cyan-600');btn.classList.add('bg-gray-700');});
   document.querySelector(`.tab-btn[data-tab="${tabName}"]`)?.classList.add('bg-cyan-600');
+}
+
+// Modal
+function openAddLicenseModal(){
+  const statesContainer=document.getElementById('add-license-states');
+  statesContainer.innerHTML='';
+  STATES_DATA.forEach(s=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent=s.abbreviation;
+    btn.className='bubble';
+    btn.addEventListener('click',()=>btn.classList.toggle('selected'));
+    statesContainer.appendChild(btn);
+  });
+  const carriersContainer=document.getElementById('carriers-container');
+  carriersContainer.innerHTML='';
+  carriers.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent=c;
+    btn.className='bubble';
+    btn.addEventListener('click',()=>btn.classList.toggle('selected'));
+    carriersContainer.appendChild(btn);
+  });
+  show('add-license-modal');
+}
+
+function closeAddLicenseModal(){hide('add-license-modal');}
+
+function handleAddLicense(e){
+  e.preventDefault();
+  const selectedStates=[...document.querySelectorAll('#add-license-states .bubble.selected')].map(b=>b.textContent);
+  const selectedCarriers=[...document.querySelectorAll('#carriers-container .bubble.selected')].map(b=>b.textContent);
+  const expiration=document.getElementById('license-expiration').value;
+  selectedStates.forEach(state=>{
+    currentUser.licenses.push({ state, carriers:selectedCarriers, expiration });
+  });
+  closeAddLicenseModal();
+  renderLicenses();
+  updateUserStats();
+}
+
+function renderLicenses(){
+  const container=document.getElementById('licenses-container');
+  container.innerHTML='';
+  currentUser.licenses.forEach((l,i)=>{
+    const div=document.createElement('div');
+    div.className='bg-gray-800 p-3 rounded mb-2';
+    div.innerHTML=`<strong>${escapeHtml(l.state)}</strong> - ${l.carriers.map(c=>escapeHtml(c)).join(', ')} - Exp: ${escapeHtml(l.expiration)}
+      <button class="ml-2 bg-red-600 hover:bg-red-700 px-2 py-1 rounded" onclick="deleteLicense(${i})">Delete</button>`;
+    container.appendChild(div);
+  });
+}
+
+function deleteLicense(index){
+  currentUser.licenses.splice(index,1);
+  renderLicenses();
+  updateUserStats();
 }
 </script>
 
 <style>
-.bubble { padding: 4px 8px; rounded: full; cursor: pointer; display:inline-block; background:#1f2937; color:white; }
-.bubble.selected { background:#06b6d4; }
-.search-highlight { background:yellow; color:black; }
-.fade-in { animation: fadeIn 0.3s ease-in; }
-@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+.bubble{padding:4px 8px;border-radius:9999px;cursor:pointer;display:inline-block;background:#1f2937;color:white;}
+.bubble.selected{background:#06b6d4;}
+.search-highlight{background:yellow;color:black;}
+.fade-in{animation:fadeIn 0.3s ease-in;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 
 </body>
