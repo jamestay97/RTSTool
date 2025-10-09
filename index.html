@@ -142,11 +142,11 @@
         <div id="search-tab" class="tab-panel active">
           <div class="mb-6">
             <div class="flex flex-col sm:flex-row gap-4">
-              <input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by state (CA), agent name, email, NPN, or carrier...">
+              <input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by exact state (California or CA), agent name, email, NPN, or carrier...">
               <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap"><i class="fas fa-search mr-2"></i>Search</button>
             </div>
             <div class="mt-2 text-sm text-gray-400">
-              <p><i class="fas fa-info-circle mr-1"></i>Substring matches: "CA" finds "California", exact names/emails/NPNs/carriers.</p>
+              <p><i class="fas fa-info-circle mr-1"></i>Exact matches only: "California" or "CA", "John Smith", "john@email.com", "123456789", "State Farm"</p>
             </div>
           </div>
           <div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
@@ -326,7 +326,7 @@ async function initApp() {
     
     if (error) {
       console.error('Supabase connection failed:', error);
-      showNotification('⚠️ Please run the SQL setup in Supabase first (check RLS policies)', 'error');
+      showNotification('⚠️ Please run the SQL setup in Supabase first', 'error');
       showAuthScreen();
       return;
     }
@@ -355,27 +355,25 @@ async function initApp() {
 
 // Data management
 async function loadCarriers() {
-  const { data, error } = await supabase.from('app_settings').select('carriers').eq('id', 1).single();
-  console.log('Carriers load:', { data, error });
-  if (error || !data) {
-    console.error('Error loading carriers:', error);
-    carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
-  } else {
-    carriers = data.carriers || ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
-  }
-  console.log('Loaded carriers:', carriers);
-}
+     try {
+       const { data, error } = await supabase.from('app_settings').select('carriers').single();
+       if (error) {
+         console.error('Error loading carriers:', error);
+         carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
+         await supabase.from('app_settings').upsert({ id: 1, carriers: carriers });
+       } else {
+         carriers = data.carriers || ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
+       }
+     } catch (err) {
+       console.error('Error in loadCarriers:', err);
+       carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
+     }
+   }
 
 async function loadAllUsers() {
   const { data: users, error } = await supabase.from('users').select('*').order('name');
-  console.log('Users load:', { data: users, error });
-  if (error) {
-    console.error('Error loading users:', error);
-    allUsers = [];
-    showNotification('Failed to load users (check RLS policies)', 'error');
-  } else {
-    allUsers = users || [];
-    console.log(`Loaded ${allUsers.length} users`);
+  if (!error) {
+    allUsers = users;
   }
 }
 
@@ -398,8 +396,6 @@ async function handleLogin(e) {
       .eq('password', password)
       .single();
     
-    console.log('Login attempt:', { user, error });
-    
     if (user) {
       currentUser = user;
       localStorage.setItem('currentUser', JSON.stringify(user));
@@ -410,8 +406,7 @@ async function handleLogin(e) {
       showNotification('Invalid email or password', 'error');
     }
   } catch (error) {
-    console.error('Login error:', error);
-    showNotification('Login failed: ' + error.message, 'error');
+    showNotification('Login failed', 'error');
   }
 }
 
@@ -436,8 +431,7 @@ async function handleRegister(e) {
   
   try {
     // Check if email exists
-    const { data: existingUser, error: checkError } = await supabase.from('users').select('id').eq('email', email).single();
-    if (checkError) console.error('Check existing user error:', checkError);
+    const { data: existingUser } = await supabase.from('users').select('id').eq('email', email).single();
     if (existingUser) {
       showNotification('Email already registered', 'error');
       return;
@@ -455,19 +449,15 @@ async function handleRegister(e) {
       licenses: []
     };
     
-    const { data, error } = await supabase.from('users').insert([newUser]).select().single();
-    console.log('Register insert:', { data, error });
-    
+    const { error } = await supabase.from('users').insert([newUser]);
     if (error) {
-      console.error('Insert error:', error);
       showNotification('Registration failed: ' + error.message, 'error');
     } else {
-      showNotification('Registration successful! You can now login.', 'success');
+      showNotification('Registration successful! You can now login. Note: Your account is stored in the database.', 'success');
       document.getElementById('register-form').reset();
     }
   } catch (error) {
-    console.error('Register error:', error);
-    showNotification('Registration failed: ' + error.message, 'error');
+    showNotification('Registration failed', 'error');
   }
 }
 
@@ -492,7 +482,15 @@ function openAddLicenseModal() {
 }
 
 function closeAddLicenseModal() {
-  document.getElementById('add-license-modal').style.display = 'none';
+     try {
+       const modal = document.getElementById('add-license-modal');
+       if (modal) {
+         modal.style.display = 'none';
+       }
+       const form = document.getElementById('add-license-form');
+       if (form) {
+         form.reset();
+       }
   document.getElementById('add-license-form').reset();
   // Clear selected bubbles
   document.querySelectorAll('.bubble.selected').forEach(bubble => {
@@ -579,18 +577,17 @@ async function handleAddLicense(e) {
     
     const updatedLicenses = [...currentLicenses, ...licensesToAdd];
     
-    // Update in database with returning minimal
+    // Update in database
     const { error } = await supabase
       .from('users')
-      .update({ licenses: updatedLicenses }, { returning: 'minimal' })
+      .update({ licenses: updatedLicenses })
       .eq('id', targetUserId);
     
-    console.log('License update:', { error });
-    
     if (error) {
-      console.error('Update error:', error);
-      showNotification('Error adding licenses: ' + error.message, 'error');
-    } else {
+         console.error('Error adding licenses:', error);
+         showNotification('Error adding licenses: ' + error.message, 'error');
+         closeAddLicenseModal();
+       } else {
       // Update local state
       if (targetUserId === currentUser.id) {
         currentUser.licenses = updatedLicenses;
@@ -613,15 +610,9 @@ async function handleAddLicense(e) {
       if (currentEditingUserId && currentUser.is_admin) {
         openEditUserLicenses(currentEditingUserId);
       }
-
-      // Refresh admin panel if user is admin
-      if (currentUser.is_admin) {
-        loadAdminPanel();
-      }
     }
   } catch (error) {
-    console.error('Add license error:', error);
-    showNotification('Error adding licenses: ' + error.message, 'error');
+    showNotification('Error adding licenses', 'error');
   }
 }
 
@@ -633,13 +624,10 @@ async function deleteLicense(licenseIndex) {
     
     const { error } = await supabase
       .from('users')
-      .update({ licenses: updatedLicenses }, { returning: 'minimal' })
+      .update({ licenses: updatedLicenses })
       .eq('id', currentUser.id);
     
-    console.log('Delete license:', { error });
-    
     if (error) {
-      console.error('Delete error:', error);
       showNotification('Error deleting license: ' + error.message, 'error');
     } else {
       currentUser.licenses = updatedLicenses;
@@ -649,13 +637,12 @@ async function deleteLicense(licenseIndex) {
       showNotification('License deleted successfully', 'success');
     }
   } catch (error) {
-    console.error('Delete license error:', error);
-    showNotification('Error deleting license: ' + error.message, 'error');
+    showNotification('Error deleting license', 'error');
   }
 }
 
 // =========================
-// ADMIN FUNCTIONALITY
+// ADMIN FUNCTIONALITY - COMPLETED
 // =========================
 
 async function loadAdminPanel() {
@@ -675,8 +662,9 @@ async function loadAdminPanel() {
   
   let html = '';
   allUsers.forEach(user => {
-    const licenseCount = (user.licenses || []).length;
-    const stateCount = new Set((user.licenses || []).map(l => l.state)).size;
+    const userLicenses = Array.isArray(user.licenses) ? user.licenses : [];
+       const licenseCount = userLicenses.length;
+       const stateCount = new Set(userLicenses.map(l => l.state).filter(s => s)).size;
     const isCurrent = user.id === currentUser.id;
     
     html += `<div class="bg-gray-700 p-4 rounded-lg">
@@ -710,12 +698,12 @@ async function loadAdminPanel() {
   
   document.getElementById('users-list').innerHTML = html;
   
-  // Load carriers list
+  // Load carriers
   let carriersHtml = '';
   carriers.forEach(carrier => {
     carriersHtml += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded">
       <span class="text-white">${escapeHtml(carrier)}</span>
-      <button onclick="removeCarrier('${escapeHtml(carrier)}')" class="text-red-400 hover:text-red-300">
+      <button onclick="removeCarrier('${carrier}')" class="text-red-400 hover:text-red-300">
         <i class="fas fa-trash"></i>
       </button>
     </div>`;
@@ -731,13 +719,10 @@ async function toggleAdminStatus(userId, makeAdmin) {
   try {
     const { error } = await supabase
       .from('users')
-      .update({ is_admin: makeAdmin }, { returning: 'minimal' })
+      .update({ is_admin: makeAdmin })
       .eq('id', userId);
     
-    console.log('Toggle admin:', { error });
-    
     if (error) {
-      console.error('Toggle error:', error);
       showNotification('Error updating user: ' + error.message, 'error');
     } else {
       await loadAllUsers();
@@ -745,8 +730,7 @@ async function toggleAdminStatus(userId, makeAdmin) {
       showNotification(`User ${makeAdmin ? 'promoted to admin' : 'demoted to agent'} successfully`, 'success');
     }
   } catch (error) {
-    console.error('Toggle admin error:', error);
-    showNotification('Error updating user: ' + error.message, 'error');
+    showNotification('Error updating user', 'error');
   }
 }
 
@@ -768,24 +752,19 @@ async function addCarrier() {
   
   try {
     const { error } = await supabase
-      .from('app_settings')
-      .upsert({id: 1, carriers: carriers}, { onConflict: 'id' });
-    
-    console.log('Add carrier upsert:', { error });
+         .from('app_settings')
+         .upsert({ id: 1, carriers: carriers });
     
     if (error) {
-      console.error('Upsert error:', error);
       showNotification('Error adding carrier: ' + error.message, 'error');
       carriers.pop(); // Revert local change
     } else {
       input.value = '';
-      await loadCarriers(); // Reload to confirm
       loadAdminPanel();
       showNotification('Carrier added successfully', 'success');
     }
   } catch (error) {
-    console.error('Add carrier error:', error);
-    showNotification('Error adding carrier: ' + error.message, 'error');
+    showNotification('Error adding carrier', 'error');
     carriers.pop(); // Revert local change
   }
 }
@@ -800,34 +779,27 @@ async function removeCarrier(carrierName) {
   
   try {
     const { error } = await supabase
-      .from('app_settings')
-      .upsert({id: 1, carriers: carriers}, { onConflict: 'id' });
-    
-    console.log('Remove carrier upsert:', { error });
+         .from('app_settings')
+         .upsert({ id: 1, carriers: carriers });
     
     if (error) {
-      console.error('Upsert error:', error);
-      showNotification('Error removing carrier: ' + error.message, 'error');
-      carriers.push(carrierName); // Revert local change
+         console.error('Error removing carrier:', error);
+         showNotification('Error removing carrier: ' + error.message, 'error');
+         carriers = originalCarriers; // Revert local change
     } else {
-      await loadCarriers(); // Reload to confirm
       loadAdminPanel();
       showNotification('Carrier removed successfully', 'success');
     }
   } catch (error) {
-    console.error('Remove carrier error:', error);
-    showNotification('Error removing carrier: ' + error.message, 'error');
-    carriers.push(carrierName); // Revert local change
+       console.error('Error removing carrier:', error);
+       showNotification('Error removing carrier', 'error');
+       carriers = originalCarriers; // Revert local change
   }
 }
 
 function openEditUserLicenses(userId) {
   currentEditingUserId = userId;
   const user = allUsers.find(u => u.id === userId);
-  if (!user) {
-    showNotification('User not found', 'error');
-    return;
-  }
   document.getElementById('edit-user-title').textContent = `Edit Licenses for ${escapeHtml(user.name)}`;
   
   const container = document.getElementById('user-licenses-container');
@@ -865,33 +837,22 @@ async function deleteUserLicense(userId, licenseIndex) {
   
   try {
     const user = allUsers.find(u => u.id === userId);
-    if (!user) {
-      showNotification('User not found', 'error');
-      return;
-    }
     const updatedLicenses = user.licenses.filter((_, index) => index !== licenseIndex);
     
     const { error } = await supabase
       .from('users')
-      .update({ licenses: updatedLicenses }, { returning: 'minimal' })
+      .update({ licenses: updatedLicenses })
       .eq('id', userId);
     
-    console.log('Delete user license:', { error });
-    
     if (error) {
-      console.error('Delete error:', error);
       showNotification('Error deleting license: ' + error.message, 'error');
     } else {
       await loadAllUsers();
       openEditUserLicenses(userId);
       showNotification('License deleted successfully', 'success');
-      if (currentUser.is_admin) {
-        loadAdminPanel();
-      }
     }
   } catch (error) {
-    console.error('Delete user license error:', error);
-    showNotification('Error deleting license: ' + error.message, 'error');
+    showNotification('Error deleting license', 'error');
   }
 }
 
@@ -904,8 +865,7 @@ function openAddLicenseForUser() {
   if (!currentEditingUserId) return;
   populateStateBubbles();
   populateCarrierBubbles();
-  const user = allUsers.find(u => u.id === currentEditingUserId);
-  document.getElementById('add-license-title').textContent = `Add License for ${escapeHtml(user ? user.name : 'User')}`;
+  document.getElementById('add-license-title').textContent = `Add License for ${allUsers.find(u => u.id === currentEditingUserId).name}`;
   document.getElementById('add-license-form').reset();
   document.getElementById('add-license-modal').style.display = 'flex';
 }
@@ -1020,31 +980,37 @@ async function performSearch() {
   
   try {
     const { data: users, error } = await supabase.from('users').select('*');
-    console.log('Search users load:', { data: users, error });
-    
     if (error) throw error;
     
     const results = users.filter(user => {
       const searchFields = [
-        user.name,
-        user.email,
-        user.npn,
-        ...(user.licenses || []).flatMap(license => [
-          license.state,
-          ...license.carriers
-        ])
-      ];
+           user.name || '',
+           user.email || '',
+           user.npn || '',
+           user.firstname || '',
+           user.lastname || ''
+         ];
+         
+         if (user.licenses && Array.isArray(user.licenses)) {
+           user.licenses.forEach(license => {
+             if (license.state) {
+               searchFields.push(license.state);
+             }
+             if (license.carriers && Array.isArray(license.carriers)) {
+               searchFields.push(...license.carriers);
+             }
+           });
+         }
       
       return searchFields.some(field => 
         field && field.toString().toLowerCase().includes(query.toLowerCase())
       );
     });
     
-    console.log(`Search results for "${query}":`, results.length);
     displaySearchResults(results, query);
   } catch (error) {
-    console.error('Search error:', error);
-    showNotification('Search failed: ' + error.message, 'error');
+       console.error('Search error:', error);
+       showNotification('Search failed: ' + error.message, 'error');
   }
 }
 
@@ -1082,7 +1048,7 @@ function displaySearchResults(results, query) {
           license.state.toLowerCase().includes(query.toLowerCase()) ||
           license.carriers.some(carrier => carrier.toLowerCase().includes(query.toLowerCase()));
         
-        if (licenseMatches || true) {  // Show all licenses for user, highlight matches
+        if (licenseMatches) {
           userHtml += `<div class="bg-gray-800 p-4 rounded-lg border-l-4 border-cyan-500">
             <h4 class="font-semibold text-white">${highlightMatch(escapeHtml(stateName), query)} (${highlightMatch(escapeHtml(license.state), query)})</h4>
             <p class="text-gray-300 mt-1">Carriers: ${license.carriers.map(carrier => highlightMatch(escapeHtml(carrier), query)).join(', ')}</p>
