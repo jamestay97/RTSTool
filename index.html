@@ -96,7 +96,7 @@
   <div id="add-license-modal" class="modal">
     <div class="modal-content">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-semibold">Add New License</h3>
+        <h3 class="text-xl font-semibold" id="add-license-title">Add New License</h3>
         <button id="close-add-license-modal" class="text-gray-400 hover:text-white">&times;</button>
       </div>
       <form id="add-license-form" class="space-y-4">
@@ -117,6 +117,21 @@
           <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Add License</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Edit User Licenses Modal -->
+  <div id="edit-user-licenses-modal" class="modal">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold" id="edit-user-title">Edit User Licenses</h3>
+        <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white">&times;</button>
+      </div>
+      <div id="user-licenses-container" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
+      <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded mb-4">Add License for User</button>
+      <div class="flex justify-end">
+        <button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Close</button>
+      </div>
     </div>
   </div>
 
@@ -249,6 +264,13 @@ document.getElementById('close-add-license-modal').addEventListener('click', clo
 document.getElementById('cancel-add-license').addEventListener('click', closeAddLicenseModal);
 document.getElementById('add-license-modal').addEventListener('click', (e) => {
   if (e.target.id === 'add-license-modal') closeAddLicenseModal();
+});
+
+// Edit user modal events
+document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
+document.getElementById('close-edit-user-modal').addEventListener('click', closeEditUserLicensesModal);
+document.getElementById('edit-user-licenses-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'edit-user-licenses-modal') closeEditUserLicensesModal();
 });
 
 // ------------------- App Init -------------------
@@ -389,6 +411,7 @@ async function loadAllUsers() {
     }
     
     allUsers = users || [];
+    console.log('Loaded users:', allUsers); // Debug log
   } catch(err) {
     console.error(err);
     allUsers = [];
@@ -398,10 +421,22 @@ async function loadAllUsers() {
 // ------------------- License Management -------------------
 document.getElementById('add-license-btn').addEventListener('click', openAddLicenseModal);
 document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
+document.getElementById('add-license-for-user-btn').addEventListener('click', openAddLicenseForUser);
 
 function openAddLicenseModal() {
+  currentEditingUserId = null;
+  document.getElementById('add-license-title').textContent = 'Add New License';
   populateStateBubbles();
   populateCarrierBubbles();
+  document.getElementById('add-license-modal').style.display = 'flex';
+}
+
+function openAddLicenseForUser() {
+  if (!currentEditingUserId) return;
+  populateStateBubbles();
+  populateCarrierBubbles();
+  const user = allUsers.find(u => u.id === currentEditingUserId);
+  document.getElementById('add-license-title').textContent = `Add License for ${user.name}`;
   document.getElementById('add-license-modal').style.display = 'flex';
 }
 
@@ -471,8 +506,22 @@ async function handleAddLicense(e) {
       expiration: expiration || ''
     }));
     
+    let targetUserId = currentUser.id;
+    let targetUser = currentUser;
+    
+    // If admin is editing another user's licenses
+    if (currentEditingUserId && currentUser.is_admin) {
+      targetUserId = currentEditingUserId;
+      targetUser = allUsers.find(u => u.id === currentEditingUserId);
+    }
+    
+    if (!targetUser) {
+      showNotification('User not found', 'error');
+      return;
+    }
+    
     // Get current licenses and merge with new ones
-    const currentLicenses = currentUser.licenses || [];
+    const currentLicenses = targetUser.licenses || [];
     
     // Avoid duplicates - only add licenses for states that don't already exist
     const licensesToAdd = newLicenses.filter(newLicense => 
@@ -486,24 +535,43 @@ async function handleAddLicense(e) {
     
     const updatedLicenses = [...currentLicenses, ...licensesToAdd];
     
+    console.log('Updating licenses for user:', targetUserId, updatedLicenses);
+    
     // Update in database
     const { error } = await supabase
       .from('users')
       .update({ licenses: updatedLicenses })
-      .eq('id', currentUser.id);
+      .eq('id', targetUserId);
     
     if (error) throw error;
     
+    console.log('✅ Licenses added successfully');
+    
     // Update local state
-    currentUser.licenses = updatedLicenses;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    if (targetUserId === currentUser.id) {
+      currentUser.licenses = updatedLicenses;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+    
+    // Reload all users data
+    await loadAllUsers();
     
     // Update UI
-    loadUserLicenses();
+    if (targetUserId === currentUser.id) {
+      loadUserLicenses();
+    }
+    
     closeAddLicenseModal();
     showNotification(`Added ${licensesToAdd.length} license(s) successfully!`, 'success');
+    
+    // If admin was editing another user, reopen the edit modal and reload admin panel
+    if (currentEditingUserId && currentUser.is_admin) {
+      await loadAllUsers(); // Ensure we have fresh data
+      openEditUserLicenses(currentEditingUserId);
+      loadAdminPanel(); // Refresh admin panel
+    }
   } catch(error) {
-    console.error(error);
+    console.error('Error in handleAddLicense:', error);
     showNotification('Error adding licenses: ' + error.message, 'error');
   }
 }
@@ -562,6 +630,79 @@ async function deleteLicense(licenseIndex) {
     console.error(error);
     showNotification('Error deleting license: ' + error.message, 'error');
   }
+}
+
+// ------------------- Admin License Management -------------------
+function openEditUserLicenses(userId) {
+  currentEditingUserId = userId;
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) {
+    showNotification('User not found', 'error');
+    return;
+  }
+  
+  document.getElementById('edit-user-title').textContent = `Edit Licenses for ${escapeHtml(user.name)}`;
+  
+  const container = document.getElementById('user-licenses-container');
+  container.innerHTML = '';
+  
+  const userLicenses = user.licenses || [];
+  
+  if (userLicenses.length === 0) {
+    container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
+  } else {
+    userLicenses.forEach((license, index) => {
+      const state = STATES_DATA.find(s => s.abbreviation === license.state);
+      const stateName = state ? state.name : license.state;
+      
+      const licenseDiv = document.createElement('div');
+      licenseDiv.className = 'bg-gray-800 p-4 rounded-lg';
+      licenseDiv.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(stateName)}</h4>
+            <p class="text-gray-400 text-sm">Carriers: ${escapeHtml(license.carriers.join(', '))}</p>
+            ${license.expiration ? `<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
+          </div>
+          <button onclick="deleteUserLicense('${userId}', ${index})" class="text-red-400 hover:text-red-300">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      container.appendChild(licenseDiv);
+    });
+  }
+  
+  document.getElementById('edit-user-licenses-modal').style.display = 'flex';
+}
+
+async function deleteUserLicense(userId, licenseIndex) {
+  if (!confirm('Are you sure you want to delete this license?')) return;
+  
+  try {
+    const user = allUsers.find(u => u.id === userId);
+    const updatedLicenses = user.licenses.filter((_, index) => index !== licenseIndex);
+    
+    const { error } = await supabase
+      .from('users')
+      .update({ licenses: updatedLicenses })
+      .eq('id', userId);
+    
+    if (error) throw error;
+    
+    await loadAllUsers();
+    openEditUserLicenses(userId);
+    loadAdminPanel(); // Refresh admin panel
+    showNotification('License deleted successfully', 'success');
+  } catch(error) {
+    console.error(error);
+    showNotification('Error deleting license: ' + error.message, 'error');
+  }
+}
+
+function closeEditUserLicensesModal() {
+  document.getElementById('edit-user-licenses-modal').style.display = 'none';
+  currentEditingUserId = null;
 }
 
 // ------------------- Search Functionality -------------------
@@ -673,25 +814,37 @@ async function loadAdminPanel() {
   allUsers.forEach(user => {
     const licenseCount = (user.licenses || []).length;
     const stateCount = new Set((user.licenses || []).map(l => l.state)).size;
+    const isCurrentUser = user.id === currentUser.id;
     
     usersHtml += `
-      <div class="bg-gray-800 p-3 rounded">
-        <div class="flex justify-between items-start mb-2">
+      <div class="bg-gray-800 p-4 rounded">
+        <div class="flex justify-between items-start mb-3">
           <div>
-            <h4 class="font-semibold text-cyan-300">${escapeHtml(user.name)}</h4>
+            <h4 class="font-semibold text-cyan-300">${escapeHtml(user.name)} ${isCurrentUser ? '(You)' : ''}</h4>
             <p class="text-gray-400 text-sm">${escapeHtml(user.email)}</p>
           </div>
           <span class="${user.is_admin ? 'bg-red-600' : 'bg-green-600'} px-2 py-1 rounded text-xs">${user.is_admin ? 'Admin' : 'Agent'}</span>
         </div>
-        <div class="flex justify-between text-sm">
-          <span>Licenses: ${licenseCount}</span>
-          <span>States: ${stateCount}</span>
+        <div class="grid grid-cols-2 gap-2 mb-3 text-center">
+          <div class="bg-gray-700 p-2 rounded">
+            <div class="text-xl font-bold text-cyan-400">${licenseCount}</div>
+            <div class="text-xs text-gray-400">Licenses</div>
+          </div>
+          <div class="bg-gray-700 p-2 rounded">
+            <div class="text-xl font-bold text-cyan-400">${stateCount}</div>
+            <div class="text-xs text-gray-400">States</div>
+          </div>
         </div>
-        ${!user.is_admin ? `
-          <button onclick="toggleAdminStatus('${user.id}', true)" class="w-full mt-2 bg-purple-600 hover:bg-purple-700 py-1 rounded text-sm">
-            Make Admin
+        <div class="flex gap-2">
+          <button onclick="openEditUserLicenses('${user.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded text-sm">
+            <i class="fas fa-edit mr-1"></i>Edit Licenses
           </button>
-        ` : ''}
+          ${!isCurrentUser ? `
+            <button onclick="toggleAdminStatus('${user.id}', ${!user.is_admin})" class="flex-1 ${user.is_admin ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded text-sm">
+              <i class="fas ${user.is_admin ? 'fa-user' : 'fa-crown'} mr-1"></i>${user.is_admin ? 'Remove Admin' : 'Make Admin'}
+            </button>
+          ` : ''}
+        </div>
       </div>
     `;
   });
@@ -702,7 +855,7 @@ async function loadAdminPanel() {
   let carriersHtml = '';
   carriers.forEach(carrier => {
     carriersHtml += `
-      <div class="flex justify-between items-center bg-gray-800 p-2 rounded">
+      <div class="flex justify-between items-center bg-gray-800 p-3 rounded">
         <span>${escapeHtml(carrier)}</span>
         <button onclick="removeCarrier('${carrier}')" class="text-red-400 hover:text-red-300">
           <i class="fas fa-trash"></i>
@@ -766,8 +919,10 @@ function removeCarrier(carrierName) {
 
 // Make functions available globally
 window.deleteLicense = deleteLicense;
+window.deleteUserLicense = deleteUserLicense;
 window.toggleAdminStatus = toggleAdminStatus;
 window.removeCarrier = removeCarrier;
+window.openEditUserLicenses = openEditUserLicenses;
 </script>
 
 </body>
