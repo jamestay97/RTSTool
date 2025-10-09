@@ -1,290 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Insurance License Data Explorer (Firebase)</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Replace CDN with proper Tailwind CSS for production -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .fade-in { animation: fadeIn 0.4s ease-in; }
-    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75); z-index:1000; align-items: center; justify-content:center; }
-    .modal-content { background: #374151; border-radius: 12px; max-width: 720px; width: 95%; max-height: 90vh; overflow-y: auto; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Insurance License Data Explorer (Firebase)</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+.modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75); z-index:1000; align-items: center; justify-content:center; }
+.modal-content { background: #374151; border-radius: 12px; max-width: 720px; width: 95%; max-height: 90vh; overflow-y: auto; }
+</style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
 
 <nav class="bg-gray-800 p-4">
-  <div class="container mx-auto flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>License Explorer</h1>
-    <div id="nav-buttons" class="hidden">
-      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
-        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-      </button>
-    </div>
-  </div>
+<div class="container mx-auto flex justify-between items-center">
+<h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>License Explorer</h1>
+<div id="nav-buttons" class="hidden">
+<button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+<i class="fas fa-sign-out-alt mr-2"></i>Logout
+</button>
+</div>
+</div>
 </nav>
 
 <div class="container mx-auto p-4">
-  <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh] fade-in">
-    <div class="loading-spinner mb-4"></div>
-    <p class="text-xl">Loading Application...</p>
-  </div>
+<div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh] fade-in">
+<div class="loading-spinner mb-4"></div>
+<p class="text-xl">Loading Application...</p>
+</div>
 
-  <!-- AUTH SCREEN (Login + Register) -->
-  <div id="auth-screen" class="hidden max-w-4xl mx-auto fade-in">
-    <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
-      <h2 class="text-3xl font-bold text-center mb-8 text-cyan-400"><i class="fas fa-shield-alt mr-3"></i>Agent Portal</h2>
-      <div class="grid md:grid-cols-2 gap-8">
-        <!-- LOGIN -->
-        <div class="bg-gray-700 p-6 rounded-lg">
-          <h3 class="text-2xl font-semibold mb-4 text-green-400"><i class="fas fa-sign-in-alt mr-2"></i>Login</h3>
-          <form id="login-form" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Email</label>
-              <input id="login-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="admin@licenseexplorer.com" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Password</label>
-              <input id="login-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter password" required>
-            </div>
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
-              <i class="fas fa-unlock mr-2"></i>Login to Dashboard
-            </button>
-          </form>
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="hidden max-w-4xl mx-auto fade-in">
+<div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+<h2 class="text-3xl font-bold text-center mb-8 text-cyan-400"><i class="fas fa-shield-alt mr-3"></i>Agent Portal</h2>
+<div class="grid md:grid-cols-2 gap-8">
+<!-- LOGIN -->
+<div class="bg-gray-700 p-6 rounded-lg">
+<h3 class="text-2xl font-semibold mb-4 text-green-400"><i class="fas fa-sign-in-alt mr-2"></i>Login</h3>
+<form id="login-form" class="space-y-4">
+<div>
+<label class="block text-sm font-medium mb-2">Email</label>
+<input id="login-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="admin@licenseexplorer.com" required>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">Password</label>
+<input id="login-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter password" required>
+</div>
+<button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
+<i class="fas fa-unlock mr-2"></i>Login to Dashboard
+</button>
+</form>
 
-          <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
-            <p class="text-cyan-300 font-semibold">Demo Accounts:</p>
-            <p class="text-gray-400">Admin: admin@licenseexplorer.com / admin123 (auto-created first-run)</p>
-            <p class="text-gray-400">Agent: will be created via registration</p>
-          </div>
+<div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
+<p class="text-cyan-300 font-semibold">Demo Accounts:</p>
+<p class="text-gray-400">Admin: admin@licenseexplorer.com / admin123</p>
+<p class="text-gray-400">Agent: will be created via registration</p>
+</div>
 
-          <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
-            <p class="text-cyan-300 font-semibold mb-2">Forgot Password?</p>
-            <button id="reset-password-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold">
-              <i class="fas fa-key mr-2"></i>Reset Password (email)
-            </button>
-          </div>
-        </div>
+<div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
+<p class="text-cyan-300 font-semibold mb-2">Forgot Password?</p>
+<button id="reset-password-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-semibold">
+<i class="fas fa-key mr-2"></i>Reset Password (email)
+</button>
+</div>
+</div>
 
-        <!-- REGISTER - Simplified without license/carrier selection -->
-        <div class="bg-gray-700 p-6 rounded-lg">
-          <h3 class="text-2xl font-semibold mb-4 text-blue-400"><i class="fas fa-user-plus mr-2"></i>Register</h3>
-          <form id="register-form" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium mb-2">First Name</label>
-                <input id="register-firstname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="John" required>
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Last Name</label>
-                <input id="register-lastname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Smith" required>
-              </div>
-            </div>
+<!-- REGISTER -->
+<div class="bg-gray-700 p-6 rounded-lg">
+<h3 class="text-2xl font-semibold mb-4 text-blue-400"><i class="fas fa-user-plus mr-2"></i>Register</h3>
+<form id="register-form" class="space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium mb-2">First Name</label>
+<input id="register-firstname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="John" required>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">Last Name</label>
+<input id="register-lastname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Smith" required>
+</div>
+</div>
 
-            <div>
-              <label class="block text-sm font-medium mb-2">Email</label>
-              <input id="register-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="john@company.com" required>
-            </div>
+<div>
+<label class="block text-sm font-medium mb-2">Email</label>
+<input id="register-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="john@company.com" required>
+</div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium mb-2">NPN Number</label>
-                <input id="register-npn" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="123456789" required>
-              </div>
-              <div>
-                <label class="block text-sm font-medium mb-2">Extension</label>
-                <input id="register-extension" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="1234" maxlength="4" required>
-              </div>
-            </div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium mb-2">NPN Number</label>
+<input id="register-npn" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="123456789" required>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">Extension</label>
+<input id="register-extension" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="1234" maxlength="4" required>
+</div>
+</div>
 
-            <div>
-              <label class="block text-sm font-medium mb-2">Password</label>
-              <input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password (min. 6 characters)" required>
-            </div>
+<div>
+<label class="block text-sm font-medium mb-2">Password</label>
+<input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password (min. 6 characters)" required>
+</div>
 
-            <div class="bg-gray-800 p-3 rounded-lg text-sm text-cyan-300">
-              <p><i class="fas fa-info-circle mr-2"></i>You can add licenses and carriers after creating your account in the dashboard.</p>
-            </div>
+<div class="bg-gray-800 p-3 rounded-lg text-sm text-cyan-300">
+<p><i class="fas fa-info-circle mr-2"></i>You can add licenses and carriers after creating your account in the dashboard.</p>
+</div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
-              <i class="fas fa-user-check mr-2"></i>Create Account
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+<button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
+<i class="fas fa-user-check mr-2"></i>Create Account
+</button>
+</form>
+</div>
+</div>
+</div>
+</div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
-    <div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div>
-          <h2 class="text-3xl font-bold mb-2">Welcome back, <span id="user-name" class="text-cyan-300"></span>!</h2>
-          <p class="text-gray-300">License Data Explorer Dashboard</p>
-        </div>
-        <div class="mt-4 md:mt-0 flex items-center space-x-2">
-          <span id="user-badge" class="bg-green-600 px-3 py-1 rounded-full text-sm font-semibold">Licensed Agent</span>
-          <span id="admin-badge" class="bg-red-600 px-3 py-1 rounded-full text-sm font-semibold hidden"><i class="fas fa-crown mr-1"></i>Administrator</span>
-        </div>
-      </div>
-    </div>
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
+<div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
+<div class="flex flex-col md:flex-row justify-between items-center">
+<div>
+<h2 class="text-3xl font-bold mb-2">Welcome back, <span id="user-name" class="text-cyan-300"></span>!</h2>
+<p class="text-gray-300">License Data Explorer Dashboard</p>
+</div>
+<div class="mt-4 md:mt-0 flex items-center space-x-2">
+<span id="user-badge" class="bg-green-600 px-3 py-1 rounded-full text-sm font-semibold">Licensed Agent</span>
+<span id="admin-badge" class="bg-red-600 px-3 py-1 rounded-full text-sm font-semibold hidden"><i class="fas fa-crown mr-1"></i>Administrator</span>
+</div>
+</div>
+</div>
 
-    <div class="bg-gray-800 rounded-xl p-6 shadow-2xl">
-      <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
-        <button class="tab-btn active bg-cyan-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="search"><i class="fas fa-search mr-2"></i>Search Licenses</button>
-        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="profile"><i class="fas fa-user mr-2"></i>My Profile</button>
-        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="licenses"><i class="fas fa-id-card mr-2"></i>My Licenses</button>
-        <button id="admin-tab-btn" class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition hidden" data-tab="admin"><i class="fas fa-users-cog mr-2"></i>Admin Panel</button>
-      </div>
+<div class="bg-gray-800 rounded-xl p-6 shadow-2xl">
+<div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+<button class="tab-btn active bg-cyan-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="search"><i class="fas fa-search mr-2"></i>Search Licenses</button>
+<button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="profile"><i class="fas fa-user mr-2"></i>My Profile</button>
+<button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="licenses"><i class="fas fa-id-card mr-2"></i>My Licenses</button>
+<button id="admin-tab-btn" class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition hidden" data-tab="admin"><i class="fas fa-users-cog mr-2"></i>Admin Panel</button>
+</div>
 
-      <div id="tab-content">
-        <!-- SEARCH -->
-        <div id="search-tab" class="tab-panel active">
-          <div class="mb-6">
-            <div class="flex flex-col sm:flex-row gap-4">
-              <input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by exact state (California or CA), agent name, email, NPN, or carrier...">
-              <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap"><i class="fas fa-search mr-2"></i>Search</button>
-            </div>
-          </div>
-          <div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
-            <div class="text-center text-gray-400">
-              <i class="fas fa-compass text-4xl mb-4"></i>
-              <p class="text-xl">Enter a search term to find license data</p>
-            </div>
-          </div>
-        </div>
+<div id="tab-content">
+<!-- SEARCH TAB -->
+<div id="search-tab" class="tab-panel active">
+<div class="mb-6">
+<div class="flex flex-col sm:flex-row gap-4">
+<input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by exact state (California or CA), agent name, email, NPN, or carrier...">
+<button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap"><i class="fas fa-search mr-2"></i>Search</button>
+</div>
+</div>
+<div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
+<div class="text-center text-gray-400">
+<i class="fas fa-compass text-4xl mb-4"></i>
+<p class="text-xl">Enter a search term to find license data</p>
+</div>
+</div>
+</div>
 
-        <!-- PROFILE -->
-        <div id="profile-tab" class="tab-panel hidden">
-          <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-gray-700 p-6 rounded-lg">
-              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Agent Information</h3>
-              <div class="space-y-3">
-                <p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
-                <p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
-                <p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
-                <p><strong class="text-gray-300">Extension:</strong> <span id="profile-extension" class="text-white"></span></p>
-                <p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
-              </div>
-            </div>
-            <div class="bg-gray-700 p-6 rounded-lg">
-              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Quick Stats</h3>
-              <div class="space-y-3">
-                <p><strong class="text-gray-300">Licensed States:</strong> <span id="states-count" class="text-white">0</span></p>
-                <p><strong class="text-gray-300">Carriers:</strong> <span id="carriers-count" class="text-white">0</span></p>
-                <p><strong class="text-gray-300">Member Since:</strong> <span class="text-white" id="member-since">2024</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
+<!-- PROFILE TAB -->
+<div id="profile-tab" class="tab-panel hidden">
+<div class="grid md:grid-cols-2 gap-6">
+<div class="bg-gray-700 p-6 rounded-lg">
+<h3 class="text-xl font-semibold mb-4 text-cyan-400">Agent Information</h3>
+<div class="space-y-3">
+<p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
+<p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
+<p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
+<p><strong class="text-gray-300">Extension:</strong> <span id="profile-extension" class="text-white"></span></p>
+<p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
+</div>
+</div>
+<div class="bg-gray-700 p-6 rounded-lg">
+<h3 class="text-xl font-semibold mb-4 text-cyan-400">Quick Stats</h3>
+<div class="space-y-3">
+<p><strong class="text-gray-300">Licensed States:</strong> <span id="states-count" class="text-white">0</span></p>
+<p><strong class="text-gray-300">Carriers:</strong> <span id="carriers-count" class="text-white">0</span></p>
+<p><strong class="text-gray-300">Member Since:</strong> <span class="text-white" id="member-since">2024</span></p>
+</div>
+</div>
+</div>
+</div>
 
-        <!-- MY LICENSES -->
-        <div id="licenses-tab" class="tab-panel hidden">
-          <div class="mb-6">
-            <h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
-            <div id="licenses-container" class="space-y-4"></div>
-            <button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
-          </div>
-        </div>
+<!-- LICENSES TAB -->
+<div id="licenses-tab" class="tab-panel hidden">
+<div class="mb-6">
+<h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
+<div id="licenses-container" class="space-y-4"></div>
+<button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
+</div>
+</div>
 
-        <!-- ADMIN PANEL -->
-        <div id="admin-tab" class="tab-panel hidden">
-          <div class="mb-6">
-            <h3 class="text-2xl font-semibold mb-4 text-red-400"><i class="fas fa-users-cog mr-2"></i>User Management</h3>
-            <div class="bg-gray-700 rounded-lg p-4 mb-4">
-              <p class="text-gray-300">Total Users: <span id="total-users" class="text-white font-semibold">0</span></p>
-              <p class="text-gray-300">Admins: <span id="admin-count" class="text-white font-semibold">0</span></p>
-              <p class="text-gray-300">Agents: <span id="agent-count" class="text-white font-semibold">0</span></p>
-            </div>
-            <div id="users-list" class="space-y-4"></div>
-          </div>
+<!-- ADMIN TAB -->
+<div id="admin-tab" class="tab-panel hidden">
+<div class="mb-6">
+<h3 class="text-2xl font-semibold mb-4 text-red-400"><i class="fas fa-users-cog mr-2"></i>User Management</h3>
+<div class="bg-gray-700 rounded-lg p-4 mb-4">
+<p class="text-gray-300">Total Users: <span id="total-users" class="text-white font-semibold">0</span></p>
+<p class="text-gray-300">Admins: <span id="admin-count" class="text-white font-semibold">0</span></p>
+<p class="text-gray-300">Agents: <span id="agent-count" class="text-white font-semibold">0</span></p>
+</div>
+<div id="users-list" class="space-y-4"></div>
+</div>
 
-          <div class="mb-6">
-            <h3 class="text-2xl font-semibold mb-4 text-purple-400"><i class="fas fa-list-alt mr-2"></i>Carrier Management</h3>
-            <div class="bg-gray-700 rounded-lg p-4 mb-4">
-              <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                <input id="new-carrier-input" type="text" class="flex-1 p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter new carrier name">
-                <button id="add-carrier-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Add Carrier</button>
-              </div>
-              <div id="carriers-list" class="space-y-2"></div>
-            </div>
-          </div>
-        </div>
+<div class="mb-6">
+<h3 class="text-2xl font-semibold mb-4 text-purple-400"><i class="fas fa-list-alt mr-2"></i>Carrier Management</h3>
+<div class="bg-gray-700 rounded-lg p-4 mb-4">
+<div class="flex flex-col sm:flex-row gap-4 mb-4">
+<input id="new-carrier-input" type="text" class="flex-1 p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter new carrier name">
+<button id="add-carrier-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Add Carrier</button>
+</div>
+<div id="carriers-list" class="space-y-2"></div>
+</div>
+</div>
+</div>
 
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
 </div>
 
 <!-- ADD LICENSE MODAL -->
 <div id="add-license-modal" class="modal">
-  <div class="modal-content p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
-      <button id="close-add-license-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-    </div>
-    <form id="add-license-form" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-2">Select States (you may choose multiple)</label>
-        <div id="add-license-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2">
-          <!-- states added by JS -->
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Carriers (choose one or more)</label>
-        <div id="carriers-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg">
-          <!-- carriers checkboxes inserted by JS -->
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Expiration Date</label>
-        <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
-      </div>
-      <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
-        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
-      </div>
-    </form>
-  </div>
+<div class="modal-content p-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
+<button id="close-add-license-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+</div>
+<form id="add-license-form" class="space-y-4">
+<div>
+<label class="block text-sm font-medium mb-2">Select States (you may choose multiple)</label>
+<div id="add-license-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2"></div>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">Carriers (choose one or more)</label>
+<div id="carriers-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg"></div>
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">Expiration Date</label>
+<input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
+</div>
+<div class="flex justify-end space-x-3 pt-4">
+<button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
+<button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
+</div>
+</form>
+</div>
 </div>
 
-<!-- EDIT USER LICENSES MODAL (for admins) -->
+<!-- EDIT USER LICENSES MODAL -->
 <div id="edit-user-licenses-modal" class="modal">
-  <div class="modal-content p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
-      <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto"></div>
-    <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
-    <div class="flex justify-end"><button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
-  </div>
+<div class="modal-content p-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
+<button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+</div>
+<div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto"></div>
+<button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
+<div class="flex justify-end"><button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
+</div>
 </div>
 
 <!-- PASSWORD RESET MODAL -->
 <div id="reset-password-modal" class="modal">
-  <div class="modal-content p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-yellow-400"><i class="fas fa-key mr-2"></i>Reset Password</h3>
-      <button id="close-reset-password-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-    </div>
-    <form id="reset-password-form" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-2">Email</label>
-        <input id="reset-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter your email" required>
-      </div>
-      <div>
-        <p class="text-sm text-gray-300">An email will be sent with a password reset link if this email is registered.</p>
-      </div>
-      <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 py-3 rounded-lg font-semibold"><i class="fas fa-sync-alt mr-2"></i>Send Reset Email</button>
-    </form>
-  </div>
+<div class="modal-content p-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-semibold text-yellow-400"><i class="fas fa-key mr-2"></i>Reset Password</h3>
+<button id="close-reset-password-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+</div>
+<form id="reset-password-form" class="space-y-4">
+<div>
+<label class="block text-sm font-medium mb-2">Email</label>
+<input id="reset-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter your email" required>
+</div>
+<div>
+<p class="text-sm text-gray-300">An email will be sent with a password reset link if this email is registered.</p>
+</div>
+<button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-700 py-3 rounded-lg font-semibold"><i class="fas fa-sync-alt mr-2"></i>Send Reset Email</button>
+</form>
+</div>
 </div>
 
 <!-- Firebase SDKs -->
@@ -293,7 +288,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Configuration - REPLACE WITH YOUR ACTUAL CONFIG
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA0Y5QsWbmv09UCoeVKbGgSjZvDkjSULyU",
   authDomain: "rts-tool-8c5e9.firebaseapp.com",
@@ -308,7 +303,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Configure Firebase Auth persistence - this keeps users logged in
+// Configure Firebase Auth persistence
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => {
     console.log("Auth persistence set to LOCAL");
@@ -317,7 +312,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     console.error("Error setting auth persistence:", error);
   });
 
-// States data (all 50 states)
+// States data
 const STATES_DATA = [
   { name: "Alabama", abbreviation: "AL" }, { name: "Alaska", abbreviation: "AK" }, { name: "Arizona", abbreviation: "AZ" },
   { name: "Arkansas", abbreviation: "AR" }, { name: "California", abbreviation: "CA" }, { name: "Colorado", abbreviation: "CO" },
@@ -338,16 +333,13 @@ const STATES_DATA = [
   { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
 ];
 
-// Default carriers
 const DEFAULT_CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
 
-// App state
 let currentUser = null;
 let agents = [];
 let CARRIERS = [];
 let currentEditingUserId = null;
 
-// DOM references
 const loadingScreen = document.getElementById('loading-screen');
 const authScreen = document.getElementById('auth-screen');
 const dashboard = document.getElementById('dashboard');
@@ -356,20 +348,14 @@ const logoutBtn = document.getElementById('logout-btn');
 const adminTabBtn = document.getElementById('admin-tab-btn');
 const adminBadge = document.getElementById('admin-badge');
 
-/* =========================
-   INITIALIZATION
-   ========================= */
-
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initApp, 600);
 });
 
 async function initApp() {
   try {
-    // Initialize app settings and carriers first
     await ensureSettingsAndCarriersExist();
     
-    // Set up auth state listener
     auth.onAuthStateChanged(async (user) => {
       console.log("Auth state changed:", user ? "User logged in" : "No user");
       
@@ -381,7 +367,6 @@ async function initApp() {
             await refreshAgentsCache();
             showDashboard();
           } else {
-            // Create baseline user document if it doesn't exist
             const baseline = {
               firstname: user.displayName ? user.displayName.split(' ')[0] : '',
               lastname: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
@@ -410,8 +395,7 @@ async function initApp() {
         await createDefaultAdminIfNeeded();
       }
     });
-
-    // Setup event listeners AFTER auth state is set up
+    
     setupEventListeners();
     await refreshAgentsCache();
     populateStateCheckboxes();
@@ -419,14 +403,10 @@ async function initApp() {
     
   } catch (err) {
     console.error('Init error:', err);
-    showNotification('Error initializing app — check console for details', 'error');
+    showNotification('Error initializing app - check console for details', 'error');
     showAuthScreen();
   }
 }
-
-/* =========================
-   SETTINGS & CARRIERS
-   ========================= */
 
 async function ensureSettingsAndCarriersExist() {
   const settingsRef = db.collection('app').doc('settings');
@@ -445,22 +425,16 @@ async function updateCarriersInFirestore(newCarriersArray) {
   CARRIERS = newCarriersArray.slice();
 }
 
-/* =========================
-   DEFAULT ADMIN CREATION
-   ========================= */
-
 async function createDefaultAdminIfNeeded() {
   try {
     const adminsSnap = await db.collection('users').where('isAdmin', '==', true).limit(1).get();
     if (!adminsSnap.empty) return;
-
+    
     const demoEmail = 'admin@licenseexplorer.com';
     const demoPassword = 'admin123';
-
+    
     try {
-      // Try to sign in first (in case user already exists)
       await auth.signInWithEmailAndPassword(demoEmail, demoPassword);
-      // If successful, ensure user doc exists
       if (auth.currentUser) {
         const u = auth.currentUser;
         const doc = await db.collection('users').doc(u.uid).get();
@@ -485,15 +459,12 @@ async function createDefaultAdminIfNeeded() {
         return;
       }
     } catch (signInErr) {
-      // User doesn't exist or wrong password - we'll create it
       console.log('Creating new admin account...');
     }
-
-    // Create the auth user
+    
     const uc = await auth.createUserWithEmailAndPassword(demoEmail, demoPassword);
     const uid = uc.user.uid;
     
-    // Create Firestore user doc
     await db.collection('users').doc(uid).set({
       firstname: 'System',
       lastname: 'Administrator',
@@ -509,18 +480,13 @@ async function createDefaultAdminIfNeeded() {
       joinDate: new Date().toISOString().split('T')[0],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
-    // Sign out the created account
+    
     await auth.signOut();
     showNotification('Default admin created (demo). Change password ASAP for production.', 'info');
   } catch (err) {
     console.error('createDefaultAdminIfNeeded error:', err);
   }
 }
-
-/* =========================
-   AGENTS CACHE
-   ========================= */
 
 async function refreshAgentsCache() {
   const usersSnap = await db.collection('users').orderBy('name').get();
@@ -530,10 +496,6 @@ async function refreshAgentsCache() {
     if (fresh) currentUser = fresh;
   }
 }
-
-/* =========================
-   UI Population helpers
-   ========================= */
 
 function populateStateCheckboxes(containerId = 'add-license-states') {
   const container = document.getElementById(containerId);
@@ -563,24 +525,17 @@ function populateCarriersCheckboxes() {
   });
 }
 
-/* =========================
-   EVENT LISTENERS
-   ========================= */
-
 function setupEventListeners() {
-  // Auth forms
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('register-form').addEventListener('submit', handleRegister);
   document.getElementById('reset-password-form').addEventListener('submit', handlePasswordReset);
   
-  // Buttons
   logoutBtn.addEventListener('click', handleLogout);
   document.getElementById('reset-password-btn').addEventListener('click', openResetPasswordModal);
   document.getElementById('add-license-btn').addEventListener('click', openAddLicenseModal);
   document.getElementById('search-btn').addEventListener('click', performSearch);
   document.getElementById('add-carrier-btn').addEventListener('click', addNewCarrier);
   
-  // Modal buttons
   document.getElementById('close-add-license-modal').addEventListener('click', closeAddLicenseModal);
   document.getElementById('cancel-add-license').addEventListener('click', closeAddLicenseModal);
   document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
@@ -588,28 +543,20 @@ function setupEventListeners() {
   document.getElementById('close-reset-password-modal').addEventListener('click', closeResetPasswordModal);
   document.getElementById('add-license-for-user-btn').addEventListener('click', openAddLicenseForUserModal);
   
-  // Forms
   document.getElementById('add-license-form').addEventListener('submit', handleAddLicense);
   
-  // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   
-  // Enter key in search
   const searchInput = document.getElementById('search-input');
   if (searchInput) searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
   
-  // Enter key in carrier input
-  document.getElementById('new-carrier-input').addEventListener('keypress', function(e) { 
+  document.getElementById('new-carrier-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      addNewCarrier(); 
+      addNewCarrier();
     }
   });
 }
-
-/* =========================
-   AUTH: LOGIN / REGISTER / LOGOUT
-   ========================= */
 
 async function handleLogin(e) {
   e.preventDefault();
@@ -617,25 +564,22 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
   
   if (!email || !password) {
-    showNotification('Please enter email and password', 'error'); 
+    showNotification('Please enter email and password', 'error');
     return;
   }
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
     submitBtn.disabled = true;
-
+    
     await auth.signInWithEmailAndPassword(email, password);
-    // The auth state change listener will handle the UI update
     showNotification('Login successful!', 'success');
     
   } catch (err) {
     console.error('Login error:', err);
     
-    // Reset button state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.innerHTML = '<i class="fas fa-unlock mr-2"></i>Login to Dashboard';
     submitBtn.disabled = false;
@@ -658,45 +602,44 @@ async function handleRegister(e) {
   const npn = document.getElementById('register-npn').value.trim();
   const extension = document.getElementById('register-extension').value.trim();
   const password = document.getElementById('register-password').value;
-
-  // Validate basic fields
+  
   if (!firstname || !lastname || !email || !npn || !extension || !password) {
-    showNotification('Please complete all required fields', 'error'); return;
+    showNotification('Please complete all required fields', 'error');
+    return;
   }
   if (!/^\d{4}$/.test(extension)) {
-    showNotification('Extension must be a 4-digit number', 'error'); return;
+    showNotification('Extension must be a 4-digit number', 'error');
+    return;
   }
   if (password.length < 6) {
-    showNotification('Password must be at least 6 characters', 'error'); return;
+    showNotification('Password must be at least 6 characters', 'error');
+    return;
   }
-
+  
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
     submitBtn.disabled = true;
-
-    // Check for unique email and NPN
+    
     const emailSnap = await db.collection('users').where('email', '==', email).limit(1).get();
-    if (!emailSnap.empty) { 
+    if (!emailSnap.empty) {
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
-      showNotification('Email already registered', 'error'); 
-      return; 
+      showNotification('Email already registered', 'error');
+      return;
     }
     const npnSnap = await db.collection('users').where('npn', '==', npn).limit(1).get();
-    if (!npnSnap.empty) { 
+    if (!npnSnap.empty) {
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
-      showNotification('NPN number already registered', 'error'); 
-      return; 
+      showNotification('NPN number already registered', 'error');
+      return;
     }
-
-    // Create the Firebase Auth user
+    
     const uc = await auth.createUserWithEmailAndPassword(email, password);
     const uid = uc.user.uid;
-
+    
     const userDoc = {
       firstname,
       lastname,
@@ -705,21 +648,19 @@ async function handleRegister(e) {
       npn,
       extension,
       isAdmin: false,
-      licenses: [], // Empty licenses array - user can add after registration
+      licenses: [],
       joinDate: new Date().toISOString().split('T')[0],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-
+    
     await db.collection('users').doc(uid).set(userDoc);
     await refreshAgentsCache();
-
+    
     showNotification('Registration successful! You are now logged in.', 'success');
-    // The auth state change listener will handle showing the dashboard
-
+    
   } catch (err) {
     console.error('Register error:', err);
     
-    // Reset button state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.innerHTML = '<i class="fas fa-user-check mr-2"></i>Create Account';
     submitBtn.disabled = false;
@@ -731,7 +672,7 @@ async function handleRegister(e) {
     } else if (err.code === 'auth/missing-permissions') {
       showNotification('Firestore permissions error. Please check your security rules.', 'error');
     } else {
-      showNotification('Registration failed — check console for details', 'error');
+      showNotification('Registration failed - check console for details', 'error');
     }
   }
 }
@@ -747,10 +688,6 @@ async function handleLogout() {
     showNotification('Logout failed', 'error');
   }
 }
-
-/* =========================
-   PASSWORD RESET
-   ========================= */
 
 function openResetPasswordModal() {
   document.getElementById('reset-password-modal').style.display = 'flex';
@@ -775,10 +712,6 @@ async function handlePasswordReset(e) {
   }
 }
 
-/* =========================
-   UI SCREEN MANAGEMENT
-   ========================= */
-
 function showAuthScreen() {
   console.log("Showing auth screen");
   loadingScreen.classList.add('hidden');
@@ -786,7 +719,6 @@ function showAuthScreen() {
   dashboard.classList.add('hidden');
   navButtons.classList.add('hidden');
   
-  // Clear any sensitive data from forms
   document.getElementById('login-form').reset();
   document.getElementById('register-form').reset();
 }
@@ -797,16 +729,14 @@ function showDashboard() {
   authScreen.classList.add('hidden');
   dashboard.classList.remove('hidden');
   navButtons.classList.remove('hidden');
-
-  // Update user information
+  
   document.getElementById('user-name').textContent = currentUser.name;
   document.getElementById('profile-name').textContent = currentUser.name;
   document.getElementById('profile-email').textContent = currentUser.email;
   document.getElementById('profile-npn').textContent = currentUser.npn || '';
   document.getElementById('profile-extension').textContent = currentUser.extension || '';
   document.getElementById('member-since').textContent = currentUser.joinDate || new Date().toISOString().split('T')[0];
-
-  // Update admin status
+  
   if (currentUser.isAdmin) {
     adminTabBtn.classList.remove('hidden');
     adminBadge.classList.remove('hidden');
@@ -816,7 +746,7 @@ function showDashboard() {
     adminBadge.classList.add('hidden');
     document.getElementById('user-badge').classList.remove('hidden');
   }
-
+  
   updateUserStats();
   loadUserLicenses();
   if (currentUser.isAdmin) loadAdminPanel();
@@ -834,24 +764,22 @@ function performSearch() {
     return;
   }
   const query = normalize(queryRaw);
-
-  // Determine if query is a state name or abbreviation (exact)
+  
   let matchedState = null;
   for (const s of STATES_DATA) {
     if (normalize(s.name) === query || normalize(s.abbreviation) === query) {
-      matchedState = s; break;
+      matchedState = s;
+      break;
     }
   }
-
+  
   const results = agents.filter(agent => {
-    // Agent-level exact matches
     if (normalize(agent.name) === query) return true;
     const nameParts = normalize(agent.name).split(/\s+/);
     if (nameParts.includes(query)) return true;
     if (normalize(agent.email) === query) return true;
     if (normalize(agent.npn) === query) return true;
-
-    // License-level exact matches
+    
     if (!Array.isArray(agent.licenses)) return false;
     return agent.licenses.some(license => {
       if (matchedState) {
@@ -866,12 +794,12 @@ function performSearch() {
       return false;
     });
   });
-
+  
   if (results.length === 0) {
     resultsContainer.innerHTML = `<div class="text-center text-gray-400"><i class="fas fa-search text-4xl mb-4"></i><p class="text-xl">No exact matches found for "${escapeHtml(queryRaw)}"</p><p class="text-sm mt-2">Search by exact state name (California), state code (CA), agent first/last name, email, NPN, or carrier name</p></div>`;
     return;
   }
-
+  
   let html = '<div class="space-y-4">';
   for (const agent of results) {
     const licenseInfo = (agent.licenses || []).map(lic => {
@@ -879,22 +807,18 @@ function performSearch() {
       return `${stateObj ? stateObj.name : lic.state}: ${Array.isArray(lic.carriers) ? lic.carriers.join(', ') : ''}`;
     }).join('; ');
     html += `<div class="bg-gray-600 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-2">
-        <h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(agent.name)}</h4>
-        ${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
-      </div>
-      <p class="text-gray-300 mb-2">Email: ${escapeHtml(agent.email || '')} | NPN: ${escapeHtml(agent.npn || '')}</p>
-      <p class="text-gray-300 mb-2">Extension: ${escapeHtml(agent.extension || '')}</p>
-      <div class="mt-3"><h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5><p class="text-gray-400">${escapeHtml(licenseInfo || 'No licenses')}</p></div>
-    </div>`;
+<div class="flex justify-between items-start mb-2">
+<h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(agent.name)}</h4>
+${agent.isAdmin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
+</div>
+<p class="text-gray-300 mb-2">Email: ${escapeHtml(agent.email || '')} | NPN: ${escapeHtml(agent.npn || '')}</p>
+<p class="text-gray-300 mb-2">Extension: ${escapeHtml(agent.extension || '')}</p>
+<div class="mt-3"><h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5><p class="text-gray-400">${escapeHtml(licenseInfo || 'No licenses')}</p></div>
+</div>`;
   }
   html += '</div>';
   resultsContainer.innerHTML = html;
 }
-
-/* =========================
-   LICENSE MANAGEMENT
-   ========================= */
 
 function openAddLicenseModal() {
   currentEditingUserId = null;
@@ -917,18 +841,17 @@ async function handleAddLicense(e) {
   const selectedStateEls = Array.from(document.querySelectorAll('.license-state-checkbox:checked'));
   const selectedCarrierEls = Array.from(document.querySelectorAll('.carrier-checkbox:checked'));
   const expiration = document.getElementById('license-expiration').value || '';
-
+  
   if (selectedStateEls.length === 0) { showNotification('Please select at least one state', 'error'); return; }
   if (selectedCarrierEls.length === 0) { showNotification('Please select at least one carrier', 'error'); return; }
-
+  
   const states = selectedStateEls.map(i => i.value);
   const carriers = selectedCarrierEls.map(i => i.value);
-
+  
   const newLicenses = states.map(s => ({ state: s, carriers: carriers.slice(), expiration }));
-
+  
   try {
     if (currentEditingUserId && currentUser && currentUser.isAdmin) {
-      // ADMIN adding licenses for another user
       const userDocRef = db.collection('users').doc(currentEditingUserId);
       const snap = await userDocRef.get();
       if (!snap.exists) { showNotification('Target user not found', 'error'); return; }
@@ -946,7 +869,6 @@ async function handleAddLicense(e) {
       openEditUserLicenses(currentEditingUserId);
       showNotification(`Added ${toAdd.length} license(s) to user`, 'success');
     } else {
-      // Regular user adding licenses to their own account
       if (!currentUser || !currentUser.uid) { showNotification('No logged-in user', 'error'); return; }
       const userDocRef = db.collection('users').doc(currentUser.uid);
       const snap = await userDocRef.get();
@@ -967,7 +889,7 @@ async function handleAddLicense(e) {
     closeAddLicenseModal();
   } catch (err) {
     console.error('Add license error:', err);
-    showNotification('Failed to add license — check console', 'error');
+    showNotification('Failed to add license - check console', 'error');
   }
 }
 
@@ -992,10 +914,6 @@ async function deleteLicense(licenseIndex) {
   }
 }
 
-/* =========================
-   ADMIN: Edit Other Users' Licenses
-   ========================= */
-
 function openEditUserLicenses(userId) {
   if (!currentUser || !currentUser.isAdmin) { showNotification('Access denied: Admin only', 'error'); return; }
   currentEditingUserId = userId;
@@ -1003,7 +921,7 @@ function openEditUserLicenses(userId) {
   document.getElementById('edit-user-title').textContent = `Edit Licenses - ${user.name}`;
   const container = document.getElementById('user-licenses-container');
   container.innerHTML = '';
-
+  
   if (!user.licenses || user.licenses.length === 0) {
     container.innerHTML = '<p class="text-gray-400 text-center">No licenses found</p>';
   } else {
@@ -1012,13 +930,13 @@ function openEditUserLicenses(userId) {
       const node = document.createElement('div');
       node.className = 'bg-gray-600 p-3 rounded-lg';
       node.innerHTML = `<div class="flex justify-between items-center">
-        <div>
-          <h5 class="font-semibold text-cyan-300">${escapeHtml(stateObj ? stateObj.name : license.state)}</h5>
-          <p class="text-sm text-gray-300">${escapeHtml((license.carriers||[]).join(', '))}</p>
-          <p class="text-xs text-gray-400">Expires: ${escapeHtml(license.expiration||'')}</p>
-        </div>
-        <button onclick="deleteUserLicense('${userId}', ${idx})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition"><i class="fas fa-trash"></i></button>
-      </div>`;
+<div>
+<h5 class="font-semibold text-cyan-300">${escapeHtml(stateObj ? stateObj.name : license.state)}</h5>
+<p class="text-sm text-gray-300">${escapeHtml((license.carriers||[]).join(', '))}</p>
+<p class="text-xs text-gray-400">Expires: ${escapeHtml(license.expiration||'')}</p>
+</div>
+<button onclick="deleteUserLicense('${userId}', ${idx})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm transition"><i class="fas fa-trash"></i></button>
+</div>`;
       container.appendChild(node);
     });
   }
@@ -1058,45 +976,41 @@ async function deleteUserLicense(userId, licenseIndex) {
   }
 }
 
-/* =========================
-   ADMIN PANEL
-   ========================= */
-
 async function loadAdminPanel() {
   const usersList = document.getElementById('users-list');
   const totalUsers = document.getElementById('total-users');
   const adminCount = document.getElementById('admin-count');
   const agentCount = document.getElementById('agent-count');
-
+  
   await refreshAgentsCache();
   const admins = agents.filter(a => a.isAdmin);
   const regular = agents.filter(a => !a.isAdmin);
-
+  
   totalUsers.textContent = agents.length;
   adminCount.textContent = admins.length;
   agentCount.textContent = regular.length;
-
+  
   let html = '';
   for (const agent of agents) {
     const licenseCount = (agent.licenses || []).length;
     const stateCount = new Set((agent.licenses || []).map(l => l.state)).size;
     const isCurrent = (agent.uid === (currentUser && currentUser.uid));
     html += `<div class="bg-gray-700 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-2">
-        <div><h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(agent.name)} ${isCurrent ? '(You)' : ''}</h4>
-        <p class="text-gray-400 text-sm">${escapeHtml(agent.email)} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p></div>
-        <span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">${agent.isAdmin ? 'Admin' : 'Agent'}</span>
-      </div>
-      <div class="grid grid-cols-2 gap-4 mb-3">
-        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${licenseCount}</p><p class="text-xs text-gray-400">Licenses</p></div>
-        <div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${stateCount}</p><p class="text-xs text-gray-400">States</p></div>
-      </div>
-      <div class="flex space-x-2">
-        <button onclick="openEditUserLicenses('${agent.uid}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Edit Licenses</button>
-        ${!isCurrent && !agent.isAdmin ? `<button onclick="deleteUser('${agent.uid}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
-        ${!isCurrent ? `<button onclick="toggleAdminStatus('${agent.uid}')" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded">${agent.isAdmin ? 'Demote' : 'Promote'}</button>` : ''}
-      </div>
-    </div>`;
+<div class="flex justify-between items-start mb-2">
+<div><h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(agent.name)} ${isCurrent ? '(You)' : ''}</h4>
+<p class="text-gray-400 text-sm">${escapeHtml(agent.email)} | ${agent.isAdmin ? 'Administrator' : 'Agent'}</p></div>
+<span class="bg-${agent.isAdmin ? 'red' : 'green'}-600 px-2 py-1 rounded text-xs font-semibold">${agent.isAdmin ? 'Admin' : 'Agent'}</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-3">
+<div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${licenseCount}</p><p class="text-xs text-gray-400">Licenses</p></div>
+<div class="text-center bg-gray-800 p-2 rounded"><p class="text-2xl font-bold text-cyan-400">${stateCount}</p><p class="text-xs text-gray-400">States</p></div>
+</div>
+<div class="flex space-x-2">
+<button onclick="openEditUserLicenses('${agent.uid}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Edit Licenses</button>
+${!isCurrent && !agent.isAdmin ? `<button onclick="deleteUser('${agent.uid}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
+${!isCurrent ? `<button onclick="toggleAdminStatus('${agent.uid}')" class="flex-1 ${agent.isAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded">${agent.isAdmin ? 'Demote' : 'Promote'}</button>` : ''}
+</div>
+</div>`;
   }
   usersList.innerHTML = html || '<p class="text-gray-400 text-center">No users found</p>';
   loadCarriersList();
@@ -1134,10 +1048,6 @@ async function deleteUser(userId) {
   }
 }
 
-/* =========================
-   CARRIER MANAGEMENT
-   ========================= */
-
 async function loadCarriersList() {
   if (!currentUser || !currentUser.isAdmin) return;
   const carriersList = document.getElementById('carriers-list');
@@ -1160,7 +1070,6 @@ async function addNewCarrier() {
   const name = input.value.trim();
   if (!name) { showNotification('Please enter a carrier name', 'error'); return; }
   
-  // Case-insensitive duplicate check
   const exists = CARRIERS.some(c => c.toLowerCase() === name.toLowerCase());
   if (exists) { showNotification('Carrier already exists', 'error'); return; }
   
@@ -1181,14 +1090,13 @@ async function removeCarrier(index) {
   if (!currentUser || !currentUser.isAdmin) { showNotification('Admin required', 'error'); return; }
   const carrier = CARRIERS[index];
   if (!confirm(`Are you sure you want to remove "${carrier}"? This will remove it from all user licenses.`)) return;
-
+  
   const newArray = CARRIERS.slice();
   newArray.splice(index, 1);
-
+  
   try {
     await updateCarriersInFirestore(newArray);
-
-    // Remove the carrier from all user docs
+    
     const usersSnapshot = await db.collection('users').get();
     const batch = db.batch();
     usersSnapshot.forEach(doc => {
@@ -1215,10 +1123,6 @@ async function removeCarrier(index) {
   }
 }
 
-/* =========================
-   USER UI: Load Current User Licenses + Stats
-   ========================= */
-
 function updateUserStats() {
   if (!currentUser) return;
   const statesCount = (currentUser.licenses || []).length;
@@ -1237,23 +1141,19 @@ function loadUserLicenses() {
   currentUser.licenses.forEach((license, index) => {
     const state = STATES_DATA.find(s => s.abbreviation === license.state);
     html += `<div class="bg-gray-700 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-3">
-        <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
-        <div class="flex space-x-2">
-          <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
-          <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>
-      <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers||[]).join(', '))}</p>
-      <p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration||'')}</p>
-    </div>`;
+<div class="flex justify-between items-start mb-3">
+<h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
+<div class="flex space-x-2">
+<span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+<button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm"><i class="fas fa-trash"></i></button>
+</div>
+</div>
+<p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers||[]).join(', '))}</p>
+<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration||'')}</p>
+</div>`;
   });
   container.innerHTML = html;
 }
-
-/* =========================
-   UTIL: Notifications + Misc
-   ========================= */
 
 function showNotification(message, type='info') {
   const notification = document.createElement('div');
@@ -1275,12 +1175,9 @@ function switchTab(tabName) {
 
 function escapeHtml(unsafe) {
   if (!unsafe) return '';
-  return unsafe.toString().replace(/[&<"'>]/g, function (m) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' })[m]; });
+  return unsafe.toString().replace(/[&<"'}>]/g, function (m) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' })[m]; });
 }
 
-/* =========================
-   Expose functions globally
-   ========================= */
 window.openAddLicenseModal = openAddLicenseModal;
 window.closeAddLicenseModal = closeAddLicenseModal;
 window.deleteLicense = deleteLicense;
