@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Insurance License Data Explorer (Supabase)</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <title>Insurance License Data Explorer</title>
+  <!-- Using Tailwind CSS CDN for development (ignore the warning) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
@@ -209,40 +210,12 @@
   </div>
 </div>
 
-<!-- ADD LICENSE MODAL -->
-<div id="add-license-modal" class="modal">
-  <div class="modal-content p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
-      <button id="close-add-license-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-    </div>
-    <form id="add-license-form" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-2">Select States (you may choose multiple)</label>
-        <div id="add-license-states" class="bg-gray-700 p-3 rounded-lg max-h-40 overflow-y-auto grid grid-cols-2 gap-2"></div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Carriers (choose one or more)</label>
-        <div id="carriers-container" class="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-700 rounded-lg"></div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Expiration Date</label>
-        <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
-      </div>
-      <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
-        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script>
-// ✅ CORRECT SUPABASE CREDENTIALS
+// ✅ SUPABASE CONFIGURATION - NO FIREBASE!
 const SUPABASE_URL = 'https://sdkprilrlnfuqkotwfyd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3ByaWxybG5mdXFrb3R3ZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MDA5MTksImV4cCI6MjA3NTQ3NjkxOX0.2E1jqwtXv03Jtc3nN1sRS3ZTIm4N02ftoX1G5NWef10';
 
-// Initialize Supabase
+// Initialize Supabase (NO FIREBASE!)
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // States data
@@ -266,42 +239,45 @@ const STATES_DATA = [
   { name: "Wisconsin", abbreviation: "WI" }, { name: "Wyoming", abbreviation: "WY" }
 ];
 
-// Default carriers
-const DEFAULT_CARRIERS = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual", "Nationwide", "Farmers", "USAA", "American Family", "Travelers"];
-
 // App state
 let currentUser = null;
 let allUsers = [];
 let carriers = [];
-let currentEditingUserId = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Initializing Supabase app...');
   await initApp();
 });
 
 async function initApp() {
   try {
+    // Test Supabase connection
+    const { data, error } = await supabase.from('users').select('count').limit(1);
+    
+    if (error) {
+      console.error('Supabase connection failed:', error);
+      showNotification('⚠️ Please run the SQL setup in Supabase first', 'error');
+      showAuthScreen();
+      return;
+    }
+
+    console.log('✅ Supabase connected successfully!');
+    
     // Load carriers
     await loadCarriers();
     
-    // Check for existing session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session) {
-      await loadUserData(session.user.id);
+    // Check if user is already logged in (from localStorage)
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      await loadAllUsers();
+      showDashboard();
     } else {
-      // Check if we can connect to Supabase
-      const { data, error } = await supabase.from('users').select('count').limit(1);
-      if (error) {
-        showNotification('Database not set up. Please run the SQL schema in Supabase.', 'error');
-      }
       showAuthScreen();
     }
     
     setupEventListeners();
-    populateStateCheckboxes();
-    populateCarriersCheckboxes();
     
   } catch (error) {
     console.error('Init error:', error);
@@ -310,27 +286,14 @@ async function initApp() {
   }
 }
 
-// Data management functions
+// Data management
 async function loadCarriers() {
   const { data, error } = await supabase.from('app_settings').select('carriers').single();
   if (error) {
     console.error('Error loading carriers:', error);
-    carriers = DEFAULT_CARRIERS;
+    carriers = ["State Farm", "Allstate", "Geico", "Progressive", "Liberty Mutual"];
   } else {
-    carriers = data.carriers || DEFAULT_CARRIERS;
-  }
-}
-
-async function loadUserData(userId) {
-  const { data: user, error } = await supabase.from('users').select('*').eq('id', userId).single();
-  if (error) {
-    showNotification('Error loading user data', 'error');
-    return;
-  }
-  if (user) {
-    currentUser = user;
-    await loadAllUsers();
-    showDashboard();
+    carriers = data.carriers || ["State Farm", "Allstate", "Geico"];
   }
 }
 
@@ -347,20 +310,30 @@ async function handleLogin(e) {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .eq('password', password)
-    .single();
+  if (!email || !password) {
+    showNotification('Please enter email and password', 'error');
+    return;
+  }
   
-  if (user) {
-    currentUser = user;
-    await loadAllUsers();
-    showDashboard();
-    showNotification('Login successful!', 'success');
-  } else {
-    showNotification('Invalid email or password', 'error');
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password', password)
+      .single();
+    
+    if (user) {
+      currentUser = user;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      await loadAllUsers();
+      showDashboard();
+      showNotification('Login successful!', 'success');
+    } else {
+      showNotification('Invalid email or password', 'error');
+    }
+  } catch (error) {
+    showNotification('Login failed', 'error');
   }
 }
 
@@ -373,36 +346,51 @@ async function handleRegister(e) {
   const extension = document.getElementById('register-extension').value;
   const password = document.getElementById('register-password').value;
   
-  // Check if email exists
-  const { data: existingUser } = await supabase.from('users').select('id').eq('email', email).single();
-  if (existingUser) {
-    showNotification('Email already registered', 'error');
+  if (!firstname || !lastname || !email || !npn || !extension || !password) {
+    showNotification('Please complete all fields', 'error');
     return;
   }
   
-  const newUser = {
-    email,
-    password,
-    firstname,
-    lastname,
-    name: `${firstname} ${lastname}`,
-    npn,
-    extension,
-    is_admin: false,
-    licenses: []
-  };
+  if (password.length < 6) {
+    showNotification('Password must be at least 6 characters', 'error');
+    return;
+  }
   
-  const { error } = await supabase.from('users').insert([newUser]);
-  if (error) {
-    showNotification('Registration failed: ' + error.message, 'error');
-  } else {
-    showNotification('Registration successful! You can now login.', 'success');
-    document.getElementById('register-form').reset();
+  try {
+    // Check if email exists
+    const { data: existingUser } = await supabase.from('users').select('id').eq('email', email).single();
+    if (existingUser) {
+      showNotification('Email already registered', 'error');
+      return;
+    }
+    
+    const newUser = {
+      email,
+      password,
+      firstname,
+      lastname,
+      name: `${firstname} ${lastname}`,
+      npn,
+      extension,
+      is_admin: false,
+      licenses: []
+    };
+    
+    const { error } = await supabase.from('users').insert([newUser]);
+    if (error) {
+      showNotification('Registration failed: ' + error.message, 'error');
+    } else {
+      showNotification('Registration successful! You can now login.', 'success');
+      document.getElementById('register-form').reset();
+    }
+  } catch (error) {
+    showNotification('Registration failed', 'error');
   }
 }
 
-async function handleLogout() {
+function handleLogout() {
   currentUser = null;
+  localStorage.removeItem('currentUser');
   showAuthScreen();
   showNotification('Logged out successfully', 'info');
 }
@@ -427,7 +415,7 @@ function showDashboard() {
   document.getElementById('profile-email').textContent = currentUser.email;
   document.getElementById('profile-npn').textContent = currentUser.npn;
   document.getElementById('profile-extension').textContent = currentUser.extension;
-  document.getElementById('member-since').textContent = currentUser.join_date;
+  document.getElementById('member-since').textContent = currentUser.join_date || '2024';
   
   // Update admin status
   if (currentUser.is_admin) {
@@ -445,38 +433,148 @@ function showDashboard() {
   if (currentUser.is_admin) loadAdminPanel();
 }
 
-// Setup all other functions (license management, search, admin panel, etc.)
-// ... [Include all the other functions from the previous implementation]
+function updateUserStats() {
+  if (!currentUser) return;
+  const statesCount = (currentUser.licenses || []).length;
+  const carriersCount = (currentUser.licenses || []).reduce((total, license) => {
+    return total + (license.carriers ? license.carriers.length : 0);
+  }, 0);
+  
+  document.getElementById('states-count').textContent = statesCount;
+  document.getElementById('carriers-count').textContent = carriersCount;
+}
 
-// For now, let's set up basic event listeners
+function loadUserLicenses() {
+  const container = document.getElementById('licenses-container');
+  
+  if (!currentUser.licenses || currentUser.licenses.length === 0) {
+    container.innerHTML = `<div class="text-center text-gray-400 py-8">
+      <i class="fas fa-id-card text-4xl mb-4"></i>
+      <p class="text-xl">No licenses added yet</p>
+      <p class="text-sm mt-2">Click "Add License" to get started</p>
+    </div>`;
+    return;
+  }
+  
+  let html = '';
+  currentUser.licenses.forEach((license, index) => {
+    const state = STATES_DATA.find(s => s.abbreviation === license.state);
+    html += `<div class="bg-gray-700 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-3">
+        <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(state ? state.name : license.state)} License</h4>
+        <div class="flex space-x-2">
+          <span class="bg-green-600 px-2 py-1 rounded text-sm">Active</span>
+          <button onclick="deleteLicense(${index})" class="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-sm">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <p class="text-gray-300 mb-2"><strong>Carriers:</strong> ${escapeHtml((license.carriers || []).join(', '))}</p>
+      <p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration || 'Not set')}</p>
+    </div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+// Search functionality
+function performSearch() {
+  const query = document.getElementById('search-input').value.trim().toLowerCase();
+  const resultsContainer = document.getElementById('search-results');
+  
+  if (!query) {
+    resultsContainer.innerHTML = '<div class="text-center text-gray-400"><i class="fas fa-compass text-4xl mb-4"></i><p class="text-xl">Enter a search term</p></div>';
+    return;
+  }
+  
+  const results = allUsers.filter(user => {
+    // Search user fields
+    if (user.name.toLowerCase().includes(query) || 
+        user.email.toLowerCase().includes(query) ||
+        user.npn.includes(query)) {
+      return true;
+    }
+    
+    // Search licenses
+    if (user.licenses && Array.isArray(user.licenses)) {
+      return user.licenses.some(license => {
+        // State match
+        if (license.state.toLowerCase() === query) return true;
+        
+        // Full state name match
+        const state = STATES_DATA.find(s => s.name.toLowerCase() === query);
+        if (state && license.state === state.abbreviation) return true;
+        
+        // Carrier match
+        if (license.carriers && Array.isArray(license.carriers)) {
+          return license.carriers.some(carrier => carrier.toLowerCase().includes(query));
+        }
+        
+        return false;
+      });
+    }
+    
+    return false;
+  });
+  
+  if (results.length === 0) {
+    resultsContainer.innerHTML = `<div class="text-center text-gray-400"><i class="fas fa-search text-4xl mb-4"></i><p class="text-xl">No results found for "${escapeHtml(query)}"</p></div>`;
+    return;
+  }
+  
+  let html = '<div class="space-y-4">';
+  results.forEach(user => {
+    const licenseInfo = (user.licenses || []).map(license => {
+      const state = STATES_DATA.find(s => s.abbreviation === license.state);
+      return `${state ? state.name : license.state}: ${(license.carriers || []).join(', ')}`;
+    }).join('; ');
+    
+    html += `<div class="bg-gray-600 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-2">
+        <h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(user.name)}</h4>
+        ${user.is_admin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
+      </div>
+      <p class="text-gray-300 mb-2">Email: ${escapeHtml(user.email)} | NPN: ${escapeHtml(user.npn)}</p>
+      <p class="text-gray-300 mb-2">Extension: ${escapeHtml(user.extension)}</p>
+      <div class="mt-3">
+        <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
+        <p class="text-gray-400">${escapeHtml(licenseInfo || 'No licenses')}</p>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  resultsContainer.innerHTML = html;
+}
+
+// Utility functions
 function setupEventListeners() {
   document.getElementById('login-form').addEventListener('submit', handleLogin);
   document.getElementById('register-form').addEventListener('submit', handleRegister);
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
   document.getElementById('search-btn').addEventListener('click', performSearch);
-  document.getElementById('add-license-btn').addEventListener('click', openAddLicenseModal);
-}
-
-function populateStateCheckboxes() {
-  const container = document.getElementById('add-license-states');
-  container.innerHTML = '';
-  STATES_DATA.forEach(state => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${state.abbreviation}" class="license-state-checkbox"> <span>${state.name} (${state.abbreviation})</span>`;
-    container.appendChild(label);
+  document.getElementById('add-license-btn').addEventListener('click', () => showNotification('Add license feature coming soon', 'info'));
+  
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 }
 
-function populateCarriersCheckboxes() {
-  const container = document.getElementById('carriers-container');
-  container.innerHTML = '';
-  carriers.forEach(carrier => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${carrier}" class="carrier-checkbox"> <span>${carrier}</span>`;
-    container.appendChild(label);
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active', 'bg-cyan-600');
+    btn.classList.add('bg-gray-700');
   });
+  
+  document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+  const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+  activeBtn.classList.add('active', 'bg-cyan-600');
+  activeBtn.classList.remove('bg-gray-700');
+  
+  if (tabName === 'admin' && currentUser.is_admin) {
+    loadAdminPanel();
+  }
 }
 
 function showNotification(message, type = 'info') {
@@ -487,19 +585,31 @@ function showNotification(message, type = 'info') {
   }`;
   notification.innerHTML = `<div class="flex items-center">
     <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} mr-2"></i>
-    <span>${message}</span>
+    <span>${escapeHtml(message)}</span>
   </div>`;
   document.body.appendChild(notification);
   setTimeout(() => notification.remove(), 3500);
 }
 
-// Placeholder functions - you'll need to implement these
-function performSearch() { showNotification('Search functionality coming soon', 'info'); }
-function openAddLicenseModal() { showNotification('Add license modal coming soon', 'info'); }
-function loadUserLicenses() { /* TODO */ }
-function updateUserStats() { /* TODO */ }
-function loadAdminPanel() { /* TODO */ }
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
+// Placeholder functions for future implementation
+function loadAdminPanel() {
+  showNotification('Admin panel coming soon', 'info');
+}
+
+async function deleteLicense(index) {
+  if (!confirm('Are you sure you want to delete this license?')) return;
+  showNotification('Delete license feature coming soon', 'info');
+}
+
+// Make functions global
+window.deleteLicense = deleteLicense;
 </script>
 </body>
 </html>
