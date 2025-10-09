@@ -1,3 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Insurance License Data Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #22d3ee; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.4s ease-in; }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.75); z-index:1000; align-items: center; justify-content:center; }
+    .modal-content { background: #374151; border-radius: 12px; max-width: 720px; width: 95%; max-height: 90vh; overflow-y: auto; }
+    .bubble { display: inline-flex; align-items: center; padding: 0.5rem 1rem; margin: 0.25rem; border-radius: 9999px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+    .bubble:hover { transform: scale(1.05); }
+    .bubble.selected { border-color: #22d3ee; background-color: #155e75; }
+    .bubble-state { background-color: #1e40af; }
+    .bubble-carrier { background-color: #7e22ce; }
+    .search-highlight { background-color: #fef3c7; color: #92400e; padding: 0.1rem 0.2rem; border-radius: 0.25rem; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+<nav class="bg-gray-800 p-4">
+  <div class="container mx-auto flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-cyan-400"><i class="fas fa-id-card-alt mr-2"></i>License Explorer</h1>
+    <div id="nav-buttons" class="hidden">
+      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container mx-auto p-4">
+  <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh] fade-in">
+    <div class="loading-spinner mb-4"></div>
+    <p class="text-xl">Loading Application...</p>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="hidden max-w-4xl mx-auto fade-in">
+    <div class="bg-gray-800 rounded-xl p-8 shadow-2xl">
+      <h2 class="text-3xl font-bold text-center mb-8 text-cyan-400"><i class="fas fa-shield-alt mr-3"></i>Agent Portal</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- LOGIN -->
+        <div class="bg-gray-700 p-6 rounded-lg">
+          <h3 class="text-2xl font-semibold mb-4 text-green-400"><i class="fas fa-sign-in-alt mr-2"></i>Login</h3>
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Email</label>
+              <input id="login-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="admin@licenseexplorer.com" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Password</label>
+              <input id="login-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold">
+              <i class="fas fa-unlock mr-2"></i>Login to Dashboard
+            </button>
+          </form>
+
+          <div class="mt-4 p-3 bg-gray-800 rounded-lg text-sm">
+            <p class="text-cyan-300 font-semibold">Demo Account:</p>
+            <p class="text-gray-400">Admin: admin@licenseexplorer.com / admin123</p>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div class="bg-gray-700 p-6 rounded-lg">
+          <h3 class="text-2xl font-semibold mb-4 text-blue-400"><i class="fas fa-user-plus mr-2"></i>Register</h3>
+          <form id="register-form" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">First Name</label>
+                <input id="register-firstname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="John" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Last Name</label>
+                <input id="register-lastname" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Smith" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Email</label>
+              <input id="register-email" type="email" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="john@company.com" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">NPN Number</label>
+                <input id="register-npn" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="123456789" required>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Extension</label>
+                <input id="register-extension" type="text" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="1234" maxlength="4" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2">Password</label>
+              <input id="register-password" type="password" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Create password (min. 6 characters)" required>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold">
+              <i class="fas fa-user-check mr-2"></i>Create Account
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden max-w-6xl mx-auto fade-in">
+    <div class="bg-gradient-to-r from-cyan-900 to-blue-900 rounded-xl p-6 mb-8 shadow-2xl">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h2 class="text-3xl font-bold mb-2">Welcome back, <span id="user-name" class="text-cyan-300"></span>!</h2>
+          <p class="text-gray-300">License Data Explorer Dashboard</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-2">
+          <span id="user-badge" class="bg-green-600 px-3 py-1 rounded-full text-sm font-semibold">Licensed Agent</span>
+          <span id="admin-badge" class="bg-red-600 px-3 py-1 rounded-full text-sm font-semibold hidden"><i class="fas fa-crown mr-1"></i>Administrator</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gray-800 rounded-xl p-6 shadow-2xl">
+      <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+        <button class="tab-btn active bg-cyan-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="search"><i class="fas fa-search mr-2"></i>Search Licenses</button>
+        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="profile"><i class="fas fa-user mr-2"></i>My Profile</button>
+        <button class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition" data-tab="licenses"><i class="fas fa-id-card mr-2"></i>My Licenses</button>
+        <button id="admin-tab-btn" class="tab-btn bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold transition hidden" data-tab="admin"><i class="fas fa-users-cog mr-2"></i>Admin Panel</button>
+      </div>
+
+      <div id="tab-content">
+        <!-- SEARCH -->
+        <div id="search-tab" class="tab-panel active">
+          <div class="mb-6">
+            <div class="flex flex-col sm:flex-row gap-4">
+              <input id="search-input" class="flex-1 p-4 bg-gray-700 rounded-lg border border-gray-600" placeholder="Search by exact state (California or CA), agent name, email, NPN, or carrier...">
+              <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-4 rounded-lg font-semibold transition whitespace-nowrap"><i class="fas fa-search mr-2"></i>Search</button>
+            </div>
+            <div class="mt-2 text-sm text-gray-400">
+              <p><i class="fas fa-info-circle mr-1"></i>Exact matches only: "California" or "CA", "John Smith", "john@email.com", "123456789", "State Farm"</p>
+            </div>
+          </div>
+          <div id="search-results" class="bg-gray-700 rounded-lg p-6 min-h-[300px]">
+            <div class="text-center text-gray-400">
+              <i class="fas fa-compass text-4xl mb-4"></i>
+              <p class="text-xl">Enter a search term to find license data</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="profile-tab" class="tab-panel hidden">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-700 p-6 rounded-lg">
+              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Agent Information</h3>
+              <div class="space-y-3">
+                <p><strong class="text-gray-300">Name:</strong> <span id="profile-name" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Email:</strong> <span id="profile-email" class="text-white"></span></p>
+                <p><strong class="text-gray-300">NPN:</strong> <span id="profile-npn" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Extension:</strong> <span id="profile-extension" class="text-white"></span></p>
+                <p><strong class="text-gray-300">Status:</strong> <span class="text-green-400 font-semibold">Active</span></p>
+              </div>
+            </div>
+            <div class="bg-gray-700 p-6 rounded-lg">
+              <h3 class="text-xl font-semibold mb-4 text-cyan-400">Quick Stats</h3>
+              <div class="space-y-3">
+                <p><strong class="text-gray-300">Licensed States:</strong> <span id="states-count" class="text-white">0</span></p>
+                <p><strong class="text-gray-300">Carriers:</strong> <span id="carriers-count" class="text-white">0</span></p>
+                <p><strong class="text-gray-300">Member Since:</strong> <span class="text-white" id="member-since">2024</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY LICENSES -->
+        <div id="licenses-tab" class="tab-panel hidden">
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-cyan-400">My License Portfolio</h3>
+            <div id="licenses-container" class="space-y-4"></div>
+            <button id="add-license-btn" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"><i class="fas fa-plus mr-2"></i>Add License</button>
+          </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="admin-tab" class="tab-panel hidden">
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-red-400"><i class="fas fa-users-cog mr-2"></i>User Management</h3>
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+              <p class="text-gray-300">Total Users: <span id="total-users" class="text-white font-semibold">0</span></p>
+              <p class="text-gray-300">Admins: <span id="admin-count" class="text-white font-semibold">0</span></p>
+              <p class="text-gray-300">Agents: <span id="agent-count" class="text-white font-semibold">0</span></p>
+            </div>
+            <div id="users-list" class="space-y-4"></div>
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-2xl font-semibold mb-4 text-purple-400"><i class="fas fa-list-alt mr-2"></i>Carrier Management</h3>
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+              <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input id="new-carrier-input" type="text" class="flex-1 p-3 bg-gray-600 rounded-lg border border-gray-500" placeholder="Enter new carrier name">
+                <button id="add-carrier-btn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Add Carrier</button>
+              </div>
+              <div id="carriers-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LICENSE MODAL -->
+<div id="add-license-modal" class="modal">
+  <div class="modal-content p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-cyan-400" id="add-license-title">Add New License</h3>
+      <button id="close-add-license-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="add-license-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-2">Select States</label>
+        <div id="add-license-states" class="bg-gray-700 p-3 rounded-lg max-h-60 overflow-y-auto">
+          <!-- States bubbles will be inserted here -->
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Select Carriers</label>
+        <div id="carriers-container" class="bg-gray-700 p-3 rounded-lg max-h-60 overflow-y-auto">
+          <!-- Carrier bubbles will be inserted here -->
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Expiration Date</label>
+        <input id="license-expiration" type="date" class="w-full p-3 bg-gray-600 rounded-lg border border-gray-500 text-white">
+      </div>
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Cancel</button>
+        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg">Add License</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT USER LICENSES MODAL -->
+<div id="edit-user-licenses-modal" class="modal">
+  <div class="modal-content p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-cyan-400" id="edit-user-title">Edit User Licenses</h3>
+      <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="user-licenses-container" class="space-y-4 mb-4 max-h-60 overflow-y-auto"></div>
+    <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg mb-4"><i class="fas fa-plus mr-2"></i>Add License for User</button>
+    <div class="flex justify-end"><button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Close</button></div>
+  </div>
+</div>
+
 <script>
 // ✅ SUPABASE CONFIGURATION
 const SUPABASE_URL = 'https://sdkprilrlnfuqkotwfyd.supabase.co';
@@ -185,14 +450,14 @@ function handleLogout() {
 }
 
 // =========================
-// LICENSE MANAGEMENT - COMPLETED
+// LICENSE MANAGEMENT - WITH BUBBLE INTERFACE
 // =========================
 
 function openAddLicenseModal() {
   currentEditingUserId = null;
   document.getElementById('add-license-title').textContent = 'Add New License';
-  populateStateCheckboxes();
-  populateCarriersCheckboxes();
+  populateStateBubbles();
+  populateCarrierBubbles();
   document.getElementById('add-license-form').reset();
   document.getElementById('add-license-modal').style.display = 'flex';
 }
@@ -200,16 +465,48 @@ function openAddLicenseModal() {
 function closeAddLicenseModal() {
   document.getElementById('add-license-modal').style.display = 'none';
   document.getElementById('add-license-form').reset();
-  // Clear checkboxes
-  document.querySelectorAll('.license-state-checkbox, .carrier-checkbox').forEach(cb => {
-    cb.checked = false;
+  // Clear selected bubbles
+  document.querySelectorAll('.bubble.selected').forEach(bubble => {
+    bubble.classList.remove('selected');
+  });
+}
+
+function populateStateBubbles() {
+  const container = document.getElementById('add-license-states');
+  container.innerHTML = '';
+  
+  STATES_DATA.forEach(state => {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bubble-state';
+    bubble.textContent = `${state.name} (${state.abbreviation})`;
+    bubble.dataset.value = state.abbreviation;
+    bubble.addEventListener('click', () => {
+      bubble.classList.toggle('selected');
+    });
+    container.appendChild(bubble);
+  });
+}
+
+function populateCarrierBubbles() {
+  const container = document.getElementById('carriers-container');
+  container.innerHTML = '';
+  
+  carriers.forEach(carrier => {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bubble-carrier';
+    bubble.textContent = carrier;
+    bubble.dataset.value = carrier;
+    bubble.addEventListener('click', () => {
+      bubble.classList.toggle('selected');
+    });
+    container.appendChild(bubble);
   });
 }
 
 async function handleAddLicense(e) {
   e.preventDefault();
-  const selectedStates = Array.from(document.querySelectorAll('.license-state-checkbox:checked')).map(cb => cb.value);
-  const selectedCarriers = Array.from(document.querySelectorAll('.carrier-checkbox:checked')).map(cb => cb.value);
+  const selectedStates = Array.from(document.querySelectorAll('#add-license-states .bubble.selected')).map(bubble => bubble.dataset.value);
+  const selectedCarriers = Array.from(document.querySelectorAll('#carriers-container .bubble.selected')).map(bubble => bubble.dataset.value);
   const expiration = document.getElementById('license-expiration').value;
   
   if (selectedStates.length === 0) {
@@ -360,7 +657,7 @@ async function loadAdminPanel() {
       </div>
       <div class="flex space-x-2">
         <button onclick="openEditUserLicenses('${user.id}')" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Edit Licenses</button>
-        ${!isCurrent && !user.is_admin ? `<button onclick="deleteUser('${user.id}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
+        ${!isCurrent ? `<button onclick="deleteUser('${user.id}')" class="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded">Delete</button>` : ''}
         ${!isCurrent ? `<button onclick="toggleAdminStatus('${user.id}')" class="flex-1 ${user.is_admin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-600 hover:bg-purple-700'} py-2 rounded">${user.is_admin ? 'Demote' : 'Promote'}</button>` : ''}
       </div>
     </div>`;
@@ -553,7 +850,7 @@ async function addNewCarrier() {
     showNotification('Error adding carrier: ' + error.message, 'error');
   } else {
     carriers = newCarriers;
-    populateCarriersCheckboxes();
+    populateCarrierBubbles();
     loadCarriersList();
     input.value = '';
     showNotification('Carrier added successfully', 'success');
@@ -599,10 +896,121 @@ async function removeCarrier(index) {
     }
     
     await loadAllUsers();
-    populateCarriersCheckboxes();
+    populateCarrierBubbles();
     loadCarriersList();
     showNotification('Carrier removed successfully', 'success');
   }
+}
+
+// =========================
+// ENHANCED SEARCH FUNCTIONALITY - EXACT MATCHES ONLY
+// =========================
+
+function performSearch() {
+  const query = document.getElementById('search-input').value.trim();
+  const resultsContainer = document.getElementById('search-results');
+  
+  if (!query) {
+    resultsContainer.innerHTML = '<div class="text-center text-gray-400"><i class="fas fa-compass text-4xl mb-4"></i><p class="text-xl">Enter a search term</p></div>';
+    return;
+  }
+  
+  const results = allUsers.filter(user => {
+    // Exact matches for user fields (case-insensitive)
+    const exactMatches = [
+      user.name.toLowerCase(),
+      user.email.toLowerCase(),
+      user.npn,
+      ...user.name.toLowerCase().split(' '), // Individual name parts
+    ];
+    
+    if (exactMatches.some(field => field === query.toLowerCase())) {
+      return true;
+    }
+    
+    // Exact state matches (both name and abbreviation)
+    const stateMatch = STATES_DATA.some(state => 
+      state.name.toLowerCase() === query.toLowerCase() || 
+      state.abbreviation.toLowerCase() === query.toLowerCase()
+    );
+    
+    if (stateMatch) {
+      // Check if user has licenses in this state
+      return (user.licenses || []).some(license => {
+        const licenseState = license.state.toLowerCase();
+        const searchState = query.toLowerCase();
+        const matchedState = STATES_DATA.find(s => 
+          s.name.toLowerCase() === searchState || s.abbreviation.toLowerCase() === searchState
+        );
+        return matchedState && licenseState === matchedState.abbreviation.toLowerCase();
+      });
+    }
+    
+    // Exact carrier matches
+    if ((user.licenses || []).some(license => 
+      (license.carriers || []).some(carrier => 
+        carrier.toLowerCase() === query.toLowerCase()
+      )
+    )) {
+      return true;
+    }
+    
+    return false;
+  });
+  
+  if (results.length === 0) {
+    resultsContainer.innerHTML = `
+      <div class="text-center text-gray-400">
+        <i class="fas fa-search text-4xl mb-4"></i>
+        <p class="text-xl">No exact matches found for "${escapeHtml(query)}"</p>
+        <p class="text-sm mt-2">Try searching by exact state name (California), state code (CA), agent full name, exact email, NPN, or carrier name</p>
+      </div>`;
+    return;
+  }
+  
+  let html = '<div class="space-y-4">';
+  results.forEach(user => {
+    const licenseInfo = (user.licenses || []).map(license => {
+      const state = STATES_DATA.find(s => s.abbreviation === license.state);
+      const highlightedCarriers = (license.carriers || []).map(carrier => 
+        carrier.toLowerCase() === query.toLowerCase() ? `<span class="search-highlight">${carrier}</span>` : carrier
+      ).join(', ');
+      
+      let stateDisplay = state ? state.name : license.state;
+      if (state && (state.name.toLowerCase() === query.toLowerCase() || state.abbreviation.toLowerCase() === query.toLowerCase())) {
+        stateDisplay = `<span class="search-highlight">${stateDisplay}</span>`;
+      }
+      
+      return `${stateDisplay}: ${highlightedCarriers}`;
+    }).join('; ');
+    
+    // Highlight matching user fields
+    const highlightField = (field, value) => {
+      if (field.toLowerCase() === query.toLowerCase()) {
+        return `<span class="search-highlight">${value}</span>`;
+      }
+      return value;
+    };
+    
+    const userName = user.name.split(' ').map(part => 
+      part.toLowerCase() === query.toLowerCase() ? `<span class="search-highlight">${part}</span>` : part
+    ).join(' ');
+    
+    html += `<div class="bg-gray-600 p-4 rounded-lg">
+      <div class="flex justify-between items-start mb-2">
+        <h4 class="text-xl font-semibold text-cyan-300">${userName}</h4>
+        ${user.is_admin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
+      </div>
+      <p class="text-gray-300 mb-2">Email: ${highlightField(user.email.toLowerCase(), user.email)} | NPN: ${highlightField(user.npn, user.npn)}</p>
+      <p class="text-gray-300 mb-2">Extension: ${user.extension}</p>
+      <div class="mt-3">
+        <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
+        <p class="text-gray-400">${licenseInfo || 'No licenses'}</p>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  resultsContainer.innerHTML = html;
 }
 
 // =========================
@@ -690,75 +1098,6 @@ function loadUserLicenses() {
   container.innerHTML = html;
 }
 
-// Search functionality
-function performSearch() {
-  const query = document.getElementById('search-input').value.trim().toLowerCase();
-  const resultsContainer = document.getElementById('search-results');
-  
-  if (!query) {
-    resultsContainer.innerHTML = '<div class="text-center text-gray-400"><i class="fas fa-compass text-4xl mb-4"></i><p class="text-xl">Enter a search term</p></div>';
-    return;
-  }
-  
-  const results = allUsers.filter(user => {
-    // Search user fields
-    if (user.name.toLowerCase().includes(query) || 
-        user.email.toLowerCase().includes(query) ||
-        user.npn.includes(query)) {
-      return true;
-    }
-    
-    // Search licenses
-    if (user.licenses && Array.isArray(user.licenses)) {
-      return user.licenses.some(license => {
-        // State match
-        if (license.state.toLowerCase() === query) return true;
-        
-        // Full state name match
-        const state = STATES_DATA.find(s => s.name.toLowerCase() === query);
-        if (state && license.state === state.abbreviation) return true;
-        
-        // Carrier match
-        if (license.carriers && Array.isArray(license.carriers)) {
-          return license.carriers.some(carrier => carrier.toLowerCase().includes(query));
-        }
-        
-        return false;
-      });
-    }
-    
-    return false;
-  });
-  
-  if (results.length === 0) {
-    resultsContainer.innerHTML = `<div class="text-center text-gray-400"><i class="fas fa-search text-4xl mb-4"></i><p class="text-xl">No results found for "${escapeHtml(query)}"</p></div>`;
-    return;
-  }
-  
-  let html = '<div class="space-y-4">';
-  results.forEach(user => {
-    const licenseInfo = (user.licenses || []).map(license => {
-      const state = STATES_DATA.find(s => s.abbreviation === license.state);
-      return `${state ? state.name : license.state}: ${(license.carriers || []).join(', ')}`;
-    }).join('; ');
-    
-    html += `<div class="bg-gray-600 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-2">
-        <h4 class="text-xl font-semibold text-cyan-300">${escapeHtml(user.name)}</h4>
-        ${user.is_admin ? '<span class="bg-red-600 px-2 py-1 rounded text-xs font-semibold">Admin</span>' : ''}
-      </div>
-      <p class="text-gray-300 mb-2">Email: ${escapeHtml(user.email)} | NPN: ${escapeHtml(user.npn)}</p>
-      <p class="text-gray-300 mb-2">Extension: ${escapeHtml(user.extension)}</p>
-      <div class="mt-3">
-        <h5 class="font-semibold text-gray-300 mb-2">Licenses:</h5>
-        <p class="text-gray-400">${escapeHtml(licenseInfo || 'No licenses')}</p>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-  resultsContainer.innerHTML = html;
-}
-
 // Utility functions
 function setupEventListeners() {
   document.getElementById('login-form').addEventListener('submit', handleLogin);
@@ -775,6 +1114,14 @@ function setupEventListeners() {
   document.getElementById('close-edit-user-licenses-modal').addEventListener('click', closeEditUserLicensesModal);
   document.getElementById('close-edit-user-modal').addEventListener('click', closeEditUserLicensesModal);
   document.getElementById('add-license-for-user-btn').addEventListener('click', openAddLicenseForUserModal);
+  
+  // Search on Enter key
+  document.getElementById('search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performSearch();
+    }
+  });
   
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -797,28 +1144,6 @@ function switchTab(tabName) {
   if (tabName === 'admin' && currentUser.is_admin) {
     loadAdminPanel();
   }
-}
-
-function populateStateCheckboxes() {
-  const container = document.getElementById('add-license-states');
-  container.innerHTML = '';
-  STATES_DATA.forEach(state => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${state.abbreviation}" class="license-state-checkbox"> <span>${state.name} (${state.abbreviation})</span>`;
-    container.appendChild(label);
-  });
-}
-
-function populateCarriersCheckboxes() {
-  const container = document.getElementById('carriers-container');
-  container.innerHTML = '';
-  carriers.forEach(carrier => {
-    const label = document.createElement('label');
-    label.className = 'flex items-center space-x-2 cursor-pointer';
-    label.innerHTML = `<input type="checkbox" value="${carrier}" class="carrier-checkbox"> <span>${carrier}</span>`;
-    container.appendChild(label);
-  });
 }
 
 function showNotification(message, type = 'info') {
@@ -852,3 +1177,5 @@ window.deleteUser = deleteUser;
 window.removeCarrier = removeCarrier;
 window.addNewCarrier = addNewCarrier;
 </script>
+</body>
+</html>
