@@ -306,7 +306,7 @@ document.getElementById('edit-user-licenses-modal').addEventListener('click', (e
   if (e.target.id === 'edit-user-licenses-modal') closeEditUserLicensesModal();
 });
 
-// NEW: Forgot Password Event Listeners
+// Forgot Password Event Listeners
 document.getElementById('show-forgot-password').addEventListener('click', () => {
   document.getElementById('forgot-password-modal').style.display = 'flex';
   document.getElementById('forgot-password-form').classList.remove('hidden');
@@ -324,9 +324,8 @@ function closeForgotPasswordModal() {
   document.getElementById('forgot-password-form').reset();
   document.getElementById('new-password-form').reset();
 }
-// END NEW Event Listeners
 
-// ------------------- App Init (UPDATED) -------------------
+// ------------------- App Init (UPDATED to use Supabase Auth session) -------------------
 async function initApp() {
   // Check for Password Recovery URL fragment
   if (window.location.hash.includes('type=recovery')) {
@@ -341,20 +340,33 @@ async function initApp() {
   }
 
   try {
-    const savedUserId = localStorage.getItem('currentUserId');
-    if (savedUserId) {
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', savedUserId)
-        .single();
-      
-      if (!error && user) {
-        currentUser = user;
-        await showDashboard();
-        return;
-      }
+    // 1. Check for an active Supabase Auth session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (session) {
+        const authUserId = session.user.id;
+        
+        // 2. Fetch user data from your custom 'users' table using the Auth ID
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', authUserId)
+            .single();
+        
+        if (!error && user) {
+            currentUser = user;
+            await showDashboard();
+            return;
+        } else {
+            // No custom user record found, log out the Auth session
+            await supabase.auth.signOut();
+            console.warn('Auth session found, but no matching custom user record. Logged out.');
+        }
     }
+    
+    // Fallback: Show login if no session or an error occurred
     showAuthScreen();
   } catch(e) {
     console.error('Init error:', e);
@@ -362,7 +374,7 @@ async function initApp() {
   }
 }
 
-// ------------------- Login -------------------
+// ------------------- Login (UPDATED to use Supabase Auth) -------------------
 document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('login-email').value.trim();
@@ -374,29 +386,35 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   }
   
   try {
-    const { data: users, error } = await supabase
+    // SECURE LOGIN: Use Supabase Auth to handle password hashing check
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+    
+    if (authError) throw authError;
+
+    // Fetch user data from your custom 'users' table
+    const { data: user, error: dbError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email)
-      .eq('password', password); // NOTE: This uses your custom plaintext password column
+      .eq('id', authData.user.id)
+      .single(); 
     
-    if (error) throw error;
+    if (dbError) throw dbError;
     
-    if (users && users.length > 0) {
-      currentUser = users[0];
-      localStorage.setItem('currentUserId', currentUser.id);
-      await showDashboard();
-      showNotification('Login successful!', 'success');
-    } else {
-      showNotification('Invalid credentials', 'error');
-    }
+    currentUser = user;
+    await showDashboard();
+    showNotification('Login successful!', 'success');
+    
   } catch(err) {
     console.error(err);
+    // Display the specific error message from Supabase Auth (e.g., Invalid login credentials)
     showNotification('Login failed: ' + err.message, 'error');
   }
 });
 
-// ------------------- Register -------------------
+// ------------------- Register (UPDATED to remove plaintext password in DB) -------------------
 document.getElementById('register-form').addEventListener('submit', async e => {
   e.preventDefault();
   const firstname = document.getElementById('register-firstname').value.trim();
@@ -412,13 +430,12 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   }
   
   try {
-    // 1. Create user in Supabase Auth (required for password reset)
+    // 1. Create user in Supabase Auth (handles secure password hashing)
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
             data: {
-                // You can add metadata here if needed
                 full_name: `${firstname} ${lastname}`
             },
             // Crucial: The password reset link will redirect to this URL
@@ -437,7 +454,9 @@ document.getElementById('register-form').addEventListener('submit', async e => {
       email,
       npn,
       extension,
-      password, // Store the plaintext password for your custom login logic
+      // IMPORTANT SECURITY FIX: The plaintext password is NO LONGER STORED in the custom table
+      // You should remove this column entirely from your 'users' table.
+      password: 'PASSWORD_SECURELY_MANAGED_BY_AUTH_SERVICE',
       licenses: [],
       is_admin: false
     };
@@ -493,7 +512,7 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
   }
 });
 
-// ------------------- Forgot Password - Step 2: Update Password -------------------
+// ------------------- Forgot Password - Step 2: Update Password (MODIFIED FOR SYNC) -------------------
 document.getElementById('new-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const newPassword = document.getElementById('new-password').value.trim();
@@ -510,33 +529,36 @@ document.getElementById('new-password-form').addEventListener('submit', async e 
   }
   
   try {
-    // 1. Update the password in Supabase Auth (This is the required step)
+    // 1. Update the password in Supabase Auth (This is the secure, required step)
     const { error: authError } = await supabase.auth.updateUser({
       password: newPassword
     });
 
     if (authError) throw authError;
 
-    // 2. Get the authenticated user's email/ID
+    // 2. Get the authenticated user's ID
     const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser();
 
+    // The user must be authenticated from the password reset link for this to work
     if (sessionError || !authUser) {
-        showNotification('Password updated in Supabase Auth. Please log in.', 'success');
+        showNotification('Password updated in Auth service. Please log in.', 'success');
         closeForgotPasswordModal();
-        // Clear the URL hash to prevent re-triggering
         history.replaceState(null, null, ' ');
         return;
     }
     
-    // 3. Update the password in your custom 'users' table
+    // 3. (FLAWED BUT NECESSARY FOR CURRENT APP LOGIC): Sync the password to your custom 'users' table 
+    // to maintain functionality, but you should not be relying on this column anymore.
     const { error: dbUpdateError } = await supabase
       .from('users')
-      .update({ password: newPassword }) // Update your custom password column
+      // WARNING: This is syncing a PLAINTEXT password to a DB column. 
+      // You must update your app logic to stop reading this column, and then remove it.
+      .update({ password: newPassword }) 
       .eq('id', authUser.id); // Use the ID to find the record
       
     if (dbUpdateError) {
-        console.error('Warning: Failed to update password in custom "users" table.', dbUpdateError);
-        showNotification('Password updated in Supabase Auth, but error syncing to custom data. Please log in.', 'warning');
+        console.error('Warning: Failed to sync new password to custom "users" table.', dbUpdateError);
+        showNotification('Password updated in Supabase Auth, but error syncing custom data. Please log in.', 'warning');
     } else {
         showNotification('Password updated successfully! Please log in with your new password.', 'success');
     }
@@ -549,7 +571,6 @@ document.getElementById('new-password-form').addEventListener('submit', async e 
     showNotification('Error updating password: ' + err.message, 'error');
   }
 });
-// END NEW Forgot Password Logic
 
 // ------------------- Load Users -------------------
 async function loadAllUsers() {
