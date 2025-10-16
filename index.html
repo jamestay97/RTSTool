@@ -14,237 +14,126 @@
     @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
     .search-highlight { background-color: #FACC15; color: #000; padding:0.1rem 0.25rem; border-radius:0.25rem;}
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+    .modal-content { background:#374151; border-radius:12px; max-width:600px; width:95%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
   </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
 
-  <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-50">
-    <i class="fas fa-spinner fa-spin text-cyan-400 text-6xl"></i>
+  <div id="loading-screen" class="flex flex-col items-center justify-center min-h-[60vh]">
+    <div class="border-4 border-t-cyan-400 rounded-full w-10 h-10 animate-spin mb-3"></div>
+    <p class="text-lg">Loading...</p>
   </div>
 
-  <div id="auth-screen" class="hidden container mx-auto p-4 flex justify-center items-center min-h-screen">
-    <div class="w-full max-w-md">
+  <div id="auth-screen" class="hidden text-center mt-10 px-4">
+    <h2 class="text-3xl font-bold text-cyan-400 mb-4">Login</h2>
+    <form id="login-form" class="space-y-3 max-w-sm mx-auto">
+      <input id="login-email" type="email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Email" required />
+      <input id="login-password" type="password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Password" required />
+      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Login</button>
+    </form>
+    <p class="mt-4 text-gray-400">Don't have an account? <button id="show-register" class="text-cyan-400 underline">Register</button></p>
 
-      <form id="login-form" class="bg-gray-800 p-8 rounded-lg shadow-xl">
-        <h2 class="text-3xl font-bold text-center mb-6 text-cyan-400">Login</h2>
-        <div class="mb-4">
-          <label for="login-email" class="block text-gray-400 mb-2">Email</label>
-          <input type="email" id="login-email" required class="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
-        </div>
-        <div class="mb-6">
-          <label for="login-password" class="block text-gray-400 mb-2">Password</label>
-          <input type="password" id="login-password" required class="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
-        </div>
-        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded transition duration-200">
-          Sign In
-        </button>
-        <p class="text-center mt-4 text-gray-400">
-          Need an account? <a href="#" id="show-register" class="text-cyan-400 hover:text-cyan-300 font-semibold">Register</a>
-        </p>
-      </form>
+    <form id="register-form" class="hidden space-y-3 max-w-sm mx-auto mt-4">
+      <input id="register-firstname" type="text" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="First Name" required />
+      <input id="register-lastname" type="text" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Last Name" required />
+      <input id="register-email" type="email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Email" required />
+      <input id="register-npn" type="text" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="NPN" required />
+      <input id="register-extension" type="text" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Extension" required />
+      <input id="register-password" type="password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Password" required />
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded">Register</button>
+      <button type="button" id="cancel-register" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded">Cancel</button>
+    </form>
+  </div>
 
-      <form id="register-form" class="bg-gray-800 p-8 rounded-lg shadow-xl hidden">
-        <h2 class="text-3xl font-bold text-center mb-6 text-cyan-400">Register</h2>
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label for="register-firstname" class="block text-gray-400 mb-2">First Name</label>
-            <input type="text" id="register-firstname" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-          </div>
-          <div>
-            <label for="register-lastname" class="block text-gray-400 mb-2">Last Name</label>
-            <input type="text" id="register-lastname" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-          </div>
-        </div>
-        <div class="mb-4">
-          <label for="register-email" class="block text-gray-400 mb-2">Email</label>
-          <input type="email" id="register-email" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-        </div>
-        <div class="mb-4">
-          <label for="register-npn" class="block text-gray-400 mb-2">NPN</label>
-          <input type="text" id="register-npn" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-        </div>
-        <div class="mb-4">
-          <label for="register-extension" class="block text-gray-400 mb-2">Extension</label>
-          <input type="text" id="register-extension" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-        </div>
-        <div class="mb-6">
-          <label for="register-password" class="block text-gray-400 mb-2">Password</label>
-          <input type="password" id="register-password" required class="w-full p-3 rounded bg-gray-700 border border-gray-600">
-        </div>
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition duration-200">
-          Register
+  <div id="dashboard" class="hidden p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Welcome, <span id="user-name" class="text-cyan-300"></span></h1>
+      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Logout</button>
+    </div>
+    
+    <div id="nav-buttons" class="mt-6 space-x-2">
+      <button class="tab-btn bg-cyan-600 px-3 py-1 rounded" data-tab="search">Search</button>
+      <button class="tab-btn bg-gray-700 px-3 py-1 rounded" data-tab="licenses">My Licenses</button>
+      <button class="tab-btn bg-gray-700 px-3 py-1 rounded hidden" data-tab="admin" id="admin-tab-btn">Admin</button>
+    </div>
+
+    <div id="search-tab" class="tab-panel mt-4">
+      <div class="flex gap-2 mb-4">
+        <input type="text" id="search-input" class="flex-1 p-2 rounded bg-gray-800 border border-gray-700" placeholder="Search by state, carrier, email, NPN, or name">
+        <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 py-2 px-4 rounded">Search</button>
+      </div>
+      <div id="search-results" class="mt-4 space-y-4"></div>
+    </div>
+
+    <div id="licenses-tab" class="tab-panel hidden mt-4">
+      <button id="add-license-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-4">Add License</button>
+      <div id="licenses-container" class="space-y-3"></div>
+    </div>
+
+    <div id="admin-tab" class="tab-panel hidden mt-4">
+      <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
+      
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3">User Management</h3>
+        <button id="refresh-users-btn" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded mb-3">
+          <i class="fas fa-sync-alt mr-1"></i>Refresh Users
         </button>
-        <button type="button" id="cancel-register" class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded transition duration-200">
-          Cancel
-        </button>
-      </form>
+        <div id="users-list" class="space-y-3"></div>
+      </div>
+      
+      <div>
+        <h3 class="text-lg font-semibold mb-3">Carrier Management</h3>
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="new-carrier-input" placeholder="New Carrier Name" class="flex-1 p-2 rounded bg-gray-800 border border-gray-700">
+          <button id="add-carrier-btn" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Add Carrier</button>
+        </div>
+        <div id="carriers-list" class="space-y-2"></div>
+      </div>
     </div>
   </div>
 
-  <div id="dashboard" class="hidden flex flex-col min-h-screen">
-    
-    <header class="bg-gray-800 shadow-md p-4 sticky top-0 z-10">
-      <div class="container mx-auto flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-cyan-400">License Explorer</h1>
-        <div class="flex items-center space-x-4">
-          <span id="user-name" class="font-semibold"></span>
-          <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition duration-200 text-sm">
-            <i class="fas fa-sign-out-alt"></i> Logout
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="flex-1 container mx-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
-      
-      <nav class="md:col-span-3 bg-gray-800 p-4 rounded-lg shadow-xl h-fit sticky top-20">
-        <h3 class="text-xl font-semibold mb-4 text-gray-200">Navigation</h3>
-        <ul class="space-y-2">
-          <li>
-            <button data-tab="licenses" class="tab-btn w-full text-left p-3 rounded bg-cyan-600 hover:bg-cyan-700 transition duration-200">
-              <i class="fas fa-certificate mr-2"></i> My Licenses
-            </button>
-          </li>
-          <li>
-            <button data-tab="search" class="tab-btn w-full text-left p-3 rounded bg-gray-700 hover:bg-gray-600 transition duration-200">
-              <i class="fas fa-search mr-2"></i> Search
-            </button>
-          </li>
-          <li id="admin-tab-btn" class="hidden">
-            <button data-tab="admin" class="tab-btn w-full text-left p-3 rounded bg-gray-700 hover:bg-gray-600 transition duration-200">
-              <i class="fas fa-user-shield mr-2"></i> Admin Panel
-            </button>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="md:col-span-9">
-
-        <div id="licenses-tab" class="tab-panel">
-          <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-3xl font-bold text-cyan-400">My Licenses</h2>
-              <button id="add-license-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition duration-200">
-                <i class="fas fa-plus mr-1"></i> Add License
-              </button>
-            </div>
-            <div id="licenses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              </div>
-          </div>
-        </div>
-
-        <div id="search-tab" class="tab-panel hidden">
-          <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <h2 class="text-3xl font-bold text-cyan-400 mb-6">Search User Licenses</h2>
-            <div class="flex space-x-2 mb-6">
-              <input type="text" id="search-input" placeholder="Search by Name, Email, NPN, State (MA), or Carrier" 
-                     class="flex-1 p-3 rounded bg-gray-700 border border-gray-600 focus:ring-cyan-500 focus:border-cyan-500">
-              <button id="search-btn" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-3 rounded font-semibold transition duration-200">
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
-            <div id="search-results" class="space-y-4">
-              <p class="text-gray-400 text-center py-4">Enter a search term to find users and their licenses.</p>
-              </div>
-          </div>
-        </div>
-
-        <div id="admin-tab" class="tab-panel hidden">
-          <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <h2 class="text-3xl font-bold text-red-400 mb-6">Admin Panel</h2>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              <div class="lg:col-span-1 bg-gray-700 p-4 rounded-lg shadow-inner">
-                <h3 class="text-xl font-semibold mb-4 text-gray-200">Manage Carriers</h3>
-                <div class="flex space-x-2 mb-4">
-                  <input type="text" id="new-carrier-input" placeholder="New Carrier Name" 
-                         class="flex-1 p-2 rounded bg-gray-800 border border-gray-600">
-                  <button id="add-carrier-btn" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded text-sm">
-                    <i class="fas fa-plus"></i> Add
-                  </button>
-                </div>
-                <div id="carriers-list" class="space-y-2 max-h-60 overflow-y-auto">
-                  </div>
-              </div>
-
-              <div class="lg:col-span-2 bg-gray-700 p-4 rounded-lg shadow-inner">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-xl font-semibold text-gray-200">Manage Agents/Admins</h3>
-                  <button id="refresh-users-btn" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm">
-                    <i class="fas fa-sync-alt mr-1"></i> Refresh
-                  </button>
-                </div>
-                <div id="users-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                  </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
   <div id="add-license-modal" class="modal">
-    <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-2xl transform scale-95 transition-all">
-      <div class="flex justify-between items-center mb-6">
-        <h3 id="add-license-title" class="text-2xl font-bold text-cyan-400">Add New License</h3>
-        <button id="close-add-license-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold" id="add-license-title">Add New License</h3>
+        <button id="close-add-license-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
       </div>
-      
-      <form id="add-license-form">
-        <div class="mb-4">
-          <label class="block text-gray-400 mb-2">Select State(s)</label>
-          <div id="add-license-states" class="flex flex-wrap border border-gray-600 p-2 rounded max-h-40 overflow-y-auto">
-            </div>
+      <form id="add-license-form" class="space-y-4">
+        <div>
+          <label class="block mb-2">Select States</label>
+          <div id="add-license-states" class="bg-gray-800 p-3 rounded max-h-40 overflow-y-auto"></div>
         </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-400 mb-2">Select Carrier(s)</label>
-          <div id="carriers-container" class="flex flex-wrap border border-gray-600 p-2 rounded max-h-40 overflow-y-auto">
-            </div>
+        <div>
+          <label class="block mb-2">Select Carriers</label>
+          <div id="carriers-container" class="bg-gray-800 p-3 rounded max-h-40 overflow-y-auto"></div>
         </div>
-        
-        <div class="mb-6">
-          <label for="license-expiration" class="block text-gray-400 mb-2">Expiration Date (Optional)</label>
-          <input type="date" id="license-expiration" class="w-full p-3 rounded bg-gray-700 border border-gray-600">
+        <div>
+          <label class="block mb-2">Expiration Date</label>
+          <input type="date" id="license-expiration" class="w-full p-2 rounded bg-gray-700 border border-gray-600">
         </div>
-
-        <div class="flex justify-end space-x-4">
-          <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition duration-200">
-            Cancel
-          </button>
-          <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded font-semibold transition duration-200">
-            Save License
-          </button>
+        <div class="flex justify-end gap-2">
+          <button type="button" id="cancel-add-license" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Cancel</button>
+          <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Add License</button>
         </div>
       </form>
     </div>
   </div>
 
   <div id="edit-user-licenses-modal" class="modal">
-    <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-2xl transform scale-95 transition-all">
-      <div class="flex justify-between items-center mb-6">
-        <h3 id="edit-user-title" class="text-2xl font-bold text-red-400">Edit Licenses for User</h3>
-        <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold" id="edit-user-title">Edit User Licenses</h3>
+        <button id="close-edit-user-licenses-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
       </div>
-      
-      <div id="user-licenses-container" class="space-y-4 mb-6 max-h-60 overflow-y-auto">
-        </div>
-
-      <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition duration-200 mb-4">
-        <i class="fas fa-plus mr-1"></i> Add License for this User
+      <div id="user-licenses-container" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
+      <button id="add-license-for-user-btn" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded mb-4">
+        <i class="fas fa-plus mr-2"></i>Add License for User
       </button>
-
       <div class="flex justify-end">
-        <button type="button" id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition duration-200">
-          Close
-        </button>
+        <button id="close-edit-user-modal" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Close</button>
       </div>
     </div>
   </div>
-
 
 <script>
 // ------------------- Supabase -------------------
@@ -701,14 +590,14 @@ async function handleAddLicense(e) {
           }
         });
         
-        // Update expiration if a new one is provided and it was blank
-        if (expiration && !existingLicense.expiration) {
+        // Update expiration if a new one is provided
+        if (expiration) {
           existingLicense.expiration = expiration;
           licensesModified = true;
         }
 
       } else {
-        // Scenario: New State/Carrier Combination. Create new license entry.
+        // Scenario: New State. Create new license entry.
         const newLicense = {
           state: state,
           carriers: [...selectedCarriers], // Copy the array
@@ -942,33 +831,28 @@ async function performSearch() {
     
     const searchTerm = query.toLowerCase();
     
-    // Use a regex with word boundaries for exact whole-word matching (Fix from previous request)
-    const searchRegex = new RegExp(`\\b${escapeRegex(searchTerm)}\\b`, 'i');
-    
     const results = users.filter(user => {
-      // Search in basic fields
-      // Name allows partial match for usability
-      if (user.name && user.name.toLowerCase().includes(searchTerm)) return true;
+      // 1. Name: Keep partial match for usability (user can search "john smith" by "john")
+      if (user.name && user.name.toLowerCase().includes(searchTerm)) return true; 
+
+      // 2. Email, NPN: Must be an EXACT match for the entire field.
+      if (user.email && user.email.toLowerCase() === searchTerm) return true;
+      if (user.npn && user.npn.toLowerCase() === searchTerm) return true;
       
-      // Email and NPN use whole-word match as per requirement
-      if (user.email && user.email.toLowerCase().match(searchRegex)) return true;
-      if (user.npn && user.npn.toLowerCase().match(searchRegex)) return true;
-      
-      // Search in licenses
+      // 3. Search in licenses
       if (user.licenses && Array.isArray(user.licenses)) {
         for (const license of user.licenses) {
-          // Check state abbreviation and full name using whole-word match
-          const stateMatch = license.state && license.state.toLowerCase().match(searchRegex);
-          if (stateMatch) return true;
+          // State Abbreviation: Must be an EXACT match. This solves the "FL" vs "Aflac" issue for state
+          if (license.state && license.state.toLowerCase() === searchTerm) return true;
           
+          // State Full Name: Must be an EXACT match.
           const state = STATES_DATA.find(s => s.abbreviation === license.state);
-          const stateNameMatch = state && state.name.toLowerCase().match(searchRegex);
-          if (stateNameMatch) return true;
+          if (state && state.name.toLowerCase() === searchTerm) return true;
           
-          // Check carriers using whole-word match
+          // Carriers: Must be an EXACT match. This solves the "FL" vs "Aflac" issue for carrier
           if (license.carriers && Array.isArray(license.carriers)) {
             for (const carrier of license.carriers) {
-              if (carrier && carrier.toLowerCase().match(searchRegex)) return true;
+              if (carrier && carrier.toLowerCase() === searchTerm) return true;
             }
           }
         }
@@ -1040,9 +924,9 @@ function highlightMatch(text, query) {
   return text.replace(regex, '<span class="search-highlight">$1</span>');
 }
 
-// Helper to escape special regex characters
+// This is the correct definition for escapeRegex
 function escapeRegex(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Use '\\$&' to escape characters
 }
 
 // ------------------- Admin Functionality -------------------
@@ -1203,5 +1087,6 @@ window.toggleAdminStatus = toggleAdminStatus;
 window.removeCarrier = removeCarrier;
 window.openEditUserLicenses = openEditUserLicenses;
 </script>
+
 </body>
 </html>
