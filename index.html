@@ -583,8 +583,7 @@ async function openAddLicenseForUser() {
     return;
   }
   
-  // FIX: Hide the current modal (agent's license list) without calling closeEditUserLicensesModal(),
-  // which would incorrectly clear the currentEditingUserId needed for assignment.
+  // Hide the current modal (agent's license list) without clearing the currentEditingUserId
   document.getElementById('edit-user-licenses-modal').style.display = 'none';
 
   await loadCarriers();
@@ -638,6 +637,7 @@ function populateCarrierBubbles() {
 
 async function handleAddLicense(e) {
   e.preventDefault();
+  
   const selectedStates = Array.from(document.querySelectorAll('#add-license-states .bubble.selected'))
     .map(bubble => bubble.dataset.value);
   const selectedCarriers = Array.from(document.querySelectorAll('#carriers-container .bubble.selected'))
@@ -655,12 +655,6 @@ async function handleAddLicense(e) {
   }
   
   try {
-    const newLicenses = selectedStates.map(state => ({
-      state,
-      carriers: [...selectedCarriers],
-      expiration: expiration || ''
-    }));
-    
     let targetUserId = currentUser.id;
     let targetUser = currentUser;
     
@@ -686,21 +680,54 @@ async function handleAddLicense(e) {
       return;
     }
     
-    console.log('Adding licenses to user:', targetUser.name, 'ID:', targetUserId);
+    let currentLicenses = targetUser.licenses || [];
+    let licensesModified = false;
+    let licensesAddedCount = 0;
+    let carriersAddedCount = 0;
     
-    const currentLicenses = targetUser.licenses || [];
+    // Use a map to simplify updates to existing licenses: State Abbreviation -> License Object
+    const licenseMap = new Map(currentLicenses.map(l => [l.state, l]));
+
+    selectedStates.forEach(state => {
+      let existingLicense = licenseMap.get(state);
+
+      if (existingLicense) {
+        // Scenario: Existing State. Merge carriers.
+        selectedCarriers.forEach(carrier => {
+          if (!existingLicense.carriers.includes(carrier)) {
+            existingLicense.carriers.push(carrier);
+            carriersAddedCount++;
+            licensesModified = true;
+          }
+        });
+        
+        // Update expiration if a new one is provided and it was blank
+        if (expiration && !existingLicense.expiration) {
+          existingLicense.expiration = expiration;
+          licensesModified = true;
+        }
+
+      } else {
+        // Scenario: New State/Carrier Combination. Create new license entry.
+        const newLicense = {
+          state: state,
+          carriers: [...selectedCarriers], // Copy the array
+          expiration: expiration || ''
+        };
+        licenseMap.set(state, newLicense);
+        licensesAddedCount++;
+        licensesModified = true;
+      }
+    });
     
-    const licensesToAdd = newLicenses.filter(newLicense => 
-      !currentLicenses.some(existing => existing.state === newLicense.state)
-    );
-    
-    if (licensesToAdd.length === 0) {
-      showNotification('Licenses for these states already exist', 'warning');
+    // Reconstruct the updated licenses array from the map
+    const updatedLicenses = Array.from(licenseMap.values());
+
+    if (!licensesModified) {
+      showNotification('No new licenses or carriers were added.', 'warning');
       closeAddLicenseModal();
       return;
     }
-    
-    const updatedLicenses = [...currentLicenses, ...licensesToAdd];
     
     console.log('Updating licenses for user ID:', targetUserId, 'New count:', updatedLicenses.length);
     
@@ -727,7 +754,15 @@ async function handleAddLicense(e) {
     
     closeAddLicenseModal(); // This now clears currentEditingUserId
     
-    showNotification(`Added ${licensesToAdd.length} license(s) to ${targetUser.name}!`, 'success');
+    const notificationMessage = [];
+    if (licensesAddedCount > 0) {
+        notificationMessage.push(`${licensesAddedCount} new state license(s)`);
+    }
+    if (carriersAddedCount > 0) {
+        notificationMessage.push(`${carriersAddedCount} new carrier appointment(s)`);
+    }
+    
+    showNotification(`Successfully added: ${notificationMessage.join(' and ')} to ${targetUser.name}!`, 'success');
     
     // If admin was editing another user, reopen their modal
     if (editingIdAfterSuccess) {
