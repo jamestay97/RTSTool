@@ -987,7 +987,8 @@ async function performSearch() {
         const userLicenses = user.licenses || [];
         
         // 1. Check for Matches
-        const nameMatch = user.name && user.name.toLowerCase().includes(searchTerm);
+        // MODIFIED: Agent name must now be an EXACT match of the full stored name
+        const nameMatch = user.name && user.name.toLowerCase() === searchTerm; 
         const identifierMatch = (user.email && user.email.toLowerCase() === searchTerm) || (user.npn && user.npn.toLowerCase() === searchTerm);
         
         // 2. Identify Licenses that are an EXACT match for the search term
