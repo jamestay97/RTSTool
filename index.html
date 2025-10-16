@@ -30,7 +30,10 @@
       <input id="login-email" type="email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Email" required />
       <input id="login-password" type="password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Password" required />
       <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded">Login</button>
-    </form>
+      <button type="button" id="show-forgot-password" class="w-full text-sm text-gray-400 hover:text-cyan-400 text-right underline p-1">
+        Forgot Password?
+      </button>
+      </form>
     <p class="mt-4 text-gray-400">Don't have an account? <button id="show-register" class="text-cyan-400 underline">Register</button></p>
 
     <form id="register-form" class="hidden space-y-3 max-w-sm mx-auto mt-4">
@@ -134,8 +137,32 @@
       </div>
     </div>
   </div>
-
-<script>
+  
+  <div id="forgot-password-modal" class="modal">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold">Reset Password</h3>
+        <button id="close-forgot-password-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      
+      <form id="forgot-password-form" class="space-y-4">
+        <p class="text-gray-300">Enter the email associated with your account. We'll send you a password reset link.</p>
+        <input type="email" id="forgot-email" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Your Email" required />
+        <div class="flex justify-end gap-2">
+          <button type="button" id="cancel-forgot-password" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Cancel</button>
+          <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded">Send Reset Link</button>
+        </div>
+      </form>
+      
+      <form id="new-password-form" class="hidden space-y-4">
+        <p class="text-green-400">Please enter and confirm your new password.</p>
+        <input type="password" id="new-password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="New Password" required />
+        <input type="password" id="confirm-new-password" class="w-full p-2 rounded bg-gray-800 border border-gray-700" placeholder="Confirm New Password" required />
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded">Set New Password</button>
+      </form>
+    </div>
+  </div>
+  <script>
 // ------------------- Supabase -------------------
 const SUPABASE_URL = "https://sdkprilrlnfuqkotwfyd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka3ByaWxybG5mdXFrb3R3ZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MDA5MTksImV4cCI6MjA3NTQ3NjkxOX0.2E1jqwtXv03Jtc3nN1sRS3ZTIm4N02ftoX1G5NWef10";
@@ -279,8 +306,40 @@ document.getElementById('edit-user-licenses-modal').addEventListener('click', (e
   if (e.target.id === 'edit-user-licenses-modal') closeEditUserLicensesModal();
 });
 
-// ------------------- App Init -------------------
+// NEW: Forgot Password Event Listeners
+document.getElementById('show-forgot-password').addEventListener('click', () => {
+  document.getElementById('forgot-password-modal').style.display = 'flex';
+  document.getElementById('forgot-password-form').classList.remove('hidden');
+  document.getElementById('new-password-form').classList.add('hidden');
+});
+
+document.getElementById('close-forgot-password-modal').addEventListener('click', closeForgotPasswordModal);
+document.getElementById('cancel-forgot-password').addEventListener('click', closeForgotPasswordModal);
+document.getElementById('forgot-password-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'forgot-password-modal') closeForgotPasswordModal();
+});
+
+function closeForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').style.display = 'none';
+  document.getElementById('forgot-password-form').reset();
+  document.getElementById('new-password-form').reset();
+}
+// END NEW Event Listeners
+
+// ------------------- App Init (UPDATED) -------------------
 async function initApp() {
+  // Check for Password Recovery URL fragment
+  if (window.location.hash.includes('type=recovery')) {
+    // Show the modal and the new password form
+    document.getElementById('forgot-password-modal').style.display = 'flex';
+    document.getElementById('forgot-password-form').classList.add('hidden');
+    document.getElementById('new-password-form').classList.remove('hidden');
+    
+    // Clear the loading screen while waiting for user action
+    document.getElementById('loading-screen').classList.add('hidden');
+    return; // Stop the standard login flow
+  }
+
   try {
     const savedUserId = localStorage.getItem('currentUserId');
     if (savedUserId) {
@@ -319,7 +378,7 @@ document.getElementById('login-form').addEventListener('submit', async e => {
       .from('users')
       .select('*')
       .eq('email', email)
-      .eq('password', password);
+      .eq('password', password); // NOTE: This uses your custom plaintext password column
     
     if (error) throw error;
     
@@ -353,37 +412,45 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   }
   
   try {
-    const { data: existingUsers } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email);
-    
-    if (existingUsers && existingUsers.length > 0) {
-      showNotification('Email already registered', 'error');
-      return;
-    }
-    
+    // 1. Create user in Supabase Auth (required for password reset)
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                // You can add metadata here if needed
+                full_name: `${firstname} ${lastname}`
+            },
+            // Crucial: The password reset link will redirect to this URL
+            emailRedirectTo: window.location.origin + window.location.pathname + '#password-reset', 
+        }
+    });
+
+    if (authError) throw authError;
+
+    // 2. Create user in your custom 'users' table
     const newUser = {
+      id: authData.user.id, // Use the ID from Supabase Auth
       firstname,
       lastname,
       name: `${firstname} ${lastname}`,
       email,
       npn,
       extension,
-      password,
+      password, // Store the plaintext password for your custom login logic
       licenses: [],
       is_admin: false
     };
     
-    const { data: createdUser, error } = await supabase
+    const { data: createdUser, error: dbError } = await supabase
       .from('users')
       .insert([newUser])
       .select()
       .single();
     
-    if (error) throw error;
+    if (dbError) throw dbError;
     
-    showNotification('Registration successful! Please log in.', 'success');
+    showNotification('Registration successful! Check your email to confirm, then log in.', 'success');
     document.getElementById('register-form').reset();
     document.getElementById('register-form').classList.add('hidden');
     document.getElementById('login-form').classList.remove('hidden');
@@ -394,12 +461,95 @@ document.getElementById('register-form').addEventListener('submit', async e => {
 });
 
 // ------------------- Logout -------------------
-document.getElementById('logout-btn').addEventListener('click', () => {
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await supabase.auth.signOut(); // Sign out of Supabase Auth session
   currentUser = null;
   localStorage.removeItem('currentUserId');
   showAuthScreen();
   showNotification('Logged out', 'info');
 });
+
+// ------------------- Forgot Password - Step 1: Send Email -------------------
+document.getElementById('forgot-password-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('forgot-email').value.trim();
+  
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        // Must match the URL configured in your Supabase Auth settings
+        redirectTo: window.location.origin + window.location.pathname + '#password-reset',
+      }
+    );
+    
+    if (error) throw error;
+    
+    showNotification('Password reset link sent to your email!', 'success');
+    closeForgotPasswordModal();
+  } catch(err) {
+    console.error(err);
+    showNotification('Error sending reset email: ' + err.message, 'error');
+  }
+});
+
+// ------------------- Forgot Password - Step 2: Update Password -------------------
+document.getElementById('new-password-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const newPassword = document.getElementById('new-password').value.trim();
+  const confirmPassword = document.getElementById('confirm-new-password').value.trim();
+  
+  if (newPassword !== confirmPassword) {
+    showNotification('Passwords do not match', 'error');
+    return;
+  }
+  
+  if (newPassword.length < 6) { 
+    showNotification('Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  try {
+    // 1. Update the password in Supabase Auth (This is the required step)
+    const { error: authError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (authError) throw authError;
+
+    // 2. Get the authenticated user's email/ID
+    const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser();
+
+    if (sessionError || !authUser) {
+        showNotification('Password updated in Supabase Auth. Please log in.', 'success');
+        closeForgotPasswordModal();
+        // Clear the URL hash to prevent re-triggering
+        history.replaceState(null, null, ' ');
+        return;
+    }
+    
+    // 3. Update the password in your custom 'users' table
+    const { error: dbUpdateError } = await supabase
+      .from('users')
+      .update({ password: newPassword }) // Update your custom password column
+      .eq('id', authUser.id); // Use the ID to find the record
+      
+    if (dbUpdateError) {
+        console.error('Warning: Failed to update password in custom "users" table.', dbUpdateError);
+        showNotification('Password updated in Supabase Auth, but error syncing to custom data. Please log in.', 'warning');
+    } else {
+        showNotification('Password updated successfully! Please log in with your new password.', 'success');
+    }
+
+    closeForgotPasswordModal();
+    // Clear the URL hash to prevent re-triggering
+    history.replaceState(null, null, ' ');
+  } catch(err) {
+    console.error(err);
+    showNotification('Error updating password: ' + err.message, 'error');
+  }
+});
+// END NEW Forgot Password Logic
 
 // ------------------- Load Users -------------------
 async function loadAllUsers() {
