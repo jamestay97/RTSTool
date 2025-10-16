@@ -583,9 +583,9 @@ async function openAddLicenseForUser() {
     return;
   }
   
-  // Admin is viewing another user's licenses, now they want to add a new one for them.
-  // The 'Edit User Licenses Modal' should close before opening the 'Add License Modal'.
-  closeEditUserLicensesModal();
+  // FIX: Hide the current modal (agent's license list) without calling closeEditUserLicensesModal(),
+  // which would incorrectly clear the currentEditingUserId needed for assignment.
+  document.getElementById('edit-user-licenses-modal').style.display = 'none';
 
   await loadCarriers();
   populateStateBubbles();
@@ -722,7 +722,7 @@ async function handleAddLicense(e) {
     
     await loadAllUsers();
     
-    // FIX 1: Store currentEditingUserId before closing the modal, as closing sets it to null
+    // Store currentEditingUserId before closing the modal (as closing sets it to null)
     const editingIdAfterSuccess = currentEditingUserId;
     
     closeAddLicenseModal(); // This now clears currentEditingUserId
@@ -907,8 +907,7 @@ async function performSearch() {
     
     const searchTerm = query.toLowerCase();
     
-    // FIX 2: Use a regex with word boundaries for exact whole-word matching
-    // \b is a word boundary, ensuring "MA" doesn't match "gMAil"
+    // Use a regex with word boundaries for exact whole-word matching (Fix from previous request)
     const searchRegex = new RegExp(`\\b${escapeRegex(searchTerm)}\\b`, 'i');
     
     const results = users.filter(user => {
