@@ -830,39 +830,46 @@ async function performSearch() {
     if (error) throw error;
     
     const searchTerm = query.toLowerCase();
-    
-    const results = users.filter(user => {
-      // 1. Name: Keep partial match for usability (user can search "john smith" by "john")
-      if (user.name && user.name.toLowerCase().includes(searchTerm)) return true; 
+    // This array will store objects like: { user: UserObject, licenses: FilteredLicensesArray }
+    const finalResults = [];
 
-      // 2. Email, NPN: Must be an EXACT match for the entire field.
-      if (user.email && user.email.toLowerCase() === searchTerm) return true;
-      if (user.npn && user.npn.toLowerCase() === searchTerm) return true;
-      
-      // 3. Search in licenses
-      if (user.licenses && Array.isArray(user.licenses)) {
-        for (const license of user.licenses) {
-          // State Abbreviation: Must be an EXACT match. This solves the "FL" vs "Aflac" issue for state
-          if (license.state && license.state.toLowerCase() === searchTerm) return true;
-          
-          // State Full Name: Must be an EXACT match.
-          const state = STATES_DATA.find(s => s.abbreviation === license.state);
-          if (state && state.name.toLowerCase() === searchTerm) return true;
-          
-          // Carriers: Must be an EXACT match. This solves the "FL" vs "Aflac" issue for carrier
-          if (license.carriers && Array.isArray(license.carriers)) {
-            for (const carrier of license.carriers) {
-              if (carrier && carrier.toLowerCase() === searchTerm) return true;
-            }
-          }
+    users.forEach(user => {
+        const userLicenses = user.licenses || [];
+        
+        // 1. Check for Matches
+        const nameMatch = user.name && user.name.toLowerCase().includes(searchTerm);
+        const identifierMatch = (user.email && user.email.toLowerCase() === searchTerm) || (user.npn && user.npn.toLowerCase() === searchTerm);
+        
+        // 2. Identify Licenses that are an EXACT match for the search term
+        const licenseMatches = userLicenses.filter(license => {
+            const state = STATES_DATA.find(s => s.abbreviation === license.state);
+            const stateName = state ? state.name.toLowerCase() : '';
+            
+            // EXACT MATCHING on State Abbreviation, Full State Name, or Carrier Name
+            const stateExactMatch = license.state.toLowerCase() === searchTerm || stateName === searchTerm;
+            const carrierExactMatch = license.carriers && license.carriers.some(carrier => carrier.toLowerCase() === searchTerm);
+            
+            return stateExactMatch || carrierExactMatch;
+        });
+
+        let licensesToDisplay = [];
+        
+        if (nameMatch || identifierMatch) {
+            // Case 1: Agent-centric search (Name, Email, NPN). Show ALL licenses for context.
+            licensesToDisplay = userLicenses;
+        } else if (licenseMatches.length > 0) {
+            // Case 2: License-centric search (State, Carrier). Show ONLY the matching licenses.
+            licensesToDisplay = licenseMatches;
         }
-      }
-      
-      return false;
+
+        // 3. Final Check: Only include the user if a match was found in any category.
+        if (nameMatch || identifierMatch || licenseMatches.length > 0) {
+            finalResults.push({ user, licenses: licensesToDisplay });
+        }
     });
-    
-    console.log('Search results:', results.length, 'for query:', query);
-    displaySearchResults(results, query);
+
+    console.log('Search results:', finalResults.length, 'for query:', query);
+    displaySearchResults(finalResults, query);
   } catch(error) {
     console.error(error);
     showNotification('Search failed: ' + error.message, 'error');
@@ -879,8 +886,9 @@ function displaySearchResults(results, query) {
   
   let html = `<p class="text-gray-400 mb-3">Found ${results.length} result(s)</p>`;
   
-  results.forEach(user => {
-    const licenses = user.licenses || [];
+  results.forEach(result => {
+    const user = result.user;
+    const licenses = result.licenses; // **Using the pre-filtered list**
     
     html += `
       <div class="bg-gray-800 p-4 rounded-lg">
@@ -908,7 +916,7 @@ function displaySearchResults(results, query) {
         `;
       });
     } else {
-      html += '<p class="text-gray-400 text-sm">No licenses</p>';
+      html += '<p class="text-gray-400 text-sm">No licenses matching this exact term.</p>';
     }
     
     html += '</div>';
@@ -924,9 +932,9 @@ function highlightMatch(text, query) {
   return text.replace(regex, '<span class="search-highlight">$1</span>');
 }
 
-// This is the correct definition for escapeRegex
+// Helper to escape special regex characters
 function escapeRegex(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Use '\\$&' to escape characters
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ------------------- Admin Functionality -------------------
