@@ -853,9 +853,9 @@ function highlightMatch(text, query) {
   return text.replace(regex, '<span class="search-highlight">$1</span>');
 }
 
+// This is the correct definition for escapeRegex
 function escapeRegex(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\  let html = '';
-  licenses.forEach((license, index) =>');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Use '\\$&' to escape characters
 }
 
 // ------------------- Admin Functionality -------------------
