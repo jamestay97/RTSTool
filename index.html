@@ -214,9 +214,14 @@ async function showDashboard() {
   document.getElementById('dashboard').classList.remove('hidden');
   document.getElementById('user-name').textContent = currentUser.name;
   
-  // Show admin tab if user is admin
-  if (currentUser.is_admin) {
-    document.getElementById('admin-tab-btn').classList.remove('hidden');
+  // Show admin tab ONLY if user is actually an admin
+  const adminTabBtn = document.getElementById('admin-tab-btn');
+  if (currentUser.is_admin === true) {
+    adminTabBtn.classList.remove('hidden');
+    console.log('Admin access granted for:', currentUser.name);
+  } else {
+    adminTabBtn.classList.add('hidden');
+    console.log('Regular user access for:', currentUser.name);
   }
   
   // Load fresh data
@@ -239,7 +244,13 @@ function showTab(tabName) {
   document.querySelector(`[data-tab="${tabName}"]`).classList.remove('bg-gray-700');
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('bg-cyan-600');
   
-  if (tabName === 'admin' && currentUser.is_admin) {
+  // Only load admin panel if user is actually an admin
+  if (tabName === 'admin') {
+    if (!currentUser.is_admin) {
+      showNotification('Access denied: Admin privileges required', 'error');
+      showTab('search');
+      return;
+    }
     loadAdminPanel();
   }
 }
@@ -479,6 +490,8 @@ function closeAddLicenseModal() {
   document.querySelectorAll('.bubble.selected').forEach(bubble => {
     bubble.classList.remove('selected');
   });
+  // Clear the editing user ID when modal closes
+  currentEditingUserId = null;
 }
 
 function populateStateBubbles() {
@@ -541,13 +554,20 @@ async function handleAddLicense(e) {
     let targetUserId = currentUser.id;
     let targetUser = currentUser;
     
-    if (currentEditingUserId && currentUser.is_admin) {
+    // Check if admin is editing another user
+    if (currentEditingUserId) {
+      console.log('Editing user:', currentEditingUserId);
       targetUserId = currentEditingUserId;
-      const { data: freshUser } = await supabase
+      const { data: freshUser, error: fetchError } = await supabase
         .from('users')
         .select('*')
         .eq('id', currentEditingUserId)
         .single();
+      
+      if (fetchError) {
+        console.error('Error fetching user:', fetchError);
+        throw fetchError;
+      }
       targetUser = freshUser;
     }
     
@@ -555,6 +575,8 @@ async function handleAddLicense(e) {
       showNotification('User not found', 'error');
       return;
     }
+    
+    console.log('Adding licenses to user:', targetUser.name, 'ID:', targetUserId);
     
     const currentLicenses = targetUser.licenses || [];
     
@@ -570,13 +592,19 @@ async function handleAddLicense(e) {
     
     const updatedLicenses = [...currentLicenses, ...licensesToAdd];
     
+    console.log('Updating licenses for user ID:', targetUserId, 'New count:', updatedLicenses.length);
+    
     const { error } = await supabase
       .from('users')
       .update({ licenses: updatedLicenses })
       .eq('id', targetUserId);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating licenses:', error);
+      throw error;
+    }
     
+    // Only update current user's data if they added to themselves
     if (targetUserId === currentUser.id) {
       currentUser.licenses = updatedLicenses;
       loadUserLicenses();
@@ -585,9 +613,10 @@ async function handleAddLicense(e) {
     await loadAllUsers();
     
     closeAddLicenseModal();
-    showNotification(`Added ${licensesToAdd.length} license(s) successfully!`, 'success');
+    showNotification(`Added ${licensesToAdd.length} license(s) to ${targetUser.name}!`, 'success');
     
-    if (currentEditingUserId && currentUser.is_admin) {
+    // If admin was editing another user, reopen their modal
+    if (currentEditingUserId) {
       setTimeout(() => {
         openEditUserLicenses(currentEditingUserId);
         loadAdminPanel();
@@ -853,9 +882,9 @@ function highlightMatch(text, query) {
   return text.replace(regex, '<span class="search-highlight">$1</span>');
 }
 
-// This is the correct definition for escapeRegex
 function escapeRegex(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Use '\\$&' to escape characters
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\  let html = '';
+  licenses.forEach((license, index) =>');
 }
 
 // ------------------- Admin Functionality -------------------
@@ -867,7 +896,12 @@ document.getElementById('refresh-users-btn').addEventListener('click', async () 
 });
 
 async function loadAdminPanel() {
-  if (!currentUser.is_admin) return;
+  // Double-check admin status
+  if (!currentUser.is_admin) {
+    showNotification('Access denied: Admin privileges required', 'error');
+    showTab('search');
+    return;
+  }
   
   await loadAllUsers();
   await loadCarriers();
