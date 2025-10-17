@@ -277,61 +277,6 @@ function showTab(tabName) {
   }
 }
 
-// ------------------- Auth Redirect Handler (Combines PKCE and Hash Flow) -------------------
-async function handleAuthRedirects() {
-    // 1. Check the URL for the 'code' parameter (PKCE flow - used for Sign Up confirmation)
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-
-    if (code) {
-        // Clear the query parameter immediately
-        history.replaceState({}, document.title, window.location.pathname);
-        
-        // 2. Exchange the temporary code for a user session
-        document.getElementById('loading-screen').classList.remove('hidden');
-        
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        document.getElementById('loading-screen').classList.add('hidden');
-
-        if (error) {
-            console.error('Code exchange error:', error);
-            showNotification('Link is invalid or has expired. Please try again.', 'error');
-            return true; // Handled, but failed
-        }
-        
-        // 3. Successfully signed in (e.g., after email confirmation)
-        showNotification('Email confirmed successfully!', 'success');
-        return true; // Handled successfully
-    }
-
-    // Fallback: Check for hash fragment parameters (Used for Password Reset tokens)
-    const hash = window.location.hash;
-    const isRecovery = hash.includes('type=recovery');
-
-    if (isRecovery) {
-        // Clear the hash fragment immediately
-        history.replaceState({}, document.title, window.location.pathname);
-        
-        // Show the modal and the new password form
-        document.getElementById('forgot-password-modal').style.display = 'flex';
-        document.getElementById('forgot-password-form').classList.add('hidden');
-        document.getElementById('new-password-form').classList.remove('hidden');
-        
-        document.getElementById('loading-screen').classList.add('hidden');
-        return true; // Handled
-    }
-
-    // Check for explicit hash-based redirect from register
-    if (hash.includes('#password-reset')) {
-         history.replaceState({}, document.title, window.location.pathname);
-         return true; // Handled
-    }
-    
-    return false; // Nothing was handled
-}
-// ------------------- End Auth Redirect Handler -------------------
-
-
 // ------------------- Event Listeners -------------------
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -381,13 +326,28 @@ function closeForgotPasswordModal() {
 }
 // END NEW Event Listeners
 
-// ------------------- App Init -------------------
+// ------------------- App Init (UPDATED FOR PKCE) -------------------
 async function initApp() {
-  // Check for redirects (PKCE code or hash fragment)
-  if (await handleAuthRedirects()) {
-      return; // Stop the standard login flow if a redirect was handled
+  
+  // NEW: Check for active Supabase session after PKCE redirect (Password Reset)
+  // The SDK automatically exchanges the ?code= for a session.
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (session && window.location.search.includes('code=')) {
+    // A valid session after redirect means the PKCE flow completed successfully.
+    // We show the new password form, as this is a password reset link.
+    
+    document.getElementById('forgot-password-modal').style.display = 'flex';
+    document.getElementById('forgot-password-form').classList.add('hidden');
+    document.getElementById('new-password-form').classList.remove('hidden');
+    
+    document.getElementById('loading-screen').classList.add('hidden');
+    // Clear query parameters to prevent re-triggering on refresh
+    history.replaceState(null, null, window.location.origin + window.location.pathname);
+    return; // Stop the standard login flow
   }
   
+  // OLD logic below
   try {
     const savedUserId = localStorage.getItem('currentUserId');
     if (savedUserId) {
@@ -469,7 +429,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
                 // You can add metadata here if needed
                 full_name: `${firstname} ${lastname}`
             },
-            // Use a clean URL for PKCE/Code flow consistency for email confirmation
+            // Crucial: Use clean base URL for PKCE flow (for email confirmation)
             emailRedirectTo: window.location.origin + window.location.pathname, 
         }
     });
@@ -517,20 +477,24 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// ------------------- Forgot Password - Step 1: Send Email (THE FINAL FIX) -------------------
+// ------------------- Forgot Password - Step 1: Send Email (PKCE) -------------------
 document.getElementById('forgot-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('forgot-email').value.trim();
   
   try {
-    // ⚠️ CRUCIAL FIX: REMOVE THE REDIRECTTO OPTION.
-    // This forces Supabase to use the #token=... hash fragment flow,
-    // which survives email security pre-fetching because the hash is client-side only.
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        // Use the clean base URL for the robust PKCE flow. 
+        // This is the correct way to handle password reset redirects.
+        redirectTo: window.location.origin + window.location.pathname,
+      }
+    );
     
     if (error) throw error;
     
-    showNotification('Password reset link sent to your email! (Look for a link that takes you back to this page.)', 'success');
+    showNotification('Password reset link sent to your email! (Check spam/junk folder)', 'success');
     closeForgotPasswordModal();
   } catch(err) {
     console.error(err);
@@ -569,7 +533,7 @@ document.getElementById('new-password-form').addEventListener('submit', async e 
         showNotification('Password updated in Supabase Auth. Please log in.', 'success');
         closeForgotPasswordModal();
         // Clear the URL to prevent re-triggering
-        history.replaceState({}, document.title, window.location.pathname);
+        history.replaceState(null, null, window.location.origin + window.location.pathname); 
         return;
     }
     
@@ -588,7 +552,7 @@ document.getElementById('new-password-form').addEventListener('submit', async e 
 
     closeForgotPasswordModal();
     // Clear the URL to prevent re-triggering
-    history.replaceState({}, document.title, window.location.pathname);
+    history.replaceState(null, null, window.location.origin + window.location.pathname);
   } catch(err) {
     console.error(err);
     showNotification('Error updating password: ' + err.message, 'error');
