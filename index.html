@@ -277,9 +277,9 @@ function showTab(tabName) {
   }
 }
 
-// ------------------- Auth Redirect Handler (The Fix) -------------------
+// ------------------- Auth Redirect Handler (Combines PKCE and Hash Flow) -------------------
 async function handleAuthRedirects() {
-    // 1. Check the URL for the 'code' parameter (PKCE flow)
+    // 1. Check the URL for the 'code' parameter (PKCE flow - used for Sign Up confirmation)
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
 
@@ -295,21 +295,20 @@ async function handleAuthRedirects() {
 
         if (error) {
             console.error('Code exchange error:', error);
-            showNotification('Password reset link is invalid or has expired. Please request a new one.', 'error');
+            showNotification('Link is invalid or has expired. Please try again.', 'error');
             return true; // Handled, but failed
         }
         
-        // 3. Successfully signed in—now display the "Set New Password" form
-        // Show the modal and the new password form
-        document.getElementById('forgot-password-modal').style.display = 'flex';
-        document.getElementById('forgot-password-form').classList.add('hidden');
-        document.getElementById('new-password-form').classList.remove('hidden');
-        
-        return true; // Recovery was handled successfully
+        // 3. Successfully signed in (e.g., after email confirmation)
+        showNotification('Email confirmed successfully!', 'success');
+        return true; // Handled successfully
     }
 
-    // Fallback: Check for the old fragment-based recovery (retained for consistency with old links)
-    if (window.location.hash.includes('type=recovery')) {
+    // Fallback: Check for hash fragment parameters (Used for Password Reset tokens)
+    const hash = window.location.hash;
+    const isRecovery = hash.includes('type=recovery');
+
+    if (isRecovery) {
         // Clear the hash fragment immediately
         history.replaceState({}, document.title, window.location.pathname);
         
@@ -323,7 +322,7 @@ async function handleAuthRedirects() {
     }
 
     // Check for explicit hash-based redirect from register
-    if (window.location.hash.includes('#password-reset')) {
+    if (hash.includes('#password-reset')) {
          history.replaceState({}, document.title, window.location.pathname);
          return true; // Handled
     }
@@ -382,9 +381,9 @@ function closeForgotPasswordModal() {
 }
 // END NEW Event Listeners
 
-// ------------------- App Init (UPDATED) -------------------
+// ------------------- App Init -------------------
 async function initApp() {
-  // Check for redirects (PKCE code or old hash fragment)
+  // Check for redirects (PKCE code or hash fragment)
   if (await handleAuthRedirects()) {
       return; // Stop the standard login flow if a redirect was handled
   }
@@ -470,7 +469,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
                 // You can add metadata here if needed
                 full_name: `${firstname} ${lastname}`
             },
-            // CRUCIAL UPDATE: Use a clean URL for PKCE/Code flow consistency.
+            // Use a clean URL for PKCE/Code flow consistency for email confirmation
             emailRedirectTo: window.location.origin + window.location.pathname, 
         }
     });
@@ -518,17 +517,16 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// NEW FIXED CODE (Uses hash fragment which bypasses server pre-fetch)
+// ------------------- Forgot Password - Step 1: Send Email (THE FINAL FIX) -------------------
 document.getElementById('forgot-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('forgot-email').value.trim();
   
   try {
-    // ⚠️ IMPORTANT: We remove the redirectTo option entirely here. 
-    // This forces Supabase to send a link with the token in the URL hash (#token=...).
-    // Since the hash isn't sent to the server during email security pre-fetch,
-    // the link remains valid when the user clicks it.
-    const { error } = await supabase.auth.resetPasswordForEmail(email); 
+    // ⚠️ CRUCIAL FIX: REMOVE THE REDIRECTTO OPTION.
+    // This forces Supabase to use the #token=... hash fragment flow,
+    // which survives email security pre-fetching because the hash is client-side only.
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     
     if (error) throw error;
     
@@ -540,7 +538,7 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
   }
 });
 
-// ------------------- Forgot Password - Step 2: Update Password (CLEANUP) -------------------
+// ------------------- Forgot Password - Step 2: Update Password -------------------
 document.getElementById('new-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const newPassword = document.getElementById('new-password').value.trim();
