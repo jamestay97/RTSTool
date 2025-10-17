@@ -518,20 +518,17 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// ------------------- Forgot Password - Step 1: Send Email (UPDATED) -------------------
+// NEW FIXED CODE (Uses hash fragment which bypasses server pre-fetch)
 document.getElementById('forgot-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('forgot-email').value.trim();
   
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email,
-      {
-        // CRUCIAL UPDATE: Use a clean URL without a hash fragment.
-        // Supabase will automatically add '?code=...' for PKCE flow.
-        redirectTo: window.location.origin + window.location.pathname,
-      }
-    );
+    // ⚠️ IMPORTANT: We remove the redirectTo option entirely here. 
+    // This forces Supabase to send a link with the token in the URL hash (#token=...).
+    // Since the hash isn't sent to the server during email security pre-fetch,
+    // the link remains valid when the user clicks it.
+    const { error } = await supabase.auth.resetPasswordForEmail(email); 
     
     if (error) throw error;
     
