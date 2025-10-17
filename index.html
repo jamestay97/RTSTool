@@ -277,6 +277,62 @@ function showTab(tabName) {
   }
 }
 
+// ------------------- Auth Redirect Handler (The Fix) -------------------
+async function handleAuthRedirects() {
+    // 1. Check the URL for the 'code' parameter (PKCE flow)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+        // Clear the query parameter immediately
+        history.replaceState({}, document.title, window.location.pathname);
+        
+        // 2. Exchange the temporary code for a user session
+        document.getElementById('loading-screen').classList.remove('hidden');
+        
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        document.getElementById('loading-screen').classList.add('hidden');
+
+        if (error) {
+            console.error('Code exchange error:', error);
+            showNotification('Password reset link is invalid or has expired. Please request a new one.', 'error');
+            return true; // Handled, but failed
+        }
+        
+        // 3. Successfully signed in—now display the "Set New Password" form
+        // Show the modal and the new password form
+        document.getElementById('forgot-password-modal').style.display = 'flex';
+        document.getElementById('forgot-password-form').classList.add('hidden');
+        document.getElementById('new-password-form').classList.remove('hidden');
+        
+        return true; // Recovery was handled successfully
+    }
+
+    // Fallback: Check for the old fragment-based recovery (retained for consistency with old links)
+    if (window.location.hash.includes('type=recovery')) {
+        // Clear the hash fragment immediately
+        history.replaceState({}, document.title, window.location.pathname);
+        
+        // Show the modal and the new password form
+        document.getElementById('forgot-password-modal').style.display = 'flex';
+        document.getElementById('forgot-password-form').classList.add('hidden');
+        document.getElementById('new-password-form').classList.remove('hidden');
+        
+        document.getElementById('loading-screen').classList.add('hidden');
+        return true; // Handled
+    }
+
+    // Check for explicit hash-based redirect from register
+    if (window.location.hash.includes('#password-reset')) {
+         history.replaceState({}, document.title, window.location.pathname);
+         return true; // Handled
+    }
+    
+    return false; // Nothing was handled
+}
+// ------------------- End Auth Redirect Handler -------------------
+
+
 // ------------------- Event Listeners -------------------
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -306,7 +362,7 @@ document.getElementById('edit-user-licenses-modal').addEventListener('click', (e
   if (e.target.id === 'edit-user-licenses-modal') closeEditUserLicensesModal();
 });
 
-// Forgot Password Event Listeners
+// NEW: Forgot Password Event Listeners
 document.getElementById('show-forgot-password').addEventListener('click', () => {
   document.getElementById('forgot-password-modal').style.display = 'flex';
   document.getElementById('forgot-password-form').classList.remove('hidden');
@@ -324,49 +380,30 @@ function closeForgotPasswordModal() {
   document.getElementById('forgot-password-form').reset();
   document.getElementById('new-password-form').reset();
 }
+// END NEW Event Listeners
 
-// ------------------- App Init (UPDATED to use Supabase Auth session) -------------------
+// ------------------- App Init (UPDATED) -------------------
 async function initApp() {
-  // Check for Password Recovery URL fragment
-  if (window.location.hash.includes('type=recovery')) {
-    // Show the modal and the new password form
-    document.getElementById('forgot-password-modal').style.display = 'flex';
-    document.getElementById('forgot-password-form').classList.add('hidden');
-    document.getElementById('new-password-form').classList.remove('hidden');
-    
-    // Clear the loading screen while waiting for user action
-    document.getElementById('loading-screen').classList.add('hidden');
-    return; // Stop the standard login flow
+  // Check for redirects (PKCE code or old hash fragment)
+  if (await handleAuthRedirects()) {
+      return; // Stop the standard login flow if a redirect was handled
   }
-
+  
   try {
-    // 1. Check for an active Supabase Auth session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-
-    if (session) {
-        const authUserId = session.user.id;
-        
-        // 2. Fetch user data from your custom 'users' table using the Auth ID
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', authUserId)
-            .single();
-        
-        if (!error && user) {
-            currentUser = user;
-            await showDashboard();
-            return;
-        } else {
-            // No custom user record found, log out the Auth session
-            await supabase.auth.signOut();
-            console.warn('Auth session found, but no matching custom user record. Logged out.');
-        }
+    const savedUserId = localStorage.getItem('currentUserId');
+    if (savedUserId) {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', savedUserId)
+        .single();
+      
+      if (!error && user) {
+        currentUser = user;
+        await showDashboard();
+        return;
+      }
     }
-    
-    // Fallback: Show login if no session or an error occurred
     showAuthScreen();
   } catch(e) {
     console.error('Init error:', e);
@@ -374,7 +411,7 @@ async function initApp() {
   }
 }
 
-// ------------------- Login (UPDATED to use Supabase Auth) -------------------
+// ------------------- Login -------------------
 document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('login-email').value.trim();
@@ -386,35 +423,29 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   }
   
   try {
-    // SECURE LOGIN: Use Supabase Auth to handle password hashing check
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
-    
-    if (authError) throw authError;
-
-    // Fetch user data from your custom 'users' table
-    const { data: user, error: dbError } = await supabase
+    const { data: users, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', authData.user.id)
-      .single(); 
+      .eq('email', email)
+      .eq('password', password); // NOTE: This uses your custom plaintext password column
     
-    if (dbError) throw dbError;
+    if (error) throw error;
     
-    currentUser = user;
-    await showDashboard();
-    showNotification('Login successful!', 'success');
-    
+    if (users && users.length > 0) {
+      currentUser = users[0];
+      localStorage.setItem('currentUserId', currentUser.id);
+      await showDashboard();
+      showNotification('Login successful!', 'success');
+    } else {
+      showNotification('Invalid credentials', 'error');
+    }
   } catch(err) {
     console.error(err);
-    // Display the specific error message from Supabase Auth (e.g., Invalid login credentials)
     showNotification('Login failed: ' + err.message, 'error');
   }
 });
 
-// ------------------- Register (UPDATED to remove plaintext password in DB) -------------------
+// ------------------- Register -------------------
 document.getElementById('register-form').addEventListener('submit', async e => {
   e.preventDefault();
   const firstname = document.getElementById('register-firstname').value.trim();
@@ -430,16 +461,17 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   }
   
   try {
-    // 1. Create user in Supabase Auth (handles secure password hashing)
+    // 1. Create user in Supabase Auth (required for password reset)
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
             data: {
+                // You can add metadata here if needed
                 full_name: `${firstname} ${lastname}`
             },
-            // Crucial: The password reset link will redirect to this URL
-            emailRedirectTo: window.location.origin + window.location.pathname + '#password-reset', 
+            // CRUCIAL UPDATE: Use a clean URL for PKCE/Code flow consistency.
+            emailRedirectTo: window.location.origin + window.location.pathname, 
         }
     });
 
@@ -454,9 +486,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
       email,
       npn,
       extension,
-      // IMPORTANT SECURITY FIX: The plaintext password is NO LONGER STORED in the custom table
-      // You should remove this column entirely from your 'users' table.
-      password: 'PASSWORD_SECURELY_MANAGED_BY_AUTH_SERVICE',
+      password, // Store the plaintext password for your custom login logic
       licenses: [],
       is_admin: false
     };
@@ -488,7 +518,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// ------------------- Forgot Password - Step 1: Send Email -------------------
+// ------------------- Forgot Password - Step 1: Send Email (UPDATED) -------------------
 document.getElementById('forgot-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('forgot-email').value.trim();
@@ -497,14 +527,15 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
     const { error } = await supabase.auth.resetPasswordForEmail(
       email,
       {
-        // Must match the URL configured in your Supabase Auth settings
-        redirectTo: window.location.origin + window.location.pathname + '#password-reset',
+        // CRUCIAL UPDATE: Use a clean URL without a hash fragment.
+        // Supabase will automatically add '?code=...' for PKCE flow.
+        redirectTo: window.location.origin + window.location.pathname,
       }
     );
     
     if (error) throw error;
     
-    showNotification('Password reset link sent to your email!', 'success');
+    showNotification('Password reset link sent to your email! (Look for a link that takes you back to this page.)', 'success');
     closeForgotPasswordModal();
   } catch(err) {
     console.error(err);
@@ -512,7 +543,7 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
   }
 });
 
-// ------------------- Forgot Password - Step 2: Update Password (MODIFIED FOR SYNC) -------------------
+// ------------------- Forgot Password - Step 2: Update Password (CLEANUP) -------------------
 document.getElementById('new-password-form').addEventListener('submit', async e => {
   e.preventDefault();
   const newPassword = document.getElementById('new-password').value.trim();
@@ -529,48 +560,46 @@ document.getElementById('new-password-form').addEventListener('submit', async e 
   }
   
   try {
-    // 1. Update the password in Supabase Auth (This is the secure, required step)
+    // 1. Update the password in Supabase Auth (This is the required step)
     const { error: authError } = await supabase.auth.updateUser({
       password: newPassword
     });
 
     if (authError) throw authError;
 
-    // 2. Get the authenticated user's ID
+    // 2. Get the authenticated user's email/ID
     const { data: { user: authUser }, error: sessionError } = await supabase.auth.getUser();
 
-    // The user must be authenticated from the password reset link for this to work
     if (sessionError || !authUser) {
-        showNotification('Password updated in Auth service. Please log in.', 'success');
+        showNotification('Password updated in Supabase Auth. Please log in.', 'success');
         closeForgotPasswordModal();
-        history.replaceState(null, null, ' ');
+        // Clear the URL to prevent re-triggering
+        history.replaceState({}, document.title, window.location.pathname);
         return;
     }
     
-    // 3. (FLAWED BUT NECESSARY FOR CURRENT APP LOGIC): Sync the password to your custom 'users' table 
-    // to maintain functionality, but you should not be relying on this column anymore.
+    // 3. Update the password in your custom 'users' table
     const { error: dbUpdateError } = await supabase
       .from('users')
-      // WARNING: This is syncing a PLAINTEXT password to a DB column. 
-      // You must update your app logic to stop reading this column, and then remove it.
-      .update({ password: newPassword }) 
+      .update({ password: newPassword }) // Update your custom password column
       .eq('id', authUser.id); // Use the ID to find the record
       
     if (dbUpdateError) {
-        console.error('Warning: Failed to sync new password to custom "users" table.', dbUpdateError);
-        showNotification('Password updated in Supabase Auth, but error syncing custom data. Please log in.', 'warning');
+        console.error('Warning: Failed to update password in custom "users" table.', dbUpdateError);
+        showNotification('Password updated in Supabase Auth, but error syncing to custom data. Please log in.', 'warning');
     } else {
         showNotification('Password updated successfully! Please log in with your new password.', 'success');
     }
 
     closeForgotPasswordModal();
-    // Clear the URL hash to prevent re-triggering
-    history.replaceState(null, null, ' ');
+    // Clear the URL to prevent re-triggering
+    history.replaceState({}, document.title, window.location.pathname);
   } catch(err) {
     console.error(err);
     showNotification('Error updating password: ' + err.message, 'error');
   }
 });
+// END NEW Forgot Password Logic
 
 // ------------------- Load Users -------------------
 async function loadAllUsers() {
