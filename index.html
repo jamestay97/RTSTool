@@ -400,16 +400,21 @@ async function initApp() {
   try {
     const savedUserId = localStorage.getItem('currentUserId');
     if (savedUserId) {
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', savedUserId)
-        .single();
+      // Check if Supabase has a session and if the user data exists in the custom table
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!error && user) {
-        currentUser = user;
-        await showDashboard();
-        return;
+      if (session && !sessionError) {
+          const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', savedUserId)
+            .single();
+          
+          if (!error && user) {
+            currentUser = user;
+            await showDashboard();
+            return;
+          }
       }
     }
     showAuthScreen();
@@ -419,7 +424,7 @@ async function initApp() {
   }
 }
 
-// ------------------- Login -------------------
+// ------------------- Login (SECURELY MODIFIED) -------------------
 document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('login-email').value.trim();
@@ -431,21 +436,32 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   }
   
   try {
-    const { data: users, error } = await supabase
+    // 1. Authenticate with Supabase Auth (Secure Check against Hashed Password)
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Authentication failed. Invalid email or password.");
+
+    // 2. Fetch user details from the custom 'users' table using the secure auth ID
+    const { data: users, error: dbError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email)
-      .eq('password', password); // NOTE: This uses your custom plaintext password column
+      .eq('id', authData.user.id)
+      .single(); 
+
+    if (dbError) throw dbError;
     
-    if (error) throw error;
-    
-    if (users && users.length > 0) {
-      currentUser = users[0];
+    if (users) {
+      currentUser = users; // The single user object
       localStorage.setItem('currentUserId', currentUser.id);
       await showDashboard();
       showNotification('Login successful!', 'success');
     } else {
-      showNotification('Invalid credentials', 'error');
+      // The user exists in Supabase Auth but not in the custom table (rare case)
+      showNotification('User data incomplete. Please contact support.', 'error');
     }
   } catch(err) {
     console.error(err);
@@ -453,7 +469,7 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   }
 });
 
-// ------------------- Register -------------------
+// ------------------- Register (SECURELY MODIFIED) -------------------
 document.getElementById('register-form').addEventListener('submit', async e => {
   e.preventDefault();
   const firstname = document.getElementById('register-firstname').value.trim();
@@ -469,7 +485,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   }
   
   try {
-    // 1. Create user in Supabase Auth (required for password reset)
+    // 1. Create user in Supabase Auth (This handles password hashing securely)
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -483,7 +499,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
 
     if (authError) throw authError;
 
-    // 2. Create user in your custom 'users' table
+    // 2. Create user in your custom 'users' table (NO PASSWORD FIELD INSERTED)
     const newUser = {
       id: authData.user.id, // Use the ID from Supabase Auth
       firstname,
@@ -492,7 +508,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
       email,
       npn,
       extension,
-      password, // Store the plaintext password for your custom login logic
+      // Removed: password field to prevent plaintext storage 🛑
       licenses: [],
       is_admin: false
     };
@@ -524,7 +540,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// ------------------- Forgot Password - Step 1: Send OTP Email (CORRECTED) -------------------
+// ------------------- Forgot Password - Step 1: Send OTP Email -------------------
 document.getElementById('request-otp-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('request-otp-email').value.trim();
@@ -539,10 +555,8 @@ document.getElementById('request-otp-form').addEventListener('submit', async e =
       email: email,
       options: {
         shouldCreateUser: false, 
-        // 👇👇 CRITICAL FIX 👇👇
         emailRedirectTo: null, // Forces sending a code instead of a magic link
         data: { channel: 'email' } // Explicitly requests the email channel OTP
-        // 👆👆 CRITICAL FIX 👆👆
       }
     });
     
@@ -561,7 +575,7 @@ document.getElementById('request-otp-form').addEventListener('submit', async e =
 });
 
 
-// ------------------- Forgot Password - Step 2: Update Password using OTP -------------------
+// ------------------- Forgot Password - Step 2: Update Password using OTP (SECURELY MODIFIED) -------------------
 async function handleOtpPasswordReset(event) {
     event.preventDefault();
     
@@ -595,25 +609,16 @@ async function handleOtpPasswordReset(event) {
         if (signInError) throw signInError;
         if (!authUser) throw new Error("Verification successful but no user session established.");
 
-        // 2. Update the password in Supabase Auth
+        // 2. Update the password in Supabase Auth (Secure Hashing is done here)
         const { error: updateAuthError } = await supabase.auth.updateUser({
             password: newPassword
         });
 
         if (updateAuthError) throw updateAuthError;
 
-        // 3. Update the password in your custom 'users' table
-        const { error: dbUpdateError } = await supabase
-          .from('users')
-          .update({ password: newPassword }) // Update your custom plaintext password column
-          .eq('id', authUser.id); 
-          
-        if (dbUpdateError) {
-            console.error('Warning: Failed to sync password to custom "users" table.', dbUpdateError);
-            showNotification('Password updated in Supabase Auth, but error syncing to custom data. Please log in.', 'warning');
-        } else {
-            showNotification('Password updated successfully! You can now log in.', 'success');
-        }
+        // 3. Removed update to custom 'users' table: The plaintext password is no longer stored or updated.
+        
+        showNotification('Password updated successfully! You can now log in.', 'success');
         
         closeOtpModal();
         showLogin();
