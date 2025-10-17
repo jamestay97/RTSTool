@@ -524,7 +524,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   showNotification('Logged out', 'info');
 });
 
-// ------------------- Forgot Password - Step 1: Send OTP Email -------------------
+// ------------------- Forgot Password - Step 1: Send OTP Email (CORRECTED) -------------------
 document.getElementById('request-otp-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('request-otp-email').value.trim();
@@ -538,9 +538,11 @@ document.getElementById('request-otp-form').addEventListener('submit', async e =
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
-        // Must be false to prevent user sign up if they don't exist, 
-        // ensuring only existing users can reset
         shouldCreateUser: false, 
+        // 👇👇 CRITICAL FIX 👇👇
+        emailRedirectTo: null, // Forces sending a code instead of a magic link
+        data: { channel: 'email' } // Explicitly requests the email channel OTP
+        // 👆👆 CRITICAL FIX 👆👆
       }
     });
     
