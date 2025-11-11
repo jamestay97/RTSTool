@@ -815,9 +815,7 @@ async function handleAddLicense(e) {
       if (existingLicense) {
         // Scenario: Existing State. Merge carriers.
         selectedCarriers.forEach(carrier => {
-          // Use defensive check for existingLicense.carriers
-          if (!(existingLicense.carriers || []).includes(carrier)) {
-            existingLicense.carriers = existingLicense.carriers || []; // Ensure it's an array before pushing
+          if (!existingLicense.carriers.includes(carrier)) {
             existingLicense.carriers.push(carrier);
             carriersAddedCount++;
             licensesModified = true;
@@ -914,15 +912,12 @@ function loadUserLicenses() {
     const state = STATES_DATA.find(s => s.abbreviation === license.state);
     const stateName = state ? state.name : license.state;
     
-    // FIX APPLIED HERE: Use (license.carriers || []) to safely access carriers
-    const carriersList = (license.carriers || []).join(', ');
-
     html += `
       <div class="bg-gray-800 p-4 rounded-lg">
         <div class="flex justify-between items-start">
           <div>
             <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(stateName)} (${escapeHtml(license.state)})</h4>
-            <p class="text-gray-400 mt-1">Carriers: ${escapeHtml(carriersList)}</p>
+            <p class="text-gray-400 mt-1">Carriers: ${escapeHtml(license.carriers.join(', '))}</p>
             ${license.expiration ? `<p class="text-gray-400">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
           </div>
           <button onclick="deleteLicense(${index})" class="text-red-400 hover:text-red-300">
@@ -994,7 +989,7 @@ async function openEditUserLicenses(userId) {
         <div class="flex justify-between items-start">
           <div>
             <h4 class="text-lg font-semibold text-cyan-300">${escapeHtml(stateName)} (${escapeHtml(license.state)})</h4>
-            <p class="text-gray-400 text-sm">Carriers: ${escapeHtml((license.carriers || []).join(', '))}</p>
+            <p class="text-gray-400 text-sm">Carriers: ${escapeHtml(license.carriers.join(', '))}</p>
             ${license.expiration ? `<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
           </div>
           <button onclick="deleteUserLicense('${userId}', ${index})" class="text-red-400 hover:text-red-300">
@@ -1074,10 +1069,9 @@ async function performSearch() {
         const userLicenses = user.licenses || [];
         
         // 1. Check for Matches
-        // FIX APPLIED HERE: Use (user.name ?? '') to handle potential null value for the 'name' column.
-        const nameMatch = (user.name ?? '').toLowerCase() === searchTerm; 
-        
-        const identifierMatch = ((user.email ?? '').toLowerCase() === searchTerm) || ((user.npn ?? '').toLowerCase() === searchTerm);
+        // MODIFIED: Agent name must now be an EXACT match of the full stored name
+        const nameMatch = user.name && user.name.toLowerCase() === searchTerm; 
+        const identifierMatch = (user.email && user.email.toLowerCase() === searchTerm) || (user.npn && user.npn.toLowerCase() === searchTerm);
         
         // 2. Identify Licenses that are an EXACT match for the search term
         const licenseMatches = userLicenses.filter(license => {
@@ -1085,11 +1079,10 @@ async function performSearch() {
             const stateName = state ? state.name.toLowerCase() : '';
             
             // EXACT MATCHING on State Abbreviation, Full State Name, or Carrier Name
-            // license.state is assumed to be safe as it's part of the license structure
-            const stateExactMatch = license.state.toLowerCase() === searchTerm || stateName === searchTerm;
-            
-            // Safe access to carriers
-            const carrierExactMatch = (license.carriers || []).some(carrier => carrier.toLowerCase() === searchTerm);
+            // FIX APPLIED HERE for license.state: 
+            const stateExactMatch = (license.state ?? '').toLowerCase() === searchTerm || stateName === searchTerm;
+            // FIX APPLIED HERE for carrier element:
+            const carrierExactMatch = license.carriers && license.carriers.some(carrier => (carrier ?? '').toLowerCase() === searchTerm);
             
             return stateExactMatch || carrierExactMatch;
         });
@@ -1152,7 +1145,7 @@ function displaySearchResults(results, query) {
         html += `
           <div class="bg-gray-700 p-3 rounded mb-2">
             <h4 class="font-semibold">${highlightMatch(escapeHtml(stateName), query)} (${highlightMatch(escapeHtml(license.state), query)})</h4>
-            <p class="text-gray-300 text-sm">Carriers: ${(license.carriers || []).map(carrier => highlightMatch(escapeHtml(carrier), query)).join(', ')}</p>
+            <p class="text-gray-300 text-sm">Carriers: ${license.carriers.map(carrier => highlightMatch(escapeHtml(carrier), query)).join(', ')}</p>
             ${license.expiration ? `<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
           </div>
         `;
