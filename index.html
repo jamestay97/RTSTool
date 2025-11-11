@@ -1,5 +1,3 @@
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1076,9 +1074,9 @@ async function performSearch() {
         const userLicenses = user.licenses || [];
         
         // 1. Check for Matches
-        // MODIFIED: Agent name must now be an EXACT match of the full stored name
-        const nameMatch = user.name && user.name.toLowerCase() === searchTerm; 
-        // FIX APPLIED HERE: Use (user.email ?? '') and (user.npn ?? '') for defensive reading
+        // FIX APPLIED HERE: Use (user.name ?? '') to handle potential null value for the 'name' column.
+        const nameMatch = (user.name ?? '').toLowerCase() === searchTerm; 
+        
         const identifierMatch = ((user.email ?? '').toLowerCase() === searchTerm) || ((user.npn ?? '').toLowerCase() === searchTerm);
         
         // 2. Identify Licenses that are an EXACT match for the search term
@@ -1087,8 +1085,10 @@ async function performSearch() {
             const stateName = state ? state.name.toLowerCase() : '';
             
             // EXACT MATCHING on State Abbreviation, Full State Name, or Carrier Name
+            // license.state is assumed to be safe as it's part of the license structure
             const stateExactMatch = license.state.toLowerCase() === searchTerm || stateName === searchTerm;
-            // FIX APPLIED HERE: Use (license.carriers || []) to safely access carriers
+            
+            // Safe access to carriers
             const carrierExactMatch = (license.carriers || []).some(carrier => carrier.toLowerCase() === searchTerm);
             
             return stateExactMatch || carrierExactMatch;
@@ -1345,4 +1345,3 @@ window.showLogin = showLogin;
 </footer>
 </body>
 </html>
-```
