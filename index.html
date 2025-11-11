@@ -247,6 +247,48 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+/**
+ * Normalizes the user's licenses field, handling JSON strings and legacy arrays of state codes.
+ * This function modifies the user object in place.
+ * @param {object} user - The user object fetched from the database.
+ */
+function normalizeLicenses(user) {
+  let licenses = user.licenses;
+  
+  if (typeof licenses === 'string') {
+    try {
+      licenses = JSON.parse(licenses);
+    } catch(e) {
+      console.error('Failed to parse licenses string for user:', user.id, e);
+      licenses = [];
+    }
+  }
+
+  // Handle the case where the license data is an array of state strings (the legacy format)
+  // This is the fix for the user's reported issue.
+  if (Array.isArray(licenses) && licenses.every(item => typeof item === 'string')) {
+    user.licenses = licenses.map(state => ({
+      state: state,
+      carriers: [],
+      expiration: ''
+    }));
+    return;
+  }
+  
+  // Ensure it is an array of objects for the standard format
+  if (!Array.isArray(licenses)) {
+    user.licenses = [];
+    return;
+  }
+  
+  // Clean up any remaining null/undefined entries and ensure required properties exist
+  user.licenses = licenses.filter(l => l && typeof l === 'object').map(license => ({
+      state: license.state || '',
+      carriers: license.carriers || [],
+      expiration: license.expiration || ''
+  }));
+}
+
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-2xl z-50 fade-in ${
@@ -411,6 +453,7 @@ async function initApp() {
             .single();
           
           if (!error && user) {
+            normalizeLicenses(user); // <<-- FIX 1: Normalize licenses on startup
             currentUser = user;
             await showDashboard();
             return;
@@ -455,6 +498,7 @@ document.getElementById('login-form').addEventListener('submit', async e => {
     if (dbError) throw dbError;
     
     if (users) {
+      normalizeLicenses(users); // <<-- FIX 2: Normalize licenses on login
       currentUser = users; // The single user object
       localStorage.setItem('currentUserId', currentUser.id);
       await showDashboard();
@@ -644,6 +688,7 @@ async function loadAllUsers() {
     if (error) throw error;
     
     allUsers = users || [];
+    allUsers.forEach(normalizeLicenses); // <<-- FIX 3: Normalize licenses when loading all users for Admin/Search
     console.log('✅ Loaded users:', allUsers.length);
   } catch(err) {
     console.error('Error loading users:', err);
@@ -793,6 +838,8 @@ async function handleAddLicense(e) {
         console.error('Error fetching user:', fetchError);
         throw fetchError;
       }
+      
+      normalizeLicenses(freshUser); // <<-- FIX 4: Normalize licenses when fetching a single user for admin editing
       targetUser = freshUser;
     }
     
@@ -969,6 +1016,8 @@ async function openEditUserLicenses(userId) {
     return;
   }
   
+  normalizeLicenses(user); // Normalize the user's data when opening the admin edit modal
+  
   document.getElementById('edit-user-title').textContent = `Edit Licenses for ${escapeHtml(user.name)}`;
   
   const container = document.getElementById('user-licenses-container');
@@ -1019,6 +1068,8 @@ async function deleteUserLicense(userId, licenseIndex) {
       return;
     }
     
+    normalizeLicenses(user); // Normalize before modification
+
     const updatedLicenses = user.licenses.filter((_, index) => index !== licenseIndex);
     
     const { error } = await supabase
@@ -1061,6 +1112,8 @@ async function performSearch() {
     const { data: users, error } = await supabase.from('users').select('*');
     if (error) throw error;
     
+    users.forEach(normalizeLicenses); // Ensure licenses are normalized before searching
+
     const searchTerm = query.toLowerCase();
     // This array will store objects like: { user: UserObject, licenses: FilteredLicensesArray }
     const finalResults = [];
@@ -1192,6 +1245,7 @@ async function loadAdminPanel() {
   // Load users list
   let usersHtml = '';
   allUsers.forEach(user => {
+    // Licenses are already normalized by loadAllUsers
     const licenseCount = (user.licenses || []).length;
     const uniqueStates = new Set((user.licenses || []).map(l => l.state));
     const stateCount = uniqueStates.size;
