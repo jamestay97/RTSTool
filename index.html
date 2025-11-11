@@ -1069,9 +1069,9 @@ async function performSearch() {
         const userLicenses = user.licenses || [];
         
         // 1. Check for Matches
-        // MODIFIED: Agent name must now be an EXACT match of the full stored name
-        const nameMatch = user.name && user.name.toLowerCase() === searchTerm; 
-        const identifierMatch = (user.email && user.email.toLowerCase() === searchTerm) || (user.npn && user.npn.toLowerCase() === searchTerm);
+        // FIX #1: Agent name, email, and NPN now use partial match (includes) for better searchability.
+        const nameMatch = user.name && user.name.toLowerCase().includes(searchTerm); 
+        const identifierMatch = (user.email && user.email.toLowerCase().includes(searchTerm)) || (user.npn && user.npn.toLowerCase().includes(searchTerm));
         
         // 2. Identify Licenses that are an EXACT match for the search term
         const licenseMatches = userLicenses.filter(license => {
@@ -1079,9 +1079,7 @@ async function performSearch() {
             const stateName = state ? state.name.toLowerCase() : '';
             
             // EXACT MATCHING on State Abbreviation, Full State Name, or Carrier Name
-            // FIX APPLIED HERE for license.state: 
             const stateExactMatch = (license.state ?? '').toLowerCase() === searchTerm || stateName === searchTerm;
-            // FIX APPLIED HERE for carrier element:
             const carrierExactMatch = license.carriers && license.carriers.some(carrier => (carrier ?? '').toLowerCase() === searchTerm);
             
             return stateExactMatch || carrierExactMatch;
@@ -1145,7 +1143,7 @@ function displaySearchResults(results, query) {
         html += `
           <div class="bg-gray-700 p-3 rounded mb-2">
             <h4 class="font-semibold">${highlightMatch(escapeHtml(stateName), query)} (${highlightMatch(escapeHtml(license.state), query)})</h4>
-            <p class="text-gray-300 text-sm">Carriers: ${license.carriers.map(carrier => highlightMatch(escapeHtml(carrier), query)).join(', ')}</p>
+            <p class="text-gray-300 text-sm">Carriers: ${(license.carriers ?? []).map(carrier => highlightMatch(escapeHtml(carrier), query)).join(', ')}</p>
             ${license.expiration ? `<p class="text-gray-400 text-sm">Expires: ${escapeHtml(license.expiration)}</p>` : ''}
           </div>
         `;
